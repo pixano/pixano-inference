@@ -1,0 +1,59 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pixano-inference"
+dynamic = ["version"]
+description = 'Inference models for Pixano, a library of data-centric AI building blocks for computer vision applications' 
+readme = "README.md"
+requires-python = ">=3.10"
+license = "CeCILL-C"
+authors = [{name = "Pixano Developers", email = "pixano@cea.fr"}]
+keywords = [
+  "machine learning",
+  "computer vision",
+  "data",
+  "visualization"
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = [
+  "pixano >= 0.1.1",
+  "torch >= 2.0.0",
+  "torchaudio >= 2.0.0",
+  "torchvision >= 0.15.0",
+  "tensorflow >= 2.12.0",
+  "tensorflow-hub >= 0.13.0",
+  "segment-anything@git+https://github.com/facebookresearch/segment-anything",
+  "gitpython >= 3.1.30",
+  "matplotlib >= 3.3",
+  "psutil",
+  "PyYAML >= 5.3.1",
+  "requests >= 2.23.0",
+  "seaborn >= 0.11.0",
+  "scipy >= 1.4.1",
+  "thop >= 0.1.1",
+]
+
+
+[project.urls]
+Documentation = "https://github.com/pixano/pixano-inference#readme"
+Issues = "https://github.com/pixano/pixano-inference/issues"
+Source = "https://github.com/pixano/pixano-inference"
+
+[tool.hatch.build]
+include = ["/pixano_inference"]
+exclude = ["__pycache__"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.version]
+path = "pixano_inference/__version__.py"
