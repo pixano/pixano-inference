@@ -27,7 +27,7 @@ from torchvision.models.detection import (
 from pixano.core import arrow_types
 from pixano.inference import OfflineModel
 from pixano.transforms import (
-    coco_names_80,
+    coco_80to91,
     coco_names_91,
     mask_to_rle,
     normalize,
@@ -313,8 +313,8 @@ class YOLO(OfflineModel):
                         bbox=normalize(xyxy_to_xywh(pred[0:4]), h, w),
                         bbox_confidence=float(pred[4]),
                         bbox_source=self.id,
-                        category_id=int(pred[5] + 1),
-                        category_name=coco_names_80(pred[5] + 1),
+                        category_id=coco_80to91(pred[5] + 1),
+                        category_name=coco_names_91(coco_80to91(pred[5] + 1)),
                     )
                     for pred in img_output
                     if pred[4] > threshold
