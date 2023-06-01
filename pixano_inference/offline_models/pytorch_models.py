@@ -225,7 +225,7 @@ class MaskRCNNv2(OfflineModel):
                     arrow_types.ObjectAnnotation(
                         id=shortuuid.uuid(),
                         view_id=view,
-                        bbox=normalize(xyxy_to_xywh(output["boxes"][i]), w, h),
+                        bbox=normalize(xyxy_to_xywh(output["boxes"][i]), h, w),
                         bbox_confidence=float(output["scores"][i]),
                         bbox_source=self.id,
                         mask=mask_to_rle(unmold_mask(output["masks"][i])),
@@ -310,7 +310,7 @@ class YOLO(OfflineModel):
                     arrow_types.ObjectAnnotation(
                         id=shortuuid.uuid(),
                         view_id=view,
-                        bbox=normalize(xyxy_to_xywh(pred[0:4]), w, h),
+                        bbox=normalize(xyxy_to_xywh(pred[0:4]), h, w),
                         bbox_confidence=float(pred[4]),
                         bbox_source=self.id,
                         category_id=int(pred[5] + 1),

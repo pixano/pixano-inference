@@ -96,7 +96,7 @@ class SAM(OfflineModel):
                     arrow_types.ObjectAnnotation(
                         id=shortuuid.uuid(),
                         view_id=view,
-                        bbox=normalize(output[i]["bbox"], w, h),
+                        bbox=normalize(output[i]["bbox"], h, w),
                         bbox_confidence=float(output[i]["predicted_iou"]),
                         bbox_source=self.id,
                         mask=mask_to_rle(output[i]["segmentation"]),
