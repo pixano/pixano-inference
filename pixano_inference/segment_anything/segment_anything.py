@@ -17,29 +17,27 @@ from pathlib import Path
 import cv2
 import numpy as np
 import pyarrow as pa
+import shortuuid
 import torch
 from onnxruntime.quantization import QuantType
 from onnxruntime.quantization.quantize import quantize_dynamic
-from segment_anything import SamPredictor, sam_model_registry
+from pixano.core import arrow_types
+from pixano.inference import InferenceModel
+from pixano.transforms import mask_to_rle, normalize
+from segment_anything import SamAutomaticMaskGenerator, SamPredictor, sam_model_registry
 from segment_anything.utils.onnx import SamOnnxModel
 
-from pixano.inference import OnlineModel
 
-
-class SAM(OnlineModel):
+class SAM(InferenceModel):
     """Segment Anything Model (SAM)
 
     Attributes:
         name (str): Model name
         id (str): Model ID
-        device (str): Model GPU or CPU device
+        device (str): Model GPU or CPU device (e.g. "cuda", "cpu")
         source (str): Model source
         info (str): Additional model info
-        onnx_path (Path): ONNX Model Path
-        onnx_session (onnxruntime.InferenceSession): ONNX session
-        working (dict): Dictionary of current working data
-        sam (torch.nn.Module): SAM model
-        model (torch.nn.Module): PyTorch Predictor model
+        model (torch.nn.Module): SAM model
     """
 
     def __init__(
@@ -52,7 +50,7 @@ class SAM(OnlineModel):
         """Initialize model
 
         Args:
-            checkpoint_path (Path): Model checkpoint path
+            checkpoint_path (Path): Model checkpoint path.
             size (str, optional): Model size ("b", "l", "h"). Defaults to "h".
             id (str, optional): Previously used ID, generate new ID if "". Defaults to "".
             device (str, optional): Model GPU or CPU device (e.g. "cuda", "cpu"). Defaults to "cuda".
@@ -67,39 +65,65 @@ class SAM(OnlineModel):
         )
 
         # Model
-        self.sam = sam_model_registry[f"vit_{size}"](checkpoint=checkpoint_path)
-        self.sam.to(device=self.device)
-        self.model = SamPredictor(self.sam)
+        self.model = sam_model_registry[f"vit_{size}"](checkpoint=checkpoint_path)
+        self.model.to(device=self.device)
 
         # Model path
         self.checkpoint_path = checkpoint_path
 
-    def __call__(self, input: dict[np.ndarray]) -> np.ndarray:
-        """Return model annotation based on user input
+    def inference_batch(
+        self, batch: pa.RecordBatch, view: str, media_dir: Path, threshold: float = 0.0
+    ) -> list[list[arrow_types.ObjectAnnotation]]:
+        """Inference preannotation for a batch
 
         Args:
-            input (dict[np.ndarray]): User input
+            batch (pa.RecordBatch): Input batch
+            view (str): Dataset view
+            media_dir (Path): Media location
+            threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            np.ndarray: Model annotation masks
+            list[list[arrow_types.ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
         """
 
-        # Preprocess image and user input
-        input["point_coords"] = self.model.transform.apply_coords(
-            input["point_coords"], self.working["image"].shape[:2]
-        ).astype(np.float32)
+        objects = []
 
-        # Inference
-        masks, _, _ = self.onnx_session.run(None, input)
+        # Iterate manually
+        for x in range(batch.num_rows):
+            # Preprocess image
+            img = cv2.imread(str(media_dir / batch[view][x].as_py()._uri))
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-        # Process model outputs
-        self.working["masks"] = masks > self.model.mask_threshold
-        return self.working["masks"]
+            # Inference
+            with torch.no_grad():
+                generator = SamAutomaticMaskGenerator(self.model)
+                output = generator.generate(img)
 
-    def process_batch(
+            # Process model outputs
+            h, w = img.shape[:2]
+            objects.append(
+                [
+                    arrow_types.ObjectAnnotation(
+                        id=shortuuid.uuid(),
+                        view_id=view,
+                        bbox=normalize(output[i]["bbox"], h, w),
+                        bbox_confidence=float(output[i]["predicted_iou"]),
+                        bbox_source=self.id,
+                        mask=mask_to_rle(output[i]["segmentation"]),
+                        mask_source=self.id,
+                        category_id=0,
+                        category_name="N/A",
+                    )
+                    for i in range(len(output))
+                    if output[i]["predicted_iou"] > threshold
+                ]
+            )
+        return objects
+
+    def embedding_batch(
         self, batch: pa.RecordBatch, view: str, media_dir: Path
     ) -> list[np.ndarray]:
-        """Precompute embeddings for a batch
+        """Embedding precomputing for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
@@ -120,14 +144,15 @@ class SAM(OnlineModel):
 
             # Inference
             with torch.no_grad():
-                self.model.set_image(img)
-                img_embedding = self.model.get_image_embedding().cpu().numpy()
+                predictor = SamPredictor(self.model)
+                predictor.set_image(img)
+                img_embedding = predictor.get_image_embedding().cpu().numpy()
 
             # Process model outputs
             embeddings.append(img_embedding)
         return embeddings
 
-    def export_onnx_model(self) -> Path:
+    def export_to_onnx(self) -> Path:
         """Export Torch model to ONNX
 
         Returns:

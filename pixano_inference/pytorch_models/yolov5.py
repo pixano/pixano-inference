@@ -13,59 +13,56 @@
 
 from pathlib import Path
 
-import cv2
 import pyarrow as pa
 import shortuuid
 import torch
-from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
-
+from PIL import Image
 from pixano.core import arrow_types
-from pixano.inference import OfflineModel
-from pixano.transforms import mask_to_rle, normalize
+from pixano.inference import InferenceModel
+from pixano.transforms import coco_80to91, coco_names_91, normalize, xyxy_to_xywh
 
 
-class SAM(OfflineModel):
-    """Segment Anything Model (SAM)
+class YOLOv5(InferenceModel):
+    """PyTorch Hub YOLOv5 Model
 
     Attributes:
         name (str): Model name
         id (str): Model ID
-        device (str): Model GPU or CPU device (e.g. "cuda", "cpu")
+        device (str): Model GPU or CPU device
         source (str): Model source
         info (str): Additional model info
-        model (torch.nn.Module): SAM model
         model (torch.nn.Module): PyTorch model
     """
 
-    def __init__(
-        self, checkpoint_path: Path, size: str = "h", id: str = "", device: str = "cuda"
-    ) -> None:
+    def __init__(self, size: str = "s", id: str = "", device: str = "cuda") -> None:
         """Initialize model
 
         Args:
-            checkpoint_path (Path): Model checkpoint path.
-            size (str, optional): Model size ("b", "l", "h"). Defaults to "h".
+            size (str, optional): Model size ("n", "s", "m", "x"). Defaults to "s".
             id (str, optional): Previously used ID, generate new ID if "". Defaults to "".
             device (str, optional): Model GPU or CPU device (e.g. "cuda", "cpu"). Defaults to "cuda".
         """
 
         super().__init__(
-            name=f"SAM_ViT_{size.upper()}",
+            name=f"YOLOv5{size}",
             id=id,
             device=device,
-            source="GitHub",
-            info=f"Segment Anything Model (SAM), ViT-{size.upper()} Backbone",
+            source="PyTorch Hub",
+            info=f"YOLOv5 model, {size.upper()} backbone",
         )
 
         # Model
-        self.sam = sam_model_registry[f"vit_{size}"](checkpoint=checkpoint_path)
-        self.sam.to(device=self.device)
-        self.model = SamAutomaticMaskGenerator(self.sam)
+        self.model = torch.hub.load(
+            "ultralytics/yolov5",
+            model=f"yolov5{size}",
+            pretrained=True,
+        )
+        self.model.to(self.device)
 
-    def __call__(
+    def inference_batch(
         self, batch: pa.RecordBatch, view: str, media_dir: Path, threshold: float = 0.0
     ) -> list[list[arrow_types.ObjectAnnotation]]:
-        """Returns model inferences for a given batch of images
+        """Inference preannotation for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
@@ -77,35 +74,33 @@ class SAM(OfflineModel):
             list[list[arrow_types.ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
         """
 
+        # Preprocess images
+        imgs = [
+            Image.open(media_dir / batch[view][x].as_py()._uri).convert("RGB")
+            for x in range(batch.num_rows)
+        ]
+
+        # Inference
+        outputs = self.model(imgs)
+
+        # Process model outputs
         objects = []
-
-        # Iterate manually
-        for x in range(batch.num_rows):
-            # Preprocess image
-            img = cv2.imread(str(media_dir / batch[view][x].as_py()._uri))
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-            # Inference
-            with torch.no_grad():
-                output = self.model.generate(img)
-
-            # Process model outputs
-            h, w = img.shape[:2]
+        for img, img_output in zip(imgs, outputs.xyxy):
+            w, h = img.size
             objects.append(
                 [
                     arrow_types.ObjectAnnotation(
                         id=shortuuid.uuid(),
                         view_id=view,
-                        bbox=normalize(output[i]["bbox"], h, w),
-                        bbox_confidence=float(output[i]["predicted_iou"]),
+                        bbox=normalize(xyxy_to_xywh(pred[0:4]), h, w),
+                        bbox_confidence=float(pred[4]),
                         bbox_source=self.id,
-                        mask=mask_to_rle(output[i]["segmentation"]),
-                        mask_source=self.id,
-                        category_id=0,
-                        category_name="N/A",
+                        category_id=coco_80to91(pred[5] + 1),
+                        category_name=coco_names_91(coco_80to91(pred[5] + 1)),
                     )
-                    for i in range(len(output))
-                    if output[i]["predicted_iou"] > threshold
+                    for pred in img_output
+                    if pred[4] > threshold
                 ]
             )
+
         return objects
