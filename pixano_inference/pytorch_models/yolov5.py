@@ -19,7 +19,7 @@ import torch
 from PIL import Image
 from pixano.core import arrow_types
 from pixano.inference import InferenceModel
-from pixano.transforms import coco_80to91, coco_names_91, normalize, xyxy_to_xywh
+from pixano.transforms import coco_ids_80to91, coco_names_91, normalize, xyxy_to_xywh
 
 
 class YOLOv5(InferenceModel):
@@ -95,8 +95,8 @@ class YOLOv5(InferenceModel):
                         bbox=normalize(xyxy_to_xywh(pred[0:4]), h, w),
                         bbox_confidence=float(pred[4]),
                         bbox_source=self.id,
-                        category_id=coco_80to91(pred[5] + 1),
-                        category_name=coco_names_91(coco_80to91(pred[5] + 1)),
+                        category_id=coco_ids_80to91(pred[5] + 1),
+                        category_name=coco_names_91(coco_ids_80to91(pred[5] + 1)),
                     )
                     for pred in img_output
                     if pred[4] > threshold
