@@ -12,9 +12,9 @@
 
 ***Under active development, subject to API change***
 
-[![License](https://img.shields.io/badge/license-CeCILL--C-blue.svg)](LICENSE)
-[![GitHub version](https://img.shields.io/github/v/release/pixano/pixano-inference?include_prereleases)](https://github.com/pixano/pixano-inference/releases)
-[![Python version](https://img.shields.io/badge/python-3.10+-important)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-CeCILL--C-green.svg)](LICENSE)
+[![GitHub version](https://img.shields.io/badge/release-v0.1.1-blue?logo=github)](https://github.com/pixano/pixano-inference/releases)
+[![Python version](https://img.shields.io/pypi/pyversions/pixano?color=important&logo=python&logoColor=white)](https://www.python.org/downloads/)
 
 </div>
 
