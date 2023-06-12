@@ -1,6 +1,16 @@
 # Release notes
 
 
+# Pixano Inference v0.1.2
+
+### Added
+- Add release notes in new RELEASE.md file
+
+### Fixed
+- Update project description in README
+- Update Python version requirement and License classifier in pyproject.toml
+
+
 ## Pixano Inference v0.1.1
 
 ### Fixed
