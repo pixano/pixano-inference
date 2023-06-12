@@ -7,7 +7,7 @@ name = "pixano-inference"
 dynamic = ["version"]
 description = 'Inference models for Pixano, data-centric AI building blocks for computer vision applications' 
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = "~=3.10"
 license = "CeCILL-C"
 authors = [{name = "Pixano Developers", email = "pixano@cea.fr"}]
 keywords = [
@@ -18,11 +18,8 @@ keywords = [
 ]
 classifiers = [
   "Development Status :: 4 - Beta",
-  "Programming Language :: Python",
   "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: Implementation :: CPython",
-  "Programming Language :: Python :: Implementation :: PyPy",
+  "License :: CeCILL-C Free Software License Agreement (CECILL-C)",
 ]
 dependencies = [
   "pixano >= 0.2.0",
@@ -41,7 +38,6 @@ dependencies = [
   "scipy >= 1.4.1",
   "thop >= 0.1.1",
 ]
-
 
 [project.urls]
 Documentation = "https://github.com/pixano/pixano-inference#readme"
