@@ -72,14 +72,14 @@ class SAM(InferenceModel):
         self.checkpoint_path = checkpoint_path
 
     def inference_batch(
-        self, batch: pa.RecordBatch, view: str, media_dir: Path, threshold: float = 0.0
+        self, batch: pa.RecordBatch, view: str, uri_prefix: str, threshold: float = 0.0
     ) -> list[list[arrow_types.ObjectAnnotation]]:
         """Inference preannotation for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
             view (str): Dataset view
-            media_dir (Path): Media location
+            uri_prefix (str): URI prefix for media files
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
@@ -91,16 +91,16 @@ class SAM(InferenceModel):
         # Iterate manually
         for x in range(batch.num_rows):
             # Preprocess image
-            img = cv2.imread(str(media_dir / batch[view][x].as_py()._uri))
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            im = batch[view][x].as_py(uri_prefix).as_cv2()
+            im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
             # Inference
             with torch.no_grad():
                 generator = SamAutomaticMaskGenerator(self.model)
-                output = generator.generate(img)
+                output = generator.generate(im)
 
             # Process model outputs
-            h, w = img.shape[:2]
+            h, w = im.shape[:2]
             objects.append(
                 [
                     arrow_types.ObjectAnnotation(
@@ -121,14 +121,14 @@ class SAM(InferenceModel):
         return objects
 
     def embedding_batch(
-        self, batch: pa.RecordBatch, view: str, media_dir: Path
+        self, batch: pa.RecordBatch, view: str, uri_prefix: str
     ) -> list[np.ndarray]:
         """Embedding precomputing for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
             view (str): Dataset view
-            media_dir (Path): Media location
+            uri_prefix (str): URI prefix for media files
 
         Returns:
             list[np.ndarray]: Model embeddings as NumPy arrays
@@ -139,13 +139,13 @@ class SAM(InferenceModel):
         # Iterate manually
         for x in range(batch.num_rows):
             # Preprocess image
-            img = cv2.imread(str(media_dir / batch[view][x].as_py()._uri))
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            im = batch[view][x].as_py(uri_prefix).as_cv2()
+            im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
             # Inference
             with torch.no_grad():
                 predictor = SamPredictor(self.model)
-                predictor.set_image(img)
+                predictor.set_image(im)
                 img_embedding = predictor.get_image_embedding().cpu().numpy()
 
             # Process model outputs

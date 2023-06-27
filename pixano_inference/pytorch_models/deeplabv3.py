@@ -93,14 +93,14 @@ class DeepLabV3(InferenceModel):
         )
 
     def inference_batch(
-        self, batch: pa.RecordBatch, view: str, media_dir: Path, threshold: float = 0.0
+        self, batch: pa.RecordBatch, view: str, uri_prefix: str, threshold: float = 0.0
     ) -> list[list[arrow_types.ObjectAnnotation]]:
         """Inference preannotation for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
             view (str): Dataset view
-            media_dir (Path): Media location
+            uri_prefix (str): URI prefix for media files
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
@@ -109,15 +109,15 @@ class DeepLabV3(InferenceModel):
 
         objects = []
 
-        # PyTorch Transforms don't support image batches, so iterate manually
+        # PyTorch Transforms don't support different-sized image batches, so iterate manually
         for x in range(batch.num_rows):
             # Preprocess image
-            img = Image.open(media_dir / batch[view][x].as_py()._uri).convert("RGB")
-            img_tensor = self.transforms(img).unsqueeze(0).to(self.device)
+            im = batch[view][x].as_py(uri_prefix).as_pillow()
+            im_tensor = self.transforms(im).unsqueeze(0).to(self.device)
 
             # Inference
             with torch.no_grad():
-                output = self.model(img_tensor)["out"][0]
+                output = self.model(im_tensor)["out"][0]
 
             # Process model outputs
             sem_mask = output.argmax(0)

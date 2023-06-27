@@ -91,14 +91,14 @@ class MaskRCNNv2(InferenceModel):
         self.transforms = MaskRCNN_ResNet50_FPN_V2_Weights.COCO_V1.transforms()
 
     def inference_batch(
-        self, batch: pa.RecordBatch, view: str, media_dir: Path, threshold: float = 0.0
+        self, batch: pa.RecordBatch, view: str, uri_prefix: str, threshold: float = 0.0
     ) -> list[list[arrow_types.ObjectAnnotation]]:
         """Inference preannotation for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
             view (str): Dataset view
-            media_dir (Path): Media location
+            uri_prefix (str): URI prefix for media files
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
@@ -107,18 +107,18 @@ class MaskRCNNv2(InferenceModel):
 
         objects = []
 
-        # PyTorch Transforms don't support image batches, so iterate manually
+        # PyTorch Transforms don't support different-sized image batches, so iterate manually
         for x in range(batch.num_rows):
             # Preprocess image
-            img = Image.open(media_dir / batch[view][x].as_py()._uri).convert("RGB")
-            img_tensor = self.transforms(img).unsqueeze(0).to(self.device)
+            im = batch[view][x].as_py(uri_prefix).as_pillow()
+            im_tensor = self.transforms(im).unsqueeze(0).to(self.device)
 
             # Inference
             with torch.no_grad():
-                output = self.model(img_tensor)[0]
+                output = self.model(im_tensor)[0]
 
             # Process model outputs
-            w, h = img.size
+            w, h = im.size
             objects.append(
                 [
                     arrow_types.ObjectAnnotation(

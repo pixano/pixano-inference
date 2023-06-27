@@ -60,32 +60,31 @@ class YOLOv5(InferenceModel):
         self.model.to(self.device)
 
     def inference_batch(
-        self, batch: pa.RecordBatch, view: str, media_dir: Path, threshold: float = 0.0
+        self, batch: pa.RecordBatch, view: str, uri_prefix: str, threshold: float = 0.0
     ) -> list[list[arrow_types.ObjectAnnotation]]:
         """Inference preannotation for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
             view (str): Dataset view
-            media_dir (Path): Media location
+            uri_prefix (str): URI prefix for media files
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
             list[list[arrow_types.ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
         """
 
-        # Preprocess images
-        imgs = [
-            Image.open(media_dir / batch[view][x].as_py()._uri).convert("RGB")
-            for x in range(batch.num_rows)
+        # Preprocess image batch
+        im_batch = [
+            batch[view][x].as_py(uri_prefix).as_pillow() for x in range(batch.num_rows)
         ]
 
         # Inference
-        outputs = self.model(imgs)
+        outputs = self.model(im_batch)
 
         # Process model outputs
         objects = []
-        for img, img_output in zip(imgs, outputs.xyxy):
+        for img, img_output in zip(im_batch, outputs.xyxy):
             w, h = img.size
             objects.append(
                 [
