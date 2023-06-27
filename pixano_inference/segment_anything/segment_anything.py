@@ -152,12 +152,16 @@ class SAM(InferenceModel):
             embeddings.append(img_embedding)
         return embeddings
 
-    def export_to_onnx(self) -> Path:
+    def export_to_onnx(self, library_dir: Path):
         """Export Torch model to ONNX
 
-        Returns:
-            Path: ONNX model path
+        Args:
+            library_dir (Path): Dataset library directory
         """
+
+        # Model directory
+        model_dir = library_dir / "models"
+        model_dir.mkdir(parents=True, exist_ok=True)
 
         # Put model to CPU for export
         self.sam.to("cpu")
@@ -186,7 +190,7 @@ class SAM(InferenceModel):
             "orig_im_size": torch.tensor([1500, 2250], dtype=torch.float),
         }
         output_names = ["masks", "iou_predictions", "low_res_masks"]
-        onnx_path = self.checkpoint_path.as_posix().replace(".pth", ".onnx")
+        onnx_path = model_dir / self.checkpoint_path.name.replace(".pth", ".onnx")
 
         # Export model
         with warnings.catch_warnings():
@@ -217,5 +221,3 @@ class SAM(InferenceModel):
 
         # Put model back to device after export
         self.sam.to(self.device)
-
-        return onnx_path
