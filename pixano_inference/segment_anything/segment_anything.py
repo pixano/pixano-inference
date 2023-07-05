@@ -22,7 +22,7 @@ import torch
 from onnxruntime.quantization import QuantType
 from onnxruntime.quantization.quantize import quantize_dynamic
 from pixano.core import arrow_types
-from pixano.inference import InferenceModel
+from pixano.models import InferenceModel
 from pixano.transforms import mask_to_rle, normalize
 from segment_anything import SamAutomaticMaskGenerator, SamPredictor, sam_model_registry
 from segment_anything.utils.onnx import SamOnnxModel

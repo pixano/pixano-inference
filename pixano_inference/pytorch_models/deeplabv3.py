@@ -20,7 +20,7 @@ import torch
 import torchvision.transforms as T
 from PIL import Image
 from pixano.core import arrow_types
-from pixano.inference import InferenceModel
+from pixano.models import InferenceModel
 from pixano.transforms import mask_to_rle, voc_names
 
 

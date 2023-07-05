@@ -18,7 +18,7 @@ import shortuuid
 import torch
 from PIL import Image
 from pixano.core import arrow_types
-from pixano.inference import InferenceModel
+from pixano.models import InferenceModel
 from pixano.transforms import coco_ids_80to91, coco_names_91, normalize, xyxy_to_xywh
 
 

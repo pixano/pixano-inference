@@ -19,7 +19,7 @@ import tensorflow as tf
 import tensorflow_hub as hub
 from PIL import Image
 from pixano.core import arrow_types
-from pixano.inference import InferenceModel
+from pixano.models import InferenceModel
 from pixano.transforms import coco_names_91, xyxy_to_xywh
 
 

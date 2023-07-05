@@ -19,7 +19,7 @@ import shortuuid
 import torch
 from PIL import Image
 from pixano.core import arrow_types
-from pixano.inference import InferenceModel
+from pixano.models import InferenceModel
 from pixano.transforms import coco_names_91, mask_to_rle, normalize, xyxy_to_xywh
 from torchvision.models.detection import (
     MaskRCNN_ResNet50_FPN_V2_Weights,
