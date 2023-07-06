@@ -5,7 +5,7 @@
 
 ### Fixed
 - Fix uses of Image type for compatibility with Pixano 0.3.0
-
+- Fix calls of InferenceModel for compatibility with Pixano 0.3.0
 
 # Pixano Inference v0.1.2
 
