@@ -164,16 +164,16 @@ class SAM(InferenceModel):
         model_dir.mkdir(parents=True, exist_ok=True)
 
         # Put model to CPU for export
-        self.sam.to("cpu")
+        self.model.to("cpu")
 
         # Export settings
-        onnx_model = SamOnnxModel(self.sam, return_single_mask=True)
+        onnx_model = SamOnnxModel(self.model, return_single_mask=True)
         dynamic_axes = {
             "point_coords": {1: "num_points"},
             "point_labels": {1: "num_points"},
         }
-        embed_dim = self.sam.prompt_encoder.embed_dim
-        embed_size = self.sam.prompt_encoder.image_embedding_size
+        embed_dim = self.model.prompt_encoder.embed_dim
+        embed_size = self.model.prompt_encoder.image_embedding_size
         mask_input_size = [4 * x for x in embed_size]
         dummy_inputs = {
             "image_embeddings": torch.randn(
@@ -220,4 +220,4 @@ class SAM(InferenceModel):
         )
 
         # Put model back to device after export
-        self.sam.to(self.device)
+        self.model.to(self.device)
