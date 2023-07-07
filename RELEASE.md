@@ -1,6 +1,12 @@
 # Release notes
 
 
+# Pixano Inference v0.1.5
+
+### Fixed
+- Fix README logo and links
+
+
 # Pixano Inference v0.1.4
 
 ### Fixed
