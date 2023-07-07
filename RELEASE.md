@@ -1,6 +1,12 @@
 # Release notes
 
 
+# Pixano Inference v0.1.4
+
+### Fixed
+- Fix export to ONNX for SAM
+
+
 # Pixano Inference v0.1.3
 
 ### Fixed
