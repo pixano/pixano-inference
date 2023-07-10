@@ -11,6 +11,9 @@
 *.sw?
 *lock.yaml
 
+# Docs
+site
+
 # Environment
 .ipynb_checkpoints
 __pycache__
