@@ -6,6 +6,10 @@ All notable changes to Pixano will be documented in this file.
 
 ## [Unreleased]
 
+
+
+## [0.1.6] - 2023-07-10
+
 ### Added
 - Create documentation website
 
@@ -76,6 +80,7 @@ All notable changes to Pixano will be documented in this file.
 
 
 [Unreleased]: https://github.com/pixano/pixano-inference/compare/v0.1.5...develop
+[0.1.6]: https://github.com/pixano/pixano-inference/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/pixano/pixano-inference/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/pixano/pixano-inference/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/pixano/pixano-inference/compare/v0.1.2...v0.1.3
