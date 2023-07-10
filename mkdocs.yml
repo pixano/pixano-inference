@@ -1,0 +1,101 @@
+site_name: Pixano Inference Documentation
+theme:
+  name: material
+  logo: assets/pixano_white.png
+  favicon: assets/pixano.png
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      primary: pink
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      primary: pink
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Poppins
+  features:
+    - navigation.instant
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.tracking
+    - navigation.top
+    - navigation.indexes
+    - toc.integrate
+repo_url: https://github.com/pixano/pixano-inference
+repo_name: pixano/pixano-inference
+copyright: Licensed under the CeCILL-C license
+extra:
+  social:
+    - icon: material/email-outline
+      link: mailto:pixano@cea.fr
+      name: Contact us
+    - icon: material/web
+      link: https://list.cea.fr/en/
+      name: CEA LIST
+    - icon: fontawesome/brands/github 
+      link: https://github.com/pixano/pixano
+      name: Pixano on GitHub
+plugins:
+- search
+- autorefs
+- mkdocstrings:
+    handlers:
+      python:
+        paths: ["pixano_inference"]
+        import:
+          - https://docs.python.org/3.10/objects.inv
+          - https://numpy.org/doc/1.23/objects.inv
+          - https://pandas.pydata.org/pandas-docs/version/1.5/objects.inv
+          - https://pillow.readthedocs.io/en/stable/objects.inv
+          - https://arrow.apache.org/docs/objects.inv
+          - https://docs.pydantic.dev/2.0/objects.inv # no objects.inv available for 1.10
+          - https://ipython.readthedocs.io/en/8.13.2/objects.inv
+          - https://pytorch.org/docs/master/objects.inv
+        options:
+          docstring_style: google
+          docstring_options:
+            ignore_init_summary: yes
+          show_submodules: no
+          docstring_section_style: table
+          members_order: alphabetical
+          merge_init_into_class: yes
+          show_root_heading: true
+          show_source: true
+          heading_level: 1
+          
+nav:
+
+- "Home": index.md
+
+- "Getting started":
+  - user/index.md
+  - "Installing Pixano Inference": user/install.md
+  - "Pre-annotation": user/pre_annotation.md
+  - "Interactive annotation": user/interactive_annotation.md
+  
+- "API reference": 
+  - code/index.md
+
+  - "pytorch_models":
+    - "DeepLabV3": code/pytorch_models/deeplabv3.md
+    - "MaskRCNNv2": code/pytorch_models/maskrcnnv2.md
+    - "YOLOv5": code/pytorch_models/yolov5.md
+
+  - "segment_anything":
+    - "SAM": code/segment_anything/segment_anything.md
+  
+  - "tensorflow_models":
+    - "EfficientDet": code/tensorflow_models/efficientdet.md
+    - "FasterRCNN": code/tensorflow_models/fasterrcnn.md
+
+- "Pixano": https://pixano.github.io
