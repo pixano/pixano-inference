@@ -74,7 +74,7 @@ class SAM(InferenceModel):
     def inference_batch(
         self, batch: pa.RecordBatch, view: str, uri_prefix: str, threshold: float = 0.0
     ) -> list[list[arrow_types.ObjectAnnotation]]:
-        """Inference preannotation for a batch
+        """Inference pre-annotation for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
