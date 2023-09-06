@@ -57,46 +57,62 @@ class YOLOv5(InferenceModel):
         self.model.to(self.device)
 
     def inference_batch(
-        self, batch: pa.RecordBatch, view: str, uri_prefix: str, threshold: float = 0.0
-    ) -> list[list[ObjectAnnotation]]:
+        self,
+        batch: pa.RecordBatch,
+        views: list[str],
+        uri_prefix: str,
+        threshold: float = 0.0,
+    ) -> list[dict]:
         """Inference pre-annotation for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
-            view (str): Dataset view
+            views (list[str]): Dataset views
             uri_prefix (str): URI prefix for media files
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            list[list[ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
+            list[dict]: Inference rows
         """
 
-        # Preprocess image batch
-        im_batch = [
-            batch[view][x].as_py(uri_prefix).as_pillow() for x in range(batch.num_rows)
+        rows = [
+            {
+                "id": batch["id"][x].as_py(),
+                "objects": [],
+                "split": batch["split"][x].as_py(),
+            }
+            for x in range(batch.num_rows)
         ]
+        for view in views:
+            # Preprocess image batch
+            im_batch = []
+            for x in range(batch.num_rows):
+                im = batch[view][x].as_py()
+                im.uri_prefix = uri_prefix
+                im_batch.append(im.as_pillow())
 
-        # Inference
-        outputs = self.model(im_batch)
+            # Inference
+            outputs = self.model(im_batch)
 
-        # Process model outputs
-        objects = []
-        for img, img_output in zip(im_batch, outputs.xyxy):
-            w, h = img.size
-            objects.append(
-                [
-                    ObjectAnnotation(
-                        id=shortuuid.uuid(),
-                        view_id=view,
-                        bbox=normalize_coords(xyxy_to_xywh(pred[0:4]), h, w),
-                        bbox_confidence=float(pred[4]),
-                        bbox_source=self.id,
-                        category_id=coco_ids_80to91(pred[5] + 1),
-                        category_name=coco_names_91(coco_ids_80to91(pred[5] + 1)),
-                    )
-                    for pred in img_output
-                    if pred[4] > threshold
-                ]
-            )
+            # Process model outputs
+            for x, img, img_output in zip(
+                range(batch.num_rows), im_batch, outputs.xyxy
+            ):
+                w, h = img.size
+                rows[x]["objects"].extend(
+                    [
+                        ObjectAnnotation(
+                            id=shortuuid.uuid(),
+                            view_id=view,
+                            bbox=normalize_coords(xyxy_to_xywh(pred[0:4]), h, w),
+                            bbox_confidence=float(pred[4]),
+                            bbox_source=self.id,
+                            category_id=coco_ids_80to91(pred[5] + 1),
+                            category_name=coco_names_91(coco_ids_80to91(pred[5] + 1)),
+                        )
+                        for pred in img_output
+                        if pred[4] > threshold
+                    ]
+                )
 
-        return objects
+        return rows

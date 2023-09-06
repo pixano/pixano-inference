@@ -90,48 +90,63 @@ class DeepLabV3(InferenceModel):
         )
 
     def inference_batch(
-        self, batch: pa.RecordBatch, view: str, uri_prefix: str, threshold: float = 0.0
-    ) -> list[list[ObjectAnnotation]]:
+        self,
+        batch: pa.RecordBatch,
+        views: list[str],
+        uri_prefix: str,
+        threshold: float = 0.0,
+    ) -> list[dict]:
         """Inference pre-annotation for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
-            view (str): Dataset view
+            views (list[str]): Dataset views
             uri_prefix (str): URI prefix for media files
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            list[list[ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
+            list[dict]: Inference rows
         """
 
-        objects = []
+        rows = [
+            {
+                "id": batch["id"][x].as_py(),
+                "objects": [],
+                "split": batch["split"][x].as_py(),
+            }
+            for x in range(batch.num_rows)
+        ]
 
-        # PyTorch Transforms don't support different-sized image batches, so iterate manually
-        for x in range(batch.num_rows):
-            # Preprocess image
-            im = batch[view][x].as_py(uri_prefix).as_pillow()
-            im_tensor = self.transforms(im).unsqueeze(0).to(self.device)
+        for view in views:
+            # PyTorch Transforms don't support different-sized image batches, so iterate manually
+            for x in range(batch.num_rows):
+                # Preprocess image
+                im = batch[view][x].as_py()
+                im.uri_prefix = uri_prefix
+                im = im.as_pillow()
+                im_tensor = self.transforms(im).unsqueeze(0).to(self.device)
 
-            # Inference
-            with torch.no_grad():
-                output = self.model(im_tensor)["out"][0]
+                # Inference
+                with torch.no_grad():
+                    output = self.model(im_tensor)["out"][0]
 
-            # Process model outputs
-            sem_mask = output.argmax(0)
-            labels = torch.unique(sem_mask)[1:]
-            masks = sem_mask == labels[:, None, None]
+                # Process model outputs
+                sem_mask = output.argmax(0)
+                labels = torch.unique(sem_mask)[1:]
+                masks = sem_mask == labels[:, None, None]
 
-            objects.append(
-                [
-                    ObjectAnnotation(
-                        id=shortuuid.uuid(),
-                        view_id=view,
-                        mask=mask_to_rle(unmold_mask(mask)),
-                        mask_source=self.id,
-                        category_id=int(label),
-                        category_name=voc_names(label),
-                    )
-                    for label, mask in zip(labels, masks)
-                ]
-            )
-        return objects
+                rows[x]["objects"].extend(
+                    [
+                        ObjectAnnotation(
+                            id=shortuuid.uuid(),
+                            view_id=view,
+                            mask=mask_to_rle(unmold_mask(mask)),
+                            mask_source=self.id,
+                            category_id=int(label),
+                            category_name=voc_names(label),
+                        )
+                        for label, mask in zip(labels, masks)
+                    ]
+                )
+
+        return rows

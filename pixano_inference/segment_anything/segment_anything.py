@@ -12,6 +12,7 @@
 # http://www.cecill.info
 
 import warnings
+from io import BytesIO
 from pathlib import Path
 
 import cv2
@@ -72,85 +73,112 @@ class SAM(InferenceModel):
         self.checkpoint_path = checkpoint_path
 
     def inference_batch(
-        self, batch: pa.RecordBatch, view: str, uri_prefix: str, threshold: float = 0.0
-    ) -> list[list[ObjectAnnotation]]:
+        self,
+        batch: pa.RecordBatch,
+        views: list[str],
+        uri_prefix: str,
+        threshold: float = 0.0,
+    ) -> list[dict]:
         """Inference pre-annotation for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
-            view (str): Dataset view
+            views (list[str]): Dataset views
             uri_prefix (str): URI prefix for media files
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            list[list[ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
+            list[dict]: Inference rows
         """
 
-        objects = []
+        rows = [
+            {
+                "id": batch["id"][x].as_py(),
+                "objects": [],
+                "split": batch["split"][x].as_py(),
+            }
+            for x in range(batch.num_rows)
+        ]
 
-        # Iterate manually
-        for x in range(batch.num_rows):
-            # Preprocess image
-            im = batch[view][x].as_py(uri_prefix).as_cv2()
-            im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        for view in views:
+            # Iterate manually
+            for x in range(batch.num_rows):
+                # Preprocess image
+                im = batch[view][x].as_py()
+                im.uri_prefix = uri_prefix
+                im = im.as_cv2()
+                im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
-            # Inference
-            with torch.no_grad():
-                generator = SamAutomaticMaskGenerator(self.model)
-                output = generator.generate(im)
+                # Inference
+                with torch.no_grad():
+                    generator = SamAutomaticMaskGenerator(self.model)
+                    output = generator.generate(im)
 
-            # Process model outputs
-            h, w = im.shape[:2]
-            objects.append(
-                [
-                    ObjectAnnotation(
-                        id=shortuuid.uuid(),
-                        view_id=view,
-                        bbox=normalize_coords(output[i]["bbox"], h, w),
-                        bbox_confidence=float(output[i]["predicted_iou"]),
-                        bbox_source=self.id,
-                        mask=mask_to_rle(output[i]["segmentation"]),
-                        mask_source=self.id,
-                        category_id=0,
-                        category_name="N/A",
-                    )
-                    for i in range(len(output))
-                    if output[i]["predicted_iou"] > threshold
-                ]
-            )
-        return objects
+                # Process model outputs
+                h, w = im.shape[:2]
+                rows[x]["objects"].extend(
+                    [
+                        ObjectAnnotation(
+                            id=shortuuid.uuid(),
+                            view_id=view,
+                            bbox=normalize_coords(output[i]["bbox"], h, w),
+                            bbox_confidence=float(output[i]["predicted_iou"]),
+                            bbox_source=self.id,
+                            mask=mask_to_rle(output[i]["segmentation"]),
+                            mask_source=self.id,
+                            category_id=0,
+                            category_name="N/A",
+                        )
+                        for i in range(len(output))
+                        if output[i]["predicted_iou"] > threshold
+                    ]
+                )
+
+        return rows
 
     def embedding_batch(
-        self, batch: pa.RecordBatch, view: str, uri_prefix: str
+        self, batch: pa.RecordBatch, views: list[str], uri_prefix: str
     ) -> list[np.ndarray]:
         """Embedding precomputing for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
-            view (str): Dataset view
+            views (list[str]): Dataset views
             uri_prefix (str): URI prefix for media files
 
         Returns:
             list[np.ndarray]: Model embeddings as NumPy arrays
         """
 
-        embeddings = []
+        rows = [
+            {
+                "id": batch["id"][x].as_py(),
+                "split": batch["split"][x].as_py(),
+            }
+            for x in range(batch.num_rows)
+        ]
 
-        # Iterate manually
-        for x in range(batch.num_rows):
-            # Preprocess image
-            im = batch[view][x].as_py(uri_prefix).as_cv2()
-            im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        for view in views:
+            # Iterate manually
+            for x in range(batch.num_rows):
+                # Preprocess image
+                im = batch[view][x].as_py()
+                im.uri_prefix = uri_prefix
+                im = im.as_cv2()
+                im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
-            # Inference
-            with torch.no_grad():
-                predictor = SamPredictor(self.model)
-                predictor.set_image(im)
-                img_embedding = predictor.get_image_embedding().cpu().numpy()
+                # Inference
+                with torch.no_grad():
+                    predictor = SamPredictor(self.model)
+                    predictor.set_image(im)
+                    img_embedding = predictor.get_image_embedding().cpu().numpy()
 
-            # Process model outputs
-            embeddings.append(img_embedding)
-        return embeddings
+                # Process model outputs
+                emb_bytes = BytesIO()
+                np.save(emb_bytes, img_embedding)
+                rows[x][f"{view}_embedding"] = emb_bytes.getvalue()
+
+        return rows
 
     def export_to_onnx(self, library_dir: Path):
         """Export Torch model to ONNX

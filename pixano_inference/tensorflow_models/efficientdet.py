@@ -53,53 +53,70 @@ class EfficientDet(InferenceModel):
             self.model = hub.load("https://tfhub.dev/tensorflow/efficientdet/d1/1")
 
     def inference_batch(
-        self, batch: pa.RecordBatch, view: str, uri_prefix: str, threshold: float = 0.0
-    ) -> list[list[ObjectAnnotation]]:
+        self,
+        batch: pa.RecordBatch,
+        views: list[str],
+        uri_prefix: str,
+        threshold: float = 0.0,
+    ) -> list[dict]:
         """Inference pre-annotation for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
-            view (str): Dataset view
+            views (list[str]): Dataset views
             uri_prefix (str): URI prefix for media files
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            list[list[ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
+            list[dict]: Inference rows
         """
 
-        objects = []
+        rows = [
+            {
+                "id": batch["id"][x].as_py(),
+                "objects": [],
+                "split": batch["split"][x].as_py(),
+            }
+            for x in range(batch.num_rows)
+        ]
 
-        # TF.Hub Models don't support image batches, so iterate manually
-        for x in range(batch.num_rows):
-            # Preprocess image
-            im = batch[view][x].as_py(uri_prefix).as_pillow()
-            im_tensor = tf.expand_dims(tf.keras.utils.img_to_array(im), 0)
-            im_tensor = tf.image.convert_image_dtype(im_tensor, dtype="uint8")
+        for view in views:
+            # TF.Hub Models don't support image batches, so iterate manually
+            for x in range(batch.num_rows):
+                # Preprocess image
+                im = batch[view][x].as_py()
+                im.uri_prefix = uri_prefix
+                im = im.as_pillow()
+                im_tensor = tf.expand_dims(tf.keras.utils.img_to_array(im), 0)
+                im_tensor = tf.image.convert_image_dtype(im_tensor, dtype="uint8")
 
-            # Inference
-            output = self.model(im_tensor)
+                # Inference
+                output = self.model(im_tensor)
 
-            # Process model outputs
-            objects.append(
-                [
-                    ObjectAnnotation(
-                        id=shortuuid.uuid(),
-                        view_id=view,
-                        bbox=xyxy_to_xywh(
-                            [
-                                output["detection_boxes"][0][i][1],
-                                output["detection_boxes"][0][i][0],
-                                output["detection_boxes"][0][i][3],
-                                output["detection_boxes"][0][i][2],
-                            ]
-                        ),
-                        bbox_confidence=float(output["detection_scores"][0][i]),
-                        bbox_source=self.id,
-                        category_id=int(output["detection_classes"][0][i]),
-                        category_name=coco_names_91(output["detection_classes"][0][i]),
-                    )
-                    for i in range(int(output["num_detections"]))
-                    if output["detection_scores"][0][i] > threshold
-                ]
-            )
-        return objects
+                # Process model outputs
+                rows[x]["objects"].extend(
+                    [
+                        ObjectAnnotation(
+                            id=shortuuid.uuid(),
+                            view_id=view,
+                            bbox=xyxy_to_xywh(
+                                [
+                                    output["detection_boxes"][0][i][1],
+                                    output["detection_boxes"][0][i][0],
+                                    output["detection_boxes"][0][i][3],
+                                    output["detection_boxes"][0][i][2],
+                                ]
+                            ),
+                            bbox_confidence=float(output["detection_scores"][0][i]),
+                            bbox_source=self.id,
+                            category_id=int(output["detection_classes"][0][i]),
+                            category_name=coco_names_91(
+                                output["detection_classes"][0][i]
+                            ),
+                        )
+                        for i in range(int(output["num_detections"]))
+                        if output["detection_scores"][0][i] > threshold
+                    ]
+                )
+
+        return rows
