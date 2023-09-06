@@ -11,17 +11,14 @@
 #
 # http://www.cecill.info
 
-from pathlib import Path
-
 import numpy as np
 import pyarrow as pa
 import shortuuid
 import torch
 import torchvision.transforms as T
-from PIL import Image
-from pixano.core import arrow_types
+from pixano.core import ObjectAnnotation
 from pixano.models import InferenceModel
-from pixano.transforms import mask_to_rle, voc_names
+from pixano.utils import mask_to_rle, voc_names
 
 
 def unmold_mask(mask: torch.Tensor, threshold: float = 0.5):
@@ -94,7 +91,7 @@ class DeepLabV3(InferenceModel):
 
     def inference_batch(
         self, batch: pa.RecordBatch, view: str, uri_prefix: str, threshold: float = 0.0
-    ) -> list[list[arrow_types.ObjectAnnotation]]:
+    ) -> list[list[ObjectAnnotation]]:
         """Inference pre-annotation for a batch
 
         Args:
@@ -104,7 +101,7 @@ class DeepLabV3(InferenceModel):
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            list[list[arrow_types.ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
+            list[list[ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
         """
 
         objects = []
@@ -126,7 +123,7 @@ class DeepLabV3(InferenceModel):
 
             objects.append(
                 [
-                    arrow_types.ObjectAnnotation(
+                    ObjectAnnotation(
                         id=shortuuid.uuid(),
                         view_id=view,
                         mask=mask_to_rle(unmold_mask(mask)),

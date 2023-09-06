@@ -21,9 +21,9 @@ import shortuuid
 import torch
 from onnxruntime.quantization import QuantType
 from onnxruntime.quantization.quantize import quantize_dynamic
-from pixano.core import arrow_types
+from pixano.core import ObjectAnnotation
 from pixano.models import InferenceModel
-from pixano.transforms import mask_to_rle, normalize
+from pixano.utils import mask_to_rle, normalize_coords
 from segment_anything import SamAutomaticMaskGenerator, SamPredictor, sam_model_registry
 from segment_anything.utils.onnx import SamOnnxModel
 
@@ -73,7 +73,7 @@ class SAM(InferenceModel):
 
     def inference_batch(
         self, batch: pa.RecordBatch, view: str, uri_prefix: str, threshold: float = 0.0
-    ) -> list[list[arrow_types.ObjectAnnotation]]:
+    ) -> list[list[ObjectAnnotation]]:
         """Inference pre-annotation for a batch
 
         Args:
@@ -83,7 +83,7 @@ class SAM(InferenceModel):
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            list[list[arrow_types.ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
+            list[list[ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
         """
 
         objects = []
@@ -103,10 +103,10 @@ class SAM(InferenceModel):
             h, w = im.shape[:2]
             objects.append(
                 [
-                    arrow_types.ObjectAnnotation(
+                    ObjectAnnotation(
                         id=shortuuid.uuid(),
                         view_id=view,
-                        bbox=normalize(output[i]["bbox"], h, w),
+                        bbox=normalize_coords(output[i]["bbox"], h, w),
                         bbox_confidence=float(output[i]["predicted_iou"]),
                         bbox_source=self.id,
                         mask=mask_to_rle(output[i]["segmentation"]),

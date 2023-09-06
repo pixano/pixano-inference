@@ -11,16 +11,13 @@
 #
 # http://www.cecill.info
 
-from pathlib import Path
-
 import numpy as np
 import pyarrow as pa
 import shortuuid
 import torch
-from PIL import Image
-from pixano.core import arrow_types
+from pixano.core import ObjectAnnotation
 from pixano.models import InferenceModel
-from pixano.transforms import coco_names_91, mask_to_rle, normalize, xyxy_to_xywh
+from pixano.utils import coco_names_91, mask_to_rle, normalize_coords, xyxy_to_xywh
 from torchvision.models.detection import (
     MaskRCNN_ResNet50_FPN_V2_Weights,
     maskrcnn_resnet50_fpn_v2,
@@ -92,7 +89,7 @@ class MaskRCNNv2(InferenceModel):
 
     def inference_batch(
         self, batch: pa.RecordBatch, view: str, uri_prefix: str, threshold: float = 0.0
-    ) -> list[list[arrow_types.ObjectAnnotation]]:
+    ) -> list[list[ObjectAnnotation]]:
         """Inference pre-annotation for a batch
 
         Args:
@@ -102,7 +99,7 @@ class MaskRCNNv2(InferenceModel):
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            list[list[arrow_types.ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
+            list[list[ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
         """
 
         objects = []
@@ -121,10 +118,10 @@ class MaskRCNNv2(InferenceModel):
             w, h = im.size
             objects.append(
                 [
-                    arrow_types.ObjectAnnotation(
+                    ObjectAnnotation(
                         id=shortuuid.uuid(),
                         view_id=view,
-                        bbox=normalize(xyxy_to_xywh(output["boxes"][i]), h, w),
+                        bbox=normalize_coords(xyxy_to_xywh(output["boxes"][i]), h, w),
                         bbox_confidence=float(output["scores"][i]),
                         bbox_source=self.id,
                         mask=mask_to_rle(unmold_mask(output["masks"][i])),

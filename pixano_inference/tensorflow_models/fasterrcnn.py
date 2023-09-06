@@ -11,16 +11,13 @@
 #
 # http://www.cecill.info
 
-from pathlib import Path
-
 import pyarrow as pa
 import shortuuid
 import tensorflow as tf
 import tensorflow_hub as hub
-from PIL import Image
-from pixano.core import arrow_types
+from pixano.core import ObjectAnnotation
 from pixano.models import InferenceModel
-from pixano.transforms import coco_names_91, xyxy_to_xywh
+from pixano.utils import coco_names_91, xyxy_to_xywh
 
 
 class FasterRCNN(InferenceModel):
@@ -59,7 +56,7 @@ class FasterRCNN(InferenceModel):
 
     def inference_batch(
         self, batch: pa.RecordBatch, view: str, uri_prefix: str, threshold: float = 0.0
-    ) -> list[list[arrow_types.ObjectAnnotation]]:
+    ) -> list[list[ObjectAnnotation]]:
         """Inference pre-annotation for a batch
 
         Args:
@@ -69,7 +66,7 @@ class FasterRCNN(InferenceModel):
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            list[list[arrow_types.ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
+            list[list[ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
         """
 
         objects = []
@@ -87,7 +84,7 @@ class FasterRCNN(InferenceModel):
             # Process model outputs
             objects.append(
                 [
-                    arrow_types.ObjectAnnotation(
+                    ObjectAnnotation(
                         id=shortuuid.uuid(),
                         view_id=view,
                         bbox=xyxy_to_xywh(
