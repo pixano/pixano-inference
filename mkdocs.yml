@@ -64,6 +64,7 @@ plugins:
         options:
           docstring_style: google
           docstring_options:
+            returns_named_value: false
             ignore_init_summary: yes
           show_submodules: no
           docstring_section_style: table

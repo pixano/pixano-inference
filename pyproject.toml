@@ -40,6 +40,14 @@ dependencies = [
   "thop >= 0.1.1",
 ]
 
+[project.optional-dependencies]
+documentation = [
+  "mkdocs-material ~= 9.3.0",
+  "mkdocstrings-python ~= 1.6.0",
+  "mkdocs-gen-files ~= 0.5.0",
+  "mkdocs-literate-nav ~= 0.6.0",
+]
+
 [project.urls]
 Documentation = "https://github.com/pixano/pixano-inference#readme"
 Issues = "https://github.com/pixano/pixano-inference/issues"
