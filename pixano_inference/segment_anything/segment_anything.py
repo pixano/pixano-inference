@@ -22,7 +22,7 @@ import shortuuid
 import torch
 from onnxruntime.quantization import QuantType
 from onnxruntime.quantization.quantize import quantize_dynamic
-from pixano.core import ObjectAnnotation
+from pixano.core import Image, ObjectAnnotation
 from pixano.models import InferenceModel
 from pixano.utils import mask_to_rle, normalize_coords
 from segment_anything import SamAutomaticMaskGenerator, SamPredictor, sam_model_registry
@@ -104,7 +104,7 @@ class SAM(InferenceModel):
             # Iterate manually
             for x in range(batch.num_rows):
                 # Preprocess image
-                im = batch[view][x].as_py()
+                im = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
                 im = im.as_cv2()
                 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
@@ -162,7 +162,7 @@ class SAM(InferenceModel):
             # Iterate manually
             for x in range(batch.num_rows):
                 # Preprocess image
-                im = batch[view][x].as_py()
+                im = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
                 im = im.as_cv2()
                 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)

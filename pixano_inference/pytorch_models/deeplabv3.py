@@ -16,7 +16,7 @@ import pyarrow as pa
 import shortuuid
 import torch
 import torchvision.transforms as T
-from pixano.core import ObjectAnnotation
+from pixano.core import Image, ObjectAnnotation
 from pixano.models import InferenceModel
 from pixano.utils import mask_to_rle, voc_names
 
@@ -121,7 +121,7 @@ class DeepLabV3(InferenceModel):
             # PyTorch Transforms don't support different-sized image batches, so iterate manually
             for x in range(batch.num_rows):
                 # Preprocess image
-                im = batch[view][x].as_py()
+                im = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
                 im = im.as_pillow()
                 im_tensor = self.transforms(im).unsqueeze(0).to(self.device)

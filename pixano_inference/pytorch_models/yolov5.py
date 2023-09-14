@@ -14,7 +14,7 @@
 import pyarrow as pa
 import shortuuid
 import torch
-from pixano.core import ObjectAnnotation
+from pixano.core import Image, ObjectAnnotation
 from pixano.models import InferenceModel
 from pixano.utils import coco_ids_80to91, coco_names_91, normalize_coords, xyxy_to_xywh
 
@@ -87,7 +87,7 @@ class YOLOv5(InferenceModel):
             # Preprocess image batch
             im_batch = []
             for x in range(batch.num_rows):
-                im = batch[view][x].as_py()
+                im = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
                 im_batch.append(im.as_pillow())
 

@@ -15,7 +15,7 @@ import numpy as np
 import pyarrow as pa
 import shortuuid
 import torch
-from pixano.core import ObjectAnnotation
+from pixano.core import Image, ObjectAnnotation
 from pixano.models import InferenceModel
 from pixano.utils import coco_names_91, mask_to_rle, normalize_coords, xyxy_to_xywh
 from torchvision.models.detection import (
@@ -119,7 +119,7 @@ class MaskRCNNv2(InferenceModel):
             # PyTorch Transforms don't support different-sized image batches, so iterate manually
             for x in range(batch.num_rows):
                 # Preprocess image
-                im = batch[view][x].as_py()
+                im = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
                 im = im.as_pillow()
                 im_tensor = self.transforms(im).unsqueeze(0).to(self.device)

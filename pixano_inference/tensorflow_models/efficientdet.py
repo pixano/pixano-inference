@@ -15,7 +15,7 @@ import pyarrow as pa
 import shortuuid
 import tensorflow as tf
 import tensorflow_hub as hub
-from pixano.core import ObjectAnnotation
+from pixano.core import Image, ObjectAnnotation
 from pixano.models import InferenceModel
 from pixano.utils import coco_names_91, xyxy_to_xywh
 
@@ -84,7 +84,7 @@ class EfficientDet(InferenceModel):
             # TF.Hub Models don't support image batches, so iterate manually
             for x in range(batch.num_rows):
                 # Preprocess image
-                im = batch[view][x].as_py()
+                im = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
                 im = im.as_pillow()
                 im_tensor = tf.expand_dims(tf.keras.utils.img_to_array(im), 0)
