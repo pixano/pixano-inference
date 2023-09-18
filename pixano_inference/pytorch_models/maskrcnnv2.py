@@ -15,9 +15,9 @@ import numpy as np
 import pyarrow as pa
 import shortuuid
 import torch
-from pixano.core import Image, ObjectAnnotation
+from pixano.core import BBox, CompressedRLE, Image, ObjectAnnotation
 from pixano.models import InferenceModel
-from pixano.utils import coco_names_91, mask_to_rle, normalize_coords, xyxy_to_xywh
+from pixano.utils import coco_names_91
 from torchvision.models.detection import (
     MaskRCNN_ResNet50_FPN_V2_Weights,
     maskrcnn_resnet50_fpn_v2,
@@ -135,12 +135,14 @@ class MaskRCNNv2(InferenceModel):
                         ObjectAnnotation(
                             id=shortuuid.uuid(),
                             view_id=view,
-                            bbox=normalize_coords(
-                                xyxy_to_xywh(output["boxes"][i]), h, w
-                            ),
+                            bbox=BBox.from_xyxy(output["boxes"][i])
+                            .to_xywh()
+                            .normalize(),
                             bbox_confidence=float(output["scores"][i]),
                             bbox_source=self.id,
-                            mask=mask_to_rle(unmold_mask(output["masks"][i])),
+                            mask=CompressedRLE.from_mask(
+                                unmold_mask(output["masks"][i])
+                            ),
                             mask_source=self.id,
                             category_id=int(output["labels"][i]),
                             category_name=coco_names_91(output["labels"][i]),

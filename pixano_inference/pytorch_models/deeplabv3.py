@@ -16,9 +16,9 @@ import pyarrow as pa
 import shortuuid
 import torch
 import torchvision.transforms as T
-from pixano.core import Image, ObjectAnnotation
+from pixano.core import CompressedRLE, Image, ObjectAnnotation
 from pixano.models import InferenceModel
-from pixano.utils import mask_to_rle, voc_names
+from pixano.utils import voc_names
 
 
 def unmold_mask(mask: torch.Tensor, threshold: float = 0.5):
@@ -140,7 +140,7 @@ class DeepLabV3(InferenceModel):
                         ObjectAnnotation(
                             id=shortuuid.uuid(),
                             view_id=view,
-                            mask=mask_to_rle(unmold_mask(mask)),
+                            mask=CompressedRLE.from_mask(unmold_mask(mask)),
                             mask_source=self.id,
                             category_id=int(label),
                             category_name=voc_names(label),

@@ -15,9 +15,9 @@ import pyarrow as pa
 import shortuuid
 import tensorflow as tf
 import tensorflow_hub as hub
-from pixano.core import Image, ObjectAnnotation
+from pixano.core import BBox, Image, ObjectAnnotation
 from pixano.models import InferenceModel
-from pixano.utils import coco_names_91, xyxy_to_xywh
+from pixano.utils import coco_names_91
 
 
 class FasterRCNN(InferenceModel):
@@ -101,14 +101,14 @@ class FasterRCNN(InferenceModel):
                         ObjectAnnotation(
                             id=shortuuid.uuid(),
                             view_id=view,
-                            bbox=xyxy_to_xywh(
+                            bbox=BBox.from_xyxy(
                                 [
                                     output["detection_boxes"][0][i][1],
                                     output["detection_boxes"][0][i][0],
                                     output["detection_boxes"][0][i][3],
                                     output["detection_boxes"][0][i][2],
                                 ]
-                            ),
+                            ).to_xywh(),
                             bbox_confidence=float(output["detection_scores"][0][i]),
                             bbox_source=self.id,
                             category_id=int(output["detection_classes"][0][i]),

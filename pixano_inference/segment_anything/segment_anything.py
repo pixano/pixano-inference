@@ -22,9 +22,8 @@ import shortuuid
 import torch
 from onnxruntime.quantization import QuantType
 from onnxruntime.quantization.quantize import quantize_dynamic
-from pixano.core import Image, ObjectAnnotation
+from pixano.core import BBox, CompressedRLE, Image, ObjectAnnotation
 from pixano.models import InferenceModel
-from pixano.utils import mask_to_rle, normalize_coords
 from segment_anything import SamAutomaticMaskGenerator, SamPredictor, sam_model_registry
 from segment_anything.utils.onnx import SamOnnxModel
 
@@ -121,10 +120,10 @@ class SAM(InferenceModel):
                         ObjectAnnotation(
                             id=shortuuid.uuid(),
                             view_id=view,
-                            bbox=normalize_coords(output[i]["bbox"], h, w),
+                            bbox=BBox.from_xywh(output[i]["bbox"]).normalize(h, w),
                             bbox_confidence=float(output[i]["predicted_iou"]),
                             bbox_source=self.id,
-                            mask=mask_to_rle(output[i]["segmentation"]),
+                            mask=CompressedRLE.from_mask(output[i]["segmentation"]),
                             mask_source=self.id,
                             category_id=0,
                             category_name="N/A",

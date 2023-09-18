@@ -14,9 +14,9 @@
 import pyarrow as pa
 import shortuuid
 import torch
-from pixano.core import Image, ObjectAnnotation
+from pixano.core import BBox, Image, ObjectAnnotation
 from pixano.models import InferenceModel
-from pixano.utils import coco_ids_80to91, coco_names_91, normalize_coords, xyxy_to_xywh
+from pixano.utils import coco_ids_80to91, coco_names_91
 
 
 class YOLOv5(InferenceModel):
@@ -104,7 +104,7 @@ class YOLOv5(InferenceModel):
                         ObjectAnnotation(
                             id=shortuuid.uuid(),
                             view_id=view,
-                            bbox=normalize_coords(xyxy_to_xywh(pred[0:4]), h, w),
+                            bbox=BBox.from_xyxy(pred[0:4]).to_xywh().normalize(h, w),
                             bbox_confidence=float(pred[4]),
                             bbox_source=self.id,
                             category_id=coco_ids_80to91(pred[5] + 1),
