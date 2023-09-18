@@ -35,8 +35,7 @@ class SAM(InferenceModel):
         name (str): Model name
         id (str): Model ID
         device (str): Model GPU or CPU device (e.g. "cuda", "cpu")
-        source (str): Model source
-        info (str): Additional model info
+        description (str): Model description
         model (torch.nn.Module): SAM model
     """
 
@@ -60,8 +59,7 @@ class SAM(InferenceModel):
             name=f"SAM_ViT_{size.upper()}",
             id=id,
             device=device,
-            source="GitHub",
-            info=f"Segment Anything Model (SAM), ViT-{size.upper()} Backbone",
+            description=f"From GitHub. Segment Anything Model (SAM), ViT-{size.upper()} Backbone.",
         )
 
         # Model

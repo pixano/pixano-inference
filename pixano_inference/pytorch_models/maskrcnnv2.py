@@ -55,8 +55,7 @@ class MaskRCNNv2(InferenceModel):
         name (str): Model name
         id (str): Model ID
         device (str): Model GPU or CPU device
-        source (str): Model source
-        info (str): Additional model info
+        description (str): Model description
         model (torch.nn.Module): PyTorch model
         transforms (torch.nn.Module): PyTorch preprocessing transforms
     """
@@ -73,8 +72,7 @@ class MaskRCNNv2(InferenceModel):
             name="MaskRCNNv2",
             id=id,
             device=device,
-            source="PyTorch Hub",
-            info="MaskRCNN, ResNet-50-FPN v2 Backbone, COCO_V1 Weights",
+            description="From PyTorch Hub. MaskRCNN, ResNet-50-FPN v2 Backbone, COCO_V1 Weights.",
         )
 
         # Model

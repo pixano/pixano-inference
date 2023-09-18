@@ -52,8 +52,7 @@ class DeepLabV3(InferenceModel):
         name (str): Model name
         id (str): Model ID
         device (str): Model GPU or CPU device
-        source (str): Model source
-        info (str): Additional model info
+        description (str): Model description
         model (torch.nn.Module): PyTorch model
         transforms (torch.nn.Module): PyTorch preprocessing transforms
     """
@@ -70,8 +69,7 @@ class DeepLabV3(InferenceModel):
             name="DeepLabV3",
             id=id,
             device=device,
-            source="PyTorch Hub",
-            info="DeepLabV3, ResNet-50 Backbone",
+            description="From PyTorch Hub. DeepLabV3, ResNet-50 Backbone.",
         )
 
         # Model

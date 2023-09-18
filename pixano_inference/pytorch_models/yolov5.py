@@ -26,8 +26,7 @@ class YOLOv5(InferenceModel):
         name (str): Model name
         id (str): Model ID
         device (str): Model GPU or CPU device
-        source (str): Model source
-        info (str): Additional model info
+        description (str): Model description
         model (torch.nn.Module): PyTorch model
     """
 
@@ -44,8 +43,7 @@ class YOLOv5(InferenceModel):
             name=f"YOLOv5{size}",
             id=id,
             device=device,
-            source="PyTorch Hub",
-            info=f"YOLOv5 model, {size.upper()} backbone",
+            description=f"From PyTorch Hub. YOLOv5 model, {size.upper()} backbone.",
         )
 
         # Model
@@ -104,7 +102,9 @@ class YOLOv5(InferenceModel):
                         ObjectAnnotation(
                             id=shortuuid.uuid(),
                             view_id=view,
-                            bbox=BBox.from_xyxy(pred[0:4]).to_xywh().normalize(h, w),
+                            bbox=BBox.from_xyxy(list(pred[0:4]))
+                            .to_xywh()
+                            .normalize(h, w),
                             bbox_confidence=float(pred[4]),
                             bbox_source=self.id,
                             category_id=coco_ids_80to91(pred[5] + 1),

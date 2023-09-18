@@ -27,8 +27,7 @@ class EfficientDet(InferenceModel):
         name (str): Model name
         id (str): Model ID
         device (str): Model GPU or CPU device
-        source (str): Model source
-        info (str): Additional model info
+        description (str): Model description
         model (tf.keras.Model): TensorFlow model
     """
 
@@ -44,8 +43,7 @@ class EfficientDet(InferenceModel):
             name="EfficientDet_D1",
             id=id,
             device=device,
-            source="TensorFlow Hub",
-            info="EfficientDet model, with D1 architecture",
+            description="From TensorFlow Hub. EfficientDet model, with D1 architecture.",
         )
 
         # Model

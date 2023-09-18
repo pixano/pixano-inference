@@ -27,8 +27,7 @@ class FasterRCNN(InferenceModel):
         name (str): Model name
         id (str): Model ID
         device (str): Model GPU or CPU device
-        source (str): Model source
-        info (str): Additional model info
+        description (str): Model description
         model (tf.keras.Model): TensorFlow model
     """
 
@@ -44,8 +43,7 @@ class FasterRCNN(InferenceModel):
             name="FasterRCNN_R50",
             id=id,
             device=device,
-            source="TensorFlow Hub",
-            info="FasterRCNN model, with ResNet50 architecture",
+            description="From TensorFlow Hub. FasterRCNN model, with ResNet50 architecture.",
         )
 
         # Model
