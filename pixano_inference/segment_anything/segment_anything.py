@@ -75,7 +75,7 @@ class SAM(InferenceModel):
         views: list[str],
         uri_prefix: str,
         threshold: float = 0.0,
-    ) -> list[dict]:
+    ) -> pa.RecordBatch:
         """Inference pre-annotation for a batch
 
         Args:
@@ -85,14 +85,14 @@ class SAM(InferenceModel):
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            list[dict]: Inference rows
+            pa.RecordBatch: Inference rows
         """
 
         rows = [
             {
                 "id": batch["id"][x].as_py(),
-                "objects": [],
                 "split": batch["split"][x].as_py(),
+                "objects": [],
             }
             for x in range(batch.num_rows)
         ]
@@ -131,11 +131,11 @@ class SAM(InferenceModel):
                     ]
                 )
 
-        return rows
+        return super().dicts_to_recordbatch(rows)
 
     def embedding_batch(
         self, batch: pa.RecordBatch, views: list[str], uri_prefix: str
-    ) -> list[np.ndarray]:
+    ) -> pa.RecordBatch:
         """Embedding precomputing for a batch
 
         Args:
@@ -144,7 +144,7 @@ class SAM(InferenceModel):
             uri_prefix (str): URI prefix for media files
 
         Returns:
-            list[np.ndarray]: Model embeddings as NumPy arrays
+            pa.RecordBatch: Embedding rows
         """
 
         rows = [
@@ -175,7 +175,7 @@ class SAM(InferenceModel):
                 np.save(emb_bytes, img_embedding)
                 rows[x][f"{view}_embedding"] = emb_bytes.getvalue()
 
-        return rows
+        return super().dicts_to_recordbatch(rows)
 
     def export_to_onnx(self, library_dir: Path):
         """Export Torch model to ONNX

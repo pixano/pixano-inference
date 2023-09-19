@@ -58,7 +58,7 @@ class FasterRCNN(InferenceModel):
         views: list[str],
         uri_prefix: str,
         threshold: float = 0.0,
-    ) -> list[dict]:
+    ) -> pa.RecordBatch:
         """Inference pre-annotation for a batch
 
         Args:
@@ -68,14 +68,14 @@ class FasterRCNN(InferenceModel):
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            list[dict]: Inference rows
+            pa.RecordBatch: Inference rows
         """
 
         rows = [
             {
                 "id": batch["id"][x].as_py(),
-                "objects": [],
                 "split": batch["split"][x].as_py(),
+                "objects": [],
             }
             for x in range(batch.num_rows)
         ]
@@ -119,4 +119,4 @@ class FasterRCNN(InferenceModel):
                     ]
                 )
 
-        return rows
+        return super().dicts_to_recordbatch(rows)
