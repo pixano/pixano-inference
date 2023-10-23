@@ -14,7 +14,7 @@
 import pyarrow as pa
 import shortuuid
 import torch
-from pixano.core import BBox, Image, ObjectAnnotation
+from pixano.core import BBox, Image
 from pixano.models import InferenceModel
 from pixano.utils import coco_ids_80to91, coco_names_91
 
@@ -54,13 +54,13 @@ class YOLOv5(InferenceModel):
         )
         self.model.to(self.device)
 
-    def inference_batch(
+    def preannotate(
         self,
         batch: pa.RecordBatch,
         views: list[str],
         uri_prefix: str,
         threshold: float = 0.0,
-    ) -> pa.RecordBatch:
+    ) -> list[dict]:
         """Inference pre-annotation for a batch
 
         Args:
@@ -70,17 +70,11 @@ class YOLOv5(InferenceModel):
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            pa.RecordBatch: Inference rows
+            list[dict]: Processed rows
         """
 
-        rows = [
-            {
-                "id": batch["id"][x].as_py(),
-                "split": batch["split"][x].as_py(),
-                "objects": [],
-            }
-            for x in range(batch.num_rows)
-        ]
+        rows = []
+
         for view in views:
             # Preprocess image batch
             im_batch = []
@@ -97,22 +91,25 @@ class YOLOv5(InferenceModel):
                 range(batch.num_rows), im_batch, outputs.xyxy
             ):
                 w, h = img.size
-                rows[x]["objects"].extend(
+                rows.extend(
                     [
-                        ObjectAnnotation(
-                            id=shortuuid.uuid(),
-                            view_id=view,
-                            bbox=BBox.from_xyxy(list(pred[0:4]))
-                            .to_xywh()
-                            .normalize(h, w),
-                            bbox_confidence=float(pred[4]),
-                            bbox_source=self.id,
-                            category_id=coco_ids_80to91(pred[5] + 1),
-                            category_name=coco_names_91(coco_ids_80to91(pred[5] + 1)),
-                        )
+                        {
+                            "id": shortuuid.uuid(),
+                            "item_id": batch["id"][x].as_py(),
+                            "view_id": view,
+                            "bbox": BBox.from_xyxy(
+                                list(pred[0:4]), confidence=float(pred[4])
+                            )
+                            .normalize(h, w)
+                            .to_dict(),
+                            "category_id": coco_ids_80to91(pred[5] + 1),
+                            "category_name": coco_names_91(
+                                coco_ids_80to91(pred[5] + 1)
+                            ),
+                        }
                         for pred in img_output
                         if pred[4] > threshold
                     ]
                 )
 
-        return super().dicts_to_recordbatch(rows)
+        return rows

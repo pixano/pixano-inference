@@ -22,7 +22,7 @@ import shortuuid
 import torch
 from onnxruntime.quantization import QuantType
 from onnxruntime.quantization.quantize import quantize_dynamic
-from pixano.core import BBox, CompressedRLE, Image, ObjectAnnotation
+from pixano.core import BBox, CompressedRLE, Image
 from pixano.models import InferenceModel
 from segment_anything import SamAutomaticMaskGenerator, SamPredictor, sam_model_registry
 from segment_anything.utils.onnx import SamOnnxModel
@@ -69,13 +69,13 @@ class SAM(InferenceModel):
         # Model path
         self.checkpoint_path = checkpoint_path
 
-    def inference_batch(
+    def preannotate(
         self,
         batch: pa.RecordBatch,
         views: list[str],
         uri_prefix: str,
         threshold: float = 0.0,
-    ) -> pa.RecordBatch:
+    ) -> list[dict]:
         """Inference pre-annotation for a batch
 
         Args:
@@ -85,17 +85,10 @@ class SAM(InferenceModel):
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            pa.RecordBatch: Inference rows
+            list[dict]: Processed rows
         """
 
-        rows = [
-            {
-                "id": batch["id"][x].as_py(),
-                "split": batch["split"][x].as_py(),
-                "objects": [],
-            }
-            for x in range(batch.num_rows)
-        ]
+        rows = []
 
         for view in views:
             # Iterate manually
@@ -113,29 +106,35 @@ class SAM(InferenceModel):
 
                 # Process model outputs
                 h, w = im.shape[:2]
-                rows[x]["objects"].extend(
+                rows.extend(
                     [
-                        ObjectAnnotation(
-                            id=shortuuid.uuid(),
-                            view_id=view,
-                            bbox=BBox.from_xywh(output[i]["bbox"]).normalize(h, w),
-                            bbox_confidence=float(output[i]["predicted_iou"]),
-                            bbox_source=self.id,
-                            mask=CompressedRLE.from_mask(output[i]["segmentation"]),
-                            mask_source=self.id,
-                            category_id=0,
-                            category_name="N/A",
-                        )
+                        {
+                            "id": shortuuid.uuid(),
+                            "item_id": batch["id"][x].as_py(),
+                            "view_id": view,
+                            "bbox": BBox.from_xywh(
+                                output[i]["bbox"],
+                                confidence=float(output[i]["predicted_iou"]),
+                            )
+                            .normalize(h, w)
+                            .to_dict(),
+                            "mask": CompressedRLE.from_mask(
+                                output[i]["segmentation"]
+                            ).to_dict(),
+                        }
                         for i in range(len(output))
                         if output[i]["predicted_iou"] > threshold
                     ]
                 )
 
-        return super().dicts_to_recordbatch(rows)
+        return rows
 
-    def embedding_batch(
-        self, batch: pa.RecordBatch, views: list[str], uri_prefix: str
-    ) -> pa.RecordBatch:
+    def precompute_embeddings(
+        self,
+        batch: pa.RecordBatch,
+        views: list[str],
+        uri_prefix: str,
+    ) -> list[dict]:
         """Embedding precomputing for a batch
 
         Args:
@@ -150,7 +149,6 @@ class SAM(InferenceModel):
         rows = [
             {
                 "id": batch["id"][x].as_py(),
-                "split": batch["split"][x].as_py(),
             }
             for x in range(batch.num_rows)
         ]
@@ -173,9 +171,9 @@ class SAM(InferenceModel):
                 # Process model outputs
                 emb_bytes = BytesIO()
                 np.save(emb_bytes, img_embedding)
-                rows[x][f"{view}_embedding"] = emb_bytes.getvalue()
+                rows[x][view] = emb_bytes.getvalue()
 
-        return super().dicts_to_recordbatch(rows)
+        return rows
 
     def export_to_onnx(self, library_dir: Path):
         """Export Torch model to ONNX

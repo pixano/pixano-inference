@@ -16,7 +16,7 @@ import pyarrow as pa
 import shortuuid
 import torch
 import torchvision.transforms as T
-from pixano.core import CompressedRLE, Image, ObjectAnnotation
+from pixano.core import CompressedRLE, Image
 from pixano.models import InferenceModel
 from pixano.utils import voc_names
 
@@ -87,13 +87,13 @@ class DeepLabV3(InferenceModel):
             ]
         )
 
-    def inference_batch(
+    def preannotate(
         self,
         batch: pa.RecordBatch,
         views: list[str],
         uri_prefix: str,
         threshold: float = 0.0,
-    ) -> pa.RecordBatch:
+    ) -> list[dict]:
         """Inference pre-annotation for a batch
 
         Args:
@@ -103,17 +103,10 @@ class DeepLabV3(InferenceModel):
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            pa.RecordBatch: Inference rows
+            list[dict]: Processed rows
         """
 
-        rows = [
-            {
-                "id": batch["id"][x].as_py(),
-                "split": batch["split"][x].as_py(),
-                "objects": [],
-            }
-            for x in range(batch.num_rows)
-        ]
+        rows = []
 
         for view in views:
             # PyTorch Transforms don't support different-sized image batches, so iterate manually
@@ -133,18 +126,20 @@ class DeepLabV3(InferenceModel):
                 labels = torch.unique(sem_mask)[1:]
                 masks = sem_mask == labels[:, None, None]
 
-                rows[x]["objects"].extend(
+                rows.extend(
                     [
-                        ObjectAnnotation(
-                            id=shortuuid.uuid(),
-                            view_id=view,
-                            mask=CompressedRLE.from_mask(unmold_mask(mask)),
-                            mask_source=self.id,
-                            category_id=int(label),
-                            category_name=voc_names(label),
-                        )
+                        {
+                            "id": shortuuid.uuid(),
+                            "item_id": batch["id"][x].as_py(),
+                            "view_id": view,
+                            "mask": CompressedRLE.from_mask(
+                                unmold_mask(mask)
+                            ).to_dict(),
+                            "category_id": int(label),
+                            "category_name": voc_names(label),
+                        }
                         for label, mask in zip(labels, masks)
                     ]
                 )
 
-        return super().dicts_to_recordbatch(rows)
+        return rows

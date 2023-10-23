@@ -15,7 +15,7 @@ import numpy as np
 import pyarrow as pa
 import shortuuid
 import torch
-from pixano.core import BBox, CompressedRLE, Image, ObjectAnnotation
+from pixano.core import BBox, CompressedRLE, Image
 from pixano.models import InferenceModel
 from pixano.utils import coco_names_91
 from torchvision.models.detection import (
@@ -85,13 +85,13 @@ class MaskRCNNv2(InferenceModel):
         # Transforms
         self.transforms = MaskRCNN_ResNet50_FPN_V2_Weights.COCO_V1.transforms()
 
-    def inference_batch(
+    def preannotate(
         self,
         batch: pa.RecordBatch,
         views: list[str],
         uri_prefix: str,
         threshold: float = 0.0,
-    ) -> pa.RecordBatch:
+    ) -> list[dict]:
         """Inference pre-annotation for a batch
 
         Args:
@@ -101,17 +101,10 @@ class MaskRCNNv2(InferenceModel):
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            pa.RecordBatch: Inference rows
+            list[dict]: Processed rows
         """
 
-        rows = [
-            {
-                "id": batch["id"][x].as_py(),
-                "split": batch["split"][x].as_py(),
-                "objects": [],
-            }
-            for x in range(batch.num_rows)
-        ]
+        rows = []
 
         for view in views:
             # PyTorch Transforms don't support different-sized image batches, so iterate manually
@@ -128,26 +121,27 @@ class MaskRCNNv2(InferenceModel):
 
                 # Process model outputs
                 w, h = im.size
-                rows[x]["objects"].extend(
+                rows.extend(
                     [
-                        ObjectAnnotation(
-                            id=shortuuid.uuid(),
-                            view_id=view,
-                            bbox=BBox.from_xyxy(output["boxes"][i])
-                            .to_xywh()
-                            .normalize(),
-                            bbox_confidence=float(output["scores"][i]),
-                            bbox_source=self.id,
-                            mask=CompressedRLE.from_mask(
+                        {
+                            "id": shortuuid.uuid(),
+                            "item_id": batch["id"][x].as_py(),
+                            "view_id": view,
+                            "bbox": BBox.from_xyxy(
+                                list(output["boxes"][i]),
+                                confidence=float(output["scores"][i]),
+                            )
+                            .normalize(h, w)
+                            .to_dict(),
+                            "mask": CompressedRLE.from_mask(
                                 unmold_mask(output["masks"][i])
-                            ),
-                            mask_source=self.id,
-                            category_id=int(output["labels"][i]),
-                            category_name=coco_names_91(output["labels"][i]),
-                        )
+                            ).to_dict(),
+                            "category_id": int(output["labels"][i]),
+                            "category_name": coco_names_91(output["labels"][i]),
+                        }
                         for i in range(len(output["scores"]))
                         if output["scores"][i] > threshold
                     ]
                 )
 
-        return super().dicts_to_recordbatch(rows)
+        return rows

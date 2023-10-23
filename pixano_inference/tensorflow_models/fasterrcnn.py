@@ -15,7 +15,7 @@ import pyarrow as pa
 import shortuuid
 import tensorflow as tf
 import tensorflow_hub as hub
-from pixano.core import BBox, Image, ObjectAnnotation
+from pixano.core import BBox, Image
 from pixano.models import InferenceModel
 from pixano.utils import coco_names_91
 
@@ -52,13 +52,13 @@ class FasterRCNN(InferenceModel):
                 "https://tfhub.dev/tensorflow/faster_rcnn/resnet50_v1_640x640/1"
             )
 
-    def inference_batch(
+    def preannotate(
         self,
         batch: pa.RecordBatch,
         views: list[str],
         uri_prefix: str,
         threshold: float = 0.0,
-    ) -> pa.RecordBatch:
+    ) -> list[dict]:
         """Inference pre-annotation for a batch
 
         Args:
@@ -68,17 +68,10 @@ class FasterRCNN(InferenceModel):
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            pa.RecordBatch: Inference rows
+            list[dict]: Processed rows
         """
 
-        rows = [
-            {
-                "id": batch["id"][x].as_py(),
-                "split": batch["split"][x].as_py(),
-                "objects": [],
-            }
-            for x in range(batch.num_rows)
-        ]
+        rows = []
 
         for view in views:
             # TF.Hub Models don't support image batches, so iterate manually
@@ -94,29 +87,29 @@ class FasterRCNN(InferenceModel):
                 output = self.model(im_tensor)
 
                 # Process model outputs
-                rows[x]["objects"].extend(
+                rows.extend(
                     [
-                        ObjectAnnotation(
-                            id=shortuuid.uuid(),
-                            view_id=view,
-                            bbox=BBox.from_xyxy(
+                        {
+                            "id": shortuuid.uuid(),
+                            "item_id": batch["id"][x].as_py(),
+                            "view_id": view,
+                            "bbox": BBox.from_xyxy(
                                 [
                                     output["detection_boxes"][0][i][1],
                                     output["detection_boxes"][0][i][0],
                                     output["detection_boxes"][0][i][3],
                                     output["detection_boxes"][0][i][2],
-                                ]
-                            ).to_xywh(),
-                            bbox_confidence=float(output["detection_scores"][0][i]),
-                            bbox_source=self.id,
-                            category_id=int(output["detection_classes"][0][i]),
-                            category_name=coco_names_91(
+                                ],
+                                confidence=float(output["detection_scores"][0][i]),
+                            ).to_dict(),
+                            "category_id": int(output["detection_classes"][0][i]),
+                            "category_name": coco_names_91(
                                 output["detection_classes"][0][i]
                             ),
-                        )
+                        }
                         for i in range(int(output["num_detections"]))
                         if output["detection_scores"][0][i] > threshold
                     ]
                 )
 
-        return super().dicts_to_recordbatch(rows)
+        return rows
