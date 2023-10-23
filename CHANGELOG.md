@@ -6,6 +6,8 @@ All notable changes to Pixano will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Update InferenceModels to new PixanoTypes and to lancedb storage format
 
 
 ## [0.1.6] - 2023-07-10
