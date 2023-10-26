@@ -6,6 +6,10 @@ All notable changes to Pixano will be documented in this file.
 
 ## [Unreleased]
 
+## [0.2.0] - 2023-10-26
+
+### Changed
+- **Breaking:** Update models to the new **PixanoTypes** and **lancedb storage format** of Pixano 0.4.0
 
 
 ## [0.1.6] - 2023-07-10
@@ -34,10 +38,8 @@ All notable changes to Pixano will be documented in this file.
 
 ## [0.1.3] - 2023-07-07
 
-### Fixed
-- Fix uses of Image type for compatibility with Pixano 0.3.0
-- Fix calls of InferenceModel for compatibility with Pixano 0.3.0
-
+### Changed
+- **Breaking:** Update models to the new **InferenceModel class** and **Image type** of Pixano 0.3.0
 
 
 ## [0.1.2] - 2023-06-12
@@ -62,7 +64,7 @@ All notable changes to Pixano will be documented in this file.
 ## [0.1.0] - 2023-06-02
 
 ### Changed
-- Merge inference generation and embedding precomputing into a **single inference model class**
+- **Breaking:** Merge inference generation and embedding precomputing into a **single InferenceModel class**
 - Improve README file
 
 ### Fixed
@@ -79,7 +81,8 @@ All notable changes to Pixano will be documented in this file.
 
 
 
-[Unreleased]: https://github.com/pixano/pixano-inference/compare/v0.1.5...develop
+[Unreleased]: https://github.com/pixano/pixano-inference/compare/v0.2.0...develop
+[0.2.0]: https://github.com/pixano/pixano-inference/compare/v0.1.6...v0.2.0
 [0.1.6]: https://github.com/pixano/pixano-inference/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/pixano/pixano-inference/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/pixano/pixano-inference/compare/v0.1.3...v0.1.4

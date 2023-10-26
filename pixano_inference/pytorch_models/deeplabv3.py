@@ -11,17 +11,14 @@
 #
 # http://www.cecill.info
 
-from pathlib import Path
-
 import numpy as np
 import pyarrow as pa
 import shortuuid
 import torch
 import torchvision.transforms as T
-from PIL import Image
-from pixano.core import arrow_types
+from pixano.core import CompressedRLE, Image
 from pixano.models import InferenceModel
-from pixano.transforms import mask_to_rle, voc_names
+from pixano.utils import voc_names
 
 
 def unmold_mask(mask: torch.Tensor, threshold: float = 0.5):
@@ -55,8 +52,7 @@ class DeepLabV3(InferenceModel):
         name (str): Model name
         id (str): Model ID
         device (str): Model GPU or CPU device
-        source (str): Model source
-        info (str): Additional model info
+        description (str): Model description
         model (torch.nn.Module): PyTorch model
         transforms (torch.nn.Module): PyTorch preprocessing transforms
     """
@@ -73,8 +69,7 @@ class DeepLabV3(InferenceModel):
             name="DeepLabV3",
             id=id,
             device=device,
-            source="PyTorch Hub",
-            info="DeepLabV3, ResNet-50 Backbone",
+            description="From PyTorch Hub. DeepLabV3, ResNet-50 Backbone.",
         )
 
         # Model
@@ -92,49 +87,59 @@ class DeepLabV3(InferenceModel):
             ]
         )
 
-    def inference_batch(
-        self, batch: pa.RecordBatch, view: str, uri_prefix: str, threshold: float = 0.0
-    ) -> list[list[arrow_types.ObjectAnnotation]]:
+    def preannotate(
+        self,
+        batch: pa.RecordBatch,
+        views: list[str],
+        uri_prefix: str,
+        threshold: float = 0.0,
+    ) -> list[dict]:
         """Inference pre-annotation for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
-            view (str): Dataset view
+            views (list[str]): Dataset views
             uri_prefix (str): URI prefix for media files
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            list[list[arrow_types.ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
+            list[dict]: Processed rows
         """
 
-        objects = []
+        rows = []
 
-        # PyTorch Transforms don't support different-sized image batches, so iterate manually
-        for x in range(batch.num_rows):
-            # Preprocess image
-            im = batch[view][x].as_py(uri_prefix).as_pillow()
-            im_tensor = self.transforms(im).unsqueeze(0).to(self.device)
+        for view in views:
+            # PyTorch Transforms don't support different-sized image batches, so iterate manually
+            for x in range(batch.num_rows):
+                # Preprocess image
+                im = Image.from_dict(batch[view][x].as_py())
+                im.uri_prefix = uri_prefix
+                im = im.as_pillow()
+                im_tensor = self.transforms(im).unsqueeze(0).to(self.device)
 
-            # Inference
-            with torch.no_grad():
-                output = self.model(im_tensor)["out"][0]
+                # Inference
+                with torch.no_grad():
+                    output = self.model(im_tensor)["out"][0]
 
-            # Process model outputs
-            sem_mask = output.argmax(0)
-            labels = torch.unique(sem_mask)[1:]
-            masks = sem_mask == labels[:, None, None]
+                # Process model outputs
+                sem_mask = output.argmax(0)
+                labels = torch.unique(sem_mask)[1:]
+                masks = sem_mask == labels[:, None, None]
 
-            objects.append(
-                [
-                    arrow_types.ObjectAnnotation(
-                        id=shortuuid.uuid(),
-                        view_id=view,
-                        mask=mask_to_rle(unmold_mask(mask)),
-                        mask_source=self.id,
-                        category_id=int(label),
-                        category_name=voc_names(label),
-                    )
-                    for label, mask in zip(labels, masks)
-                ]
-            )
-        return objects
+                rows.extend(
+                    [
+                        {
+                            "id": shortuuid.uuid(),
+                            "item_id": batch["id"][x].as_py(),
+                            "view_id": view,
+                            "mask": CompressedRLE.from_mask(
+                                unmold_mask(mask)
+                            ).to_dict(),
+                            "category_id": int(label),
+                            "category_name": voc_names(label),
+                        }
+                        for label, mask in zip(labels, masks)
+                    ]
+                )
+
+        return rows

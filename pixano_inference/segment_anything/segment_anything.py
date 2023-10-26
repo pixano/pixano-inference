@@ -12,6 +12,7 @@
 # http://www.cecill.info
 
 import warnings
+from io import BytesIO
 from pathlib import Path
 
 import cv2
@@ -21,9 +22,8 @@ import shortuuid
 import torch
 from onnxruntime.quantization import QuantType
 from onnxruntime.quantization.quantize import quantize_dynamic
-from pixano.core import arrow_types
+from pixano.core import BBox, CompressedRLE, Image
 from pixano.models import InferenceModel
-from pixano.transforms import mask_to_rle, normalize
 from segment_anything import SamAutomaticMaskGenerator, SamPredictor, sam_model_registry
 from segment_anything.utils.onnx import SamOnnxModel
 
@@ -35,8 +35,7 @@ class SAM(InferenceModel):
         name (str): Model name
         id (str): Model ID
         device (str): Model GPU or CPU device (e.g. "cuda", "cpu")
-        source (str): Model source
-        info (str): Additional model info
+        description (str): Model description
         model (torch.nn.Module): SAM model
     """
 
@@ -60,8 +59,7 @@ class SAM(InferenceModel):
             name=f"SAM_ViT_{size.upper()}",
             id=id,
             device=device,
-            source="GitHub",
-            info=f"Segment Anything Model (SAM), ViT-{size.upper()} Backbone",
+            description=f"From GitHub. Segment Anything Model (SAM), ViT-{size.upper()} Backbone.",
         )
 
         # Model
@@ -71,86 +69,111 @@ class SAM(InferenceModel):
         # Model path
         self.checkpoint_path = checkpoint_path
 
-    def inference_batch(
-        self, batch: pa.RecordBatch, view: str, uri_prefix: str, threshold: float = 0.0
-    ) -> list[list[arrow_types.ObjectAnnotation]]:
+    def preannotate(
+        self,
+        batch: pa.RecordBatch,
+        views: list[str],
+        uri_prefix: str,
+        threshold: float = 0.0,
+    ) -> list[dict]:
         """Inference pre-annotation for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
-            view (str): Dataset view
+            views (list[str]): Dataset views
             uri_prefix (str): URI prefix for media files
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            list[list[arrow_types.ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
+            list[dict]: Processed rows
         """
 
-        objects = []
+        rows = []
 
-        # Iterate manually
-        for x in range(batch.num_rows):
-            # Preprocess image
-            im = batch[view][x].as_py(uri_prefix).as_cv2()
-            im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        for view in views:
+            # Iterate manually
+            for x in range(batch.num_rows):
+                # Preprocess image
+                im = Image.from_dict(batch[view][x].as_py())
+                im.uri_prefix = uri_prefix
+                im = im.as_cv2()
+                im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
-            # Inference
-            with torch.no_grad():
-                generator = SamAutomaticMaskGenerator(self.model)
-                output = generator.generate(im)
+                # Inference
+                with torch.no_grad():
+                    generator = SamAutomaticMaskGenerator(self.model)
+                    output = generator.generate(im)
 
-            # Process model outputs
-            h, w = im.shape[:2]
-            objects.append(
-                [
-                    arrow_types.ObjectAnnotation(
-                        id=shortuuid.uuid(),
-                        view_id=view,
-                        bbox=normalize(output[i]["bbox"], h, w),
-                        bbox_confidence=float(output[i]["predicted_iou"]),
-                        bbox_source=self.id,
-                        mask=mask_to_rle(output[i]["segmentation"]),
-                        mask_source=self.id,
-                        category_id=0,
-                        category_name="N/A",
-                    )
-                    for i in range(len(output))
-                    if output[i]["predicted_iou"] > threshold
-                ]
-            )
-        return objects
+                # Process model outputs
+                h, w = im.shape[:2]
+                rows.extend(
+                    [
+                        {
+                            "id": shortuuid.uuid(),
+                            "item_id": batch["id"][x].as_py(),
+                            "view_id": view,
+                            "bbox": BBox.from_xywh(
+                                output[i]["bbox"],
+                                confidence=float(output[i]["predicted_iou"]),
+                            )
+                            .normalize(h, w)
+                            .to_dict(),
+                            "mask": CompressedRLE.from_mask(
+                                output[i]["segmentation"]
+                            ).to_dict(),
+                        }
+                        for i in range(len(output))
+                        if output[i]["predicted_iou"] > threshold
+                    ]
+                )
 
-    def embedding_batch(
-        self, batch: pa.RecordBatch, view: str, uri_prefix: str
-    ) -> list[np.ndarray]:
+        return rows
+
+    def precompute_embeddings(
+        self,
+        batch: pa.RecordBatch,
+        views: list[str],
+        uri_prefix: str,
+    ) -> list[dict]:
         """Embedding precomputing for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
-            view (str): Dataset view
+            views (list[str]): Dataset views
             uri_prefix (str): URI prefix for media files
 
         Returns:
-            list[np.ndarray]: Model embeddings as NumPy arrays
+            pa.RecordBatch: Embedding rows
         """
 
-        embeddings = []
+        rows = [
+            {
+                "id": batch["id"][x].as_py(),
+            }
+            for x in range(batch.num_rows)
+        ]
 
-        # Iterate manually
-        for x in range(batch.num_rows):
-            # Preprocess image
-            im = batch[view][x].as_py(uri_prefix).as_cv2()
-            im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        for view in views:
+            # Iterate manually
+            for x in range(batch.num_rows):
+                # Preprocess image
+                im = Image.from_dict(batch[view][x].as_py())
+                im.uri_prefix = uri_prefix
+                im = im.as_cv2()
+                im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
-            # Inference
-            with torch.no_grad():
-                predictor = SamPredictor(self.model)
-                predictor.set_image(im)
-                img_embedding = predictor.get_image_embedding().cpu().numpy()
+                # Inference
+                with torch.no_grad():
+                    predictor = SamPredictor(self.model)
+                    predictor.set_image(im)
+                    img_embedding = predictor.get_image_embedding().cpu().numpy()
 
-            # Process model outputs
-            embeddings.append(img_embedding)
-        return embeddings
+                # Process model outputs
+                emb_bytes = BytesIO()
+                np.save(emb_bytes, img_embedding)
+                rows[x][view] = emb_bytes.getvalue()
+
+        return rows
 
     def export_to_onnx(self, library_dir: Path):
         """Export Torch model to ONNX

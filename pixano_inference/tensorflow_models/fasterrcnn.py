@@ -11,16 +11,13 @@
 #
 # http://www.cecill.info
 
-from pathlib import Path
-
 import pyarrow as pa
 import shortuuid
 import tensorflow as tf
 import tensorflow_hub as hub
-from PIL import Image
-from pixano.core import arrow_types
+from pixano.core import BBox, Image
 from pixano.models import InferenceModel
-from pixano.transforms import coco_names_91, xyxy_to_xywh
+from pixano.utils import coco_names_91
 
 
 class FasterRCNN(InferenceModel):
@@ -30,8 +27,7 @@ class FasterRCNN(InferenceModel):
         name (str): Model name
         id (str): Model ID
         device (str): Model GPU or CPU device
-        source (str): Model source
-        info (str): Additional model info
+        description (str): Model description
         model (tf.keras.Model): TensorFlow model
     """
 
@@ -47,8 +43,7 @@ class FasterRCNN(InferenceModel):
             name="FasterRCNN_R50",
             id=id,
             device=device,
-            source="TensorFlow Hub",
-            info="FasterRCNN model, with ResNet50 architecture",
+            description="From TensorFlow Hub. FasterRCNN model, with ResNet50 architecture.",
         )
 
         # Model
@@ -57,54 +52,64 @@ class FasterRCNN(InferenceModel):
                 "https://tfhub.dev/tensorflow/faster_rcnn/resnet50_v1_640x640/1"
             )
 
-    def inference_batch(
-        self, batch: pa.RecordBatch, view: str, uri_prefix: str, threshold: float = 0.0
-    ) -> list[list[arrow_types.ObjectAnnotation]]:
+    def preannotate(
+        self,
+        batch: pa.RecordBatch,
+        views: list[str],
+        uri_prefix: str,
+        threshold: float = 0.0,
+    ) -> list[dict]:
         """Inference pre-annotation for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
-            view (str): Dataset view
+            views (list[str]): Dataset views
             uri_prefix (str): URI prefix for media files
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            list[list[arrow_types.ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
+            list[dict]: Processed rows
         """
 
-        objects = []
+        rows = []
 
-        # TF.Hub Models don't support image batches, so iterate manually
-        for x in range(batch.num_rows):
-            # Preprocess image
-            im = batch[view][x].as_py(uri_prefix).as_pillow()
-            im_tensor = tf.expand_dims(tf.keras.utils.img_to_array(im), 0)
-            im_tensor = tf.image.convert_image_dtype(im_tensor, dtype="uint8")
+        for view in views:
+            # TF.Hub Models don't support image batches, so iterate manually
+            for x in range(batch.num_rows):
+                # Preprocess image
+                im = Image.from_dict(batch[view][x].as_py())
+                im.uri_prefix = uri_prefix
+                im = im.as_pillow()
+                im_tensor = tf.expand_dims(tf.keras.utils.img_to_array(im), 0)
+                im_tensor = tf.image.convert_image_dtype(im_tensor, dtype="uint8")
 
-            # Inference
-            output = self.model(im_tensor)
+                # Inference
+                output = self.model(im_tensor)
 
-            # Process model outputs
-            objects.append(
-                [
-                    arrow_types.ObjectAnnotation(
-                        id=shortuuid.uuid(),
-                        view_id=view,
-                        bbox=xyxy_to_xywh(
-                            [
-                                output["detection_boxes"][0][i][1],
-                                output["detection_boxes"][0][i][0],
-                                output["detection_boxes"][0][i][3],
-                                output["detection_boxes"][0][i][2],
-                            ]
-                        ),
-                        bbox_confidence=float(output["detection_scores"][0][i]),
-                        bbox_source=self.id,
-                        category_id=int(output["detection_classes"][0][i]),
-                        category_name=coco_names_91(output["detection_classes"][0][i]),
-                    )
-                    for i in range(int(output["num_detections"]))
-                    if output["detection_scores"][0][i] > threshold
-                ]
-            )
-        return objects
+                # Process model outputs
+                rows.extend(
+                    [
+                        {
+                            "id": shortuuid.uuid(),
+                            "item_id": batch["id"][x].as_py(),
+                            "view_id": view,
+                            "bbox": BBox.from_xyxy(
+                                [
+                                    output["detection_boxes"][0][i][1],
+                                    output["detection_boxes"][0][i][0],
+                                    output["detection_boxes"][0][i][3],
+                                    output["detection_boxes"][0][i][2],
+                                ],
+                                confidence=float(output["detection_scores"][0][i]),
+                            ).to_dict(),
+                            "category_id": int(output["detection_classes"][0][i]),
+                            "category_name": coco_names_91(
+                                output["detection_classes"][0][i]
+                            ),
+                        }
+                        for i in range(int(output["num_detections"]))
+                        if output["detection_scores"][0][i] > threshold
+                    ]
+                )
+
+        return rows

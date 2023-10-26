@@ -11,16 +11,13 @@
 #
 # http://www.cecill.info
 
-from pathlib import Path
-
 import numpy as np
 import pyarrow as pa
 import shortuuid
 import torch
-from PIL import Image
-from pixano.core import arrow_types
+from pixano.core import BBox, CompressedRLE, Image
 from pixano.models import InferenceModel
-from pixano.transforms import coco_names_91, mask_to_rle, normalize, xyxy_to_xywh
+from pixano.utils import coco_names_91
 from torchvision.models.detection import (
     MaskRCNN_ResNet50_FPN_V2_Weights,
     maskrcnn_resnet50_fpn_v2,
@@ -58,8 +55,7 @@ class MaskRCNNv2(InferenceModel):
         name (str): Model name
         id (str): Model ID
         device (str): Model GPU or CPU device
-        source (str): Model source
-        info (str): Additional model info
+        description (str): Model description
         model (torch.nn.Module): PyTorch model
         transforms (torch.nn.Module): PyTorch preprocessing transforms
     """
@@ -76,8 +72,7 @@ class MaskRCNNv2(InferenceModel):
             name="MaskRCNNv2",
             id=id,
             device=device,
-            source="PyTorch Hub",
-            info="MaskRCNN, ResNet-50-FPN v2 Backbone, COCO_V1 Weights",
+            description="From PyTorch Hub. MaskRCNN, ResNet-50-FPN v2 Backbone, COCO_V1 Weights.",
         )
 
         # Model
@@ -90,50 +85,63 @@ class MaskRCNNv2(InferenceModel):
         # Transforms
         self.transforms = MaskRCNN_ResNet50_FPN_V2_Weights.COCO_V1.transforms()
 
-    def inference_batch(
-        self, batch: pa.RecordBatch, view: str, uri_prefix: str, threshold: float = 0.0
-    ) -> list[list[arrow_types.ObjectAnnotation]]:
+    def preannotate(
+        self,
+        batch: pa.RecordBatch,
+        views: list[str],
+        uri_prefix: str,
+        threshold: float = 0.0,
+    ) -> list[dict]:
         """Inference pre-annotation for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
-            view (str): Dataset view
+            views (list[str]): Dataset views
             uri_prefix (str): URI prefix for media files
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            list[list[arrow_types.ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
+            list[dict]: Processed rows
         """
 
-        objects = []
+        rows = []
 
-        # PyTorch Transforms don't support different-sized image batches, so iterate manually
-        for x in range(batch.num_rows):
-            # Preprocess image
-            im = batch[view][x].as_py(uri_prefix).as_pillow()
-            im_tensor = self.transforms(im).unsqueeze(0).to(self.device)
+        for view in views:
+            # PyTorch Transforms don't support different-sized image batches, so iterate manually
+            for x in range(batch.num_rows):
+                # Preprocess image
+                im = Image.from_dict(batch[view][x].as_py())
+                im.uri_prefix = uri_prefix
+                im = im.as_pillow()
+                im_tensor = self.transforms(im).unsqueeze(0).to(self.device)
 
-            # Inference
-            with torch.no_grad():
-                output = self.model(im_tensor)[0]
+                # Inference
+                with torch.no_grad():
+                    output = self.model(im_tensor)[0]
 
-            # Process model outputs
-            w, h = im.size
-            objects.append(
-                [
-                    arrow_types.ObjectAnnotation(
-                        id=shortuuid.uuid(),
-                        view_id=view,
-                        bbox=normalize(xyxy_to_xywh(output["boxes"][i]), h, w),
-                        bbox_confidence=float(output["scores"][i]),
-                        bbox_source=self.id,
-                        mask=mask_to_rle(unmold_mask(output["masks"][i])),
-                        mask_source=self.id,
-                        category_id=int(output["labels"][i]),
-                        category_name=coco_names_91(output["labels"][i]),
-                    )
-                    for i in range(len(output["scores"]))
-                    if output["scores"][i] > threshold
-                ]
-            )
-        return objects
+                # Process model outputs
+                w, h = im.size
+                rows.extend(
+                    [
+                        {
+                            "id": shortuuid.uuid(),
+                            "item_id": batch["id"][x].as_py(),
+                            "view_id": view,
+                            "bbox": BBox.from_xyxy(
+                                list(output["boxes"][i]),
+                                confidence=float(output["scores"][i]),
+                            )
+                            .normalize(h, w)
+                            .to_dict(),
+                            "mask": CompressedRLE.from_mask(
+                                unmold_mask(output["masks"][i])
+                            ).to_dict(),
+                            "category_id": int(output["labels"][i]),
+                            "category_name": coco_names_91(output["labels"][i]),
+                        }
+                        for i in range(len(output["scores"]))
+                        if output["scores"][i] > threshold
+                    ]
+                )
+
+        return rows

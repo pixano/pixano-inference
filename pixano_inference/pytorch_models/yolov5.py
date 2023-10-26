@@ -11,15 +11,12 @@
 #
 # http://www.cecill.info
 
-from pathlib import Path
-
 import pyarrow as pa
 import shortuuid
 import torch
-from PIL import Image
-from pixano.core import arrow_types
+from pixano.core import BBox, Image
 from pixano.models import InferenceModel
-from pixano.transforms import coco_ids_80to91, coco_names_91, normalize, xyxy_to_xywh
+from pixano.utils import coco_ids_80to91, coco_names_91
 
 
 class YOLOv5(InferenceModel):
@@ -29,8 +26,7 @@ class YOLOv5(InferenceModel):
         name (str): Model name
         id (str): Model ID
         device (str): Model GPU or CPU device
-        source (str): Model source
-        info (str): Additional model info
+        description (str): Model description
         model (torch.nn.Module): PyTorch model
     """
 
@@ -47,8 +43,7 @@ class YOLOv5(InferenceModel):
             name=f"YOLOv5{size}",
             id=id,
             device=device,
-            source="PyTorch Hub",
-            info=f"YOLOv5 model, {size.upper()} backbone",
+            description=f"From PyTorch Hub. YOLOv5 model, {size.upper()} backbone.",
         )
 
         # Model
@@ -59,47 +54,62 @@ class YOLOv5(InferenceModel):
         )
         self.model.to(self.device)
 
-    def inference_batch(
-        self, batch: pa.RecordBatch, view: str, uri_prefix: str, threshold: float = 0.0
-    ) -> list[list[arrow_types.ObjectAnnotation]]:
+    def preannotate(
+        self,
+        batch: pa.RecordBatch,
+        views: list[str],
+        uri_prefix: str,
+        threshold: float = 0.0,
+    ) -> list[dict]:
         """Inference pre-annotation for a batch
 
         Args:
             batch (pa.RecordBatch): Input batch
-            view (str): Dataset view
+            views (list[str]): Dataset views
             uri_prefix (str): URI prefix for media files
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
 
         Returns:
-            list[list[arrow_types.ObjectAnnotation]]: Model inferences as lists of ObjectAnnotation
+            list[dict]: Processed rows
         """
 
-        # Preprocess image batch
-        im_batch = [
-            batch[view][x].as_py(uri_prefix).as_pillow() for x in range(batch.num_rows)
-        ]
+        rows = []
 
-        # Inference
-        outputs = self.model(im_batch)
+        for view in views:
+            # Preprocess image batch
+            im_batch = []
+            for x in range(batch.num_rows):
+                im = Image.from_dict(batch[view][x].as_py())
+                im.uri_prefix = uri_prefix
+                im_batch.append(im.as_pillow())
 
-        # Process model outputs
-        objects = []
-        for img, img_output in zip(im_batch, outputs.xyxy):
-            w, h = img.size
-            objects.append(
-                [
-                    arrow_types.ObjectAnnotation(
-                        id=shortuuid.uuid(),
-                        view_id=view,
-                        bbox=normalize(xyxy_to_xywh(pred[0:4]), h, w),
-                        bbox_confidence=float(pred[4]),
-                        bbox_source=self.id,
-                        category_id=coco_ids_80to91(pred[5] + 1),
-                        category_name=coco_names_91(coco_ids_80to91(pred[5] + 1)),
-                    )
-                    for pred in img_output
-                    if pred[4] > threshold
-                ]
-            )
+            # Inference
+            outputs = self.model(im_batch)
 
-        return objects
+            # Process model outputs
+            for x, img, img_output in zip(
+                range(batch.num_rows), im_batch, outputs.xyxy
+            ):
+                w, h = img.size
+                rows.extend(
+                    [
+                        {
+                            "id": shortuuid.uuid(),
+                            "item_id": batch["id"][x].as_py(),
+                            "view_id": view,
+                            "bbox": BBox.from_xyxy(
+                                list(pred[0:4]), confidence=float(pred[4])
+                            )
+                            .normalize(h, w)
+                            .to_dict(),
+                            "category_id": coco_ids_80to91(pred[5] + 1),
+                            "category_name": coco_names_91(
+                                coco_ids_80to91(pred[5] + 1)
+                            ),
+                        }
+                        for pred in img_output
+                        if pred[4] > threshold
+                    ]
+                )
+
+        return rows
