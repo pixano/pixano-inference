@@ -94,8 +94,8 @@ class CLIP(InferenceModel):
 
                 # Inference
                 inputs = self.processor(images=im, padded=True, return_tensors="pt")
-                text_features = self.model.get_image_features(**inputs)
-                vect = text_features.detach().numpy()[0]
+                image_features = self.model.get_image_features(**inputs)
+                vect = image_features.detach().numpy()[0]
 
                 # Process model outputs
                 rows[x][view] = vect
