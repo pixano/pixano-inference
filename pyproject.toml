@@ -30,6 +30,7 @@ dependencies = [
   "tensorflow >= 2.12.0",
   "tensorflow-hub >= 0.13.0",
   "segment-anything@git+https://github.com/facebookresearch/segment-anything",
+  "transformers >= 4.33.0",
   "gitpython >= 3.1.30",
   "matplotlib >= 3.3",
   "psutil",
