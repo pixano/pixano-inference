@@ -37,6 +37,7 @@ class SAM(InferenceModel):
         device (str): Model GPU or CPU device (e.g. "cuda", "cpu")
         description (str): Model description
         model (torch.nn.Module): SAM model
+        checkpoint_path (Path): Model checkpoint path
     """
 
     def __init__(
