@@ -6,10 +6,20 @@ All notable changes to Pixano will be documented in this file.
 
 ## [Unreleased]
 
+
+
+## [0.2.1] - 2023-11-13
+
+### Added
+- Add CLIP model for **semantic search** on images
+
+
+
 ## [0.2.0] - 2023-10-26
 
 ### Changed
 - **Breaking:** Update models to the new **PixanoTypes** and **lancedb storage format** of Pixano 0.4.0
+
 
 
 ## [0.1.6] - 2023-07-10
@@ -81,7 +91,8 @@ All notable changes to Pixano will be documented in this file.
 
 
 
-[Unreleased]: https://github.com/pixano/pixano-inference/compare/v0.2.0...develop
+[Unreleased]: https://github.com/pixano/pixano/compare/main...develop
+[0.2.1]: https://github.com/pixano/pixano-inference/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/pixano/pixano-inference/compare/v0.1.6...v0.2.0
 [0.1.6]: https://github.com/pixano/pixano-inference/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/pixano/pixano-inference/compare/v0.1.4...v0.1.5
