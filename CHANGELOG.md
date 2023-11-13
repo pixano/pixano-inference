@@ -8,7 +8,7 @@ All notable changes to Pixano will be documented in this file.
 
 
 
-## [0.2.1] - 2023-11-10
+## [0.2.1] - 2023-11-13
 
 ### Added
 - Add CLIP model for **semantic search** on images
