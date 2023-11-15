@@ -11,6 +11,7 @@ All notable changes to Pixano will be documented in this file.
 
 ### Changed
 
+- Update README with a small header description listing main features and more detailed installation instructions
 - Generate API reference automatically
 - Update documentation website accent color to complementary color of the Pixano main accent color
 - Add cross-references to Pixano, TensorFlow, and Hugging Face Transformers in the API reference of the documentation website
