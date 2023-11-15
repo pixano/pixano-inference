@@ -16,6 +16,7 @@ All notable changes to Pixano will be documented in this file.
 
 ### Fixed
 
+- Fix links to Pixano notebooks
 - Fix internal cross-references in the API reference of the documentation website
 
 ## [0.2.1] - 2023-11-13

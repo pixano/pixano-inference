@@ -25,7 +25,7 @@ pip install pixano-inference@git+https://github.com/pixano/pixano-inference
 
 # Using Pixano Inference
 
-Please refer to the Pixano [annotation notebooks](https://github.com/pixano/pixano/tree/main/notebooks/annotation) for information on how to use the inference models provided by this module.
+Please refer to [these Pixano notebooks](https://github.com/pixano/pixano/tree/main/notebooks/models) for information on how to use the inference models provided by this module.
 
 # Contributing
 
