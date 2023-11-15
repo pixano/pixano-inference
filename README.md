@@ -29,11 +29,7 @@ Please refer to [these Pixano notebooks](https://github.com/pixano/pixano/tree/m
 
 # Contributing
 
-If you find a bug or you think of some missing features that could be useful while using Pixano Inference, please [open an issue](https://github.com/pixano/pixano-inference/issues)!
-
-To contribute more actively to the project, you are welcome to develop the fix or the feature you have in mind, and [create a pull request](https://github.com/pixano/pixano-inference/pulls)!
-
-And if you want to change the module to your liking, feel free to [fork this repository](https://github.com/pixano/pixano-inference/fork)!
+Please refer to the [CONTRIBUTING.md](CONTRIBUTING.md) for information on running Pixano locally and guidelines on how to publish your contributions.
 
 # License
 
