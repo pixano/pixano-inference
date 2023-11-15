@@ -37,11 +37,4 @@ jobs:
         uses: psf/black@stable
         with:
           options: "--check --verbose"
-          src: "./pixano"
-
-      - name: Lint Jupyter notebooks with black
-        uses: psf/black@stable
-        with:
-          options: "--check --verbose"
-          src: "./notebooks"
-          jupyter: true
+          src: "./pixano_inference"
