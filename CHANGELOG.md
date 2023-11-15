@@ -11,6 +11,7 @@ All notable changes to Pixano will be documented in this file.
 ### Changed
 
 - Generate API reference automatically
+- Update documentation website accent color to complementary color of the Pixano main accent color
 
 ## [0.2.1] - 2023-11-13
 
