@@ -8,7 +8,7 @@
 
 **Data-centric AI building blocks for computer vision applications**
 
-***Under active development, subject to API change***
+**_Under active development, subject to API change_**
 
 [![GitHub version](https://img.shields.io/github/v/release/pixano/pixano-inference?label=release&logo=github)](https://github.com/pixano/pixano/releases)
 [![Documentation](https://img.shields.io/website/https/pixano.github.io?up_message=online&up_color=green&down_message=offline&down_color=orange&label=docs)](https://pixano.github.io)
@@ -17,12 +17,12 @@
 
 </div>
 
-
 # Installing Pixano Inference
 
 ```shell
 pip install pixano-inference@git+https://github.com/pixano/pixano-inference
 ```
+
 # Using Pixano Inference
 
 Please refer to the Pixano [annotation notebooks](https://github.com/pixano/pixano/tree/main/notebooks/annotation) for information on how to use the inference models provided by this module.
@@ -34,7 +34,6 @@ If you find a bug or you think of some missing features that could be useful whi
 To contribute more actively to the project, you are welcome to develop the fix or the feature you have in mind, and [create a pull request](https://github.com/pixano/pixano-inference/pulls)!
 
 And if you want to change the module to your liking, feel free to [fork this repository](https://github.com/pixano/pixano-inference/fork)!
-
 
 # License
 
