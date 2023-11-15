@@ -11,7 +11,7 @@
 #
 # http://www.cecill.info
 
-from .segment_anything import SAM
+from .sam import SAM
 
 __all__ = [
     "SAM",
