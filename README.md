@@ -17,9 +17,9 @@
 
 <hr />
 
-<a href="https://github.com/pixano/pixano" target="_blank">Pixano</a> is an open-source tool by CEA List for exploring and annotating your dataset using AI features like **smart segmentation** and **semantic search**.
+<a href="https://github.com/pixano/pixano" target="_blank">**Pixano**</a> is an open-source tool by CEA List for exploring and annotating your dataset using AI features like **smart segmentation** and **semantic search**.
 
-This library provides the AI models like _SAM_ and _CLIP_ that power those features, as well as a PyTorch and TensorFlow models for pre-annotating your datasets.
+**Pixano Inference** provides the AI models like _SAM_ and _CLIP_ that power those features, as well as a PyTorch and TensorFlow models for pre-annotating your datasets.
 
 # Getting started
 
