@@ -48,6 +48,11 @@ extra:
 plugins:
   - search
   - autorefs
+  - gen-files:
+      scripts:
+        - docs/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
   - mkdocstrings:
       handlers:
         python:
@@ -58,7 +63,7 @@ plugins:
             - https://pandas.pydata.org/pandas-docs/version/1.5/objects.inv
             - https://pillow.readthedocs.io/en/stable/objects.inv
             - https://arrow.apache.org/docs/objects.inv
-            - https://docs.pydantic.dev/2.0/objects.inv # no objects.inv available for 1.10
+            - https://docs.pydantic.dev/2.4/objects.inv
             - https://ipython.readthedocs.io/en/8.13.2/objects.inv
             - https://pytorch.org/docs/master/objects.inv
           options:
@@ -83,19 +88,6 @@ nav:
       - "Pre-annotation": user/pre_annotation.md
       - "Interactive annotation": user/interactive_annotation.md
 
-  - "API reference":
-      - code/index.md
-
-      - "pytorch_models":
-          - "DeepLabV3": code/pytorch_models/deeplabv3.md
-          - "MaskRCNNv2": code/pytorch_models/maskrcnnv2.md
-          - "YOLOv5": code/pytorch_models/yolov5.md
-
-      - "segment_anything":
-          - "SAM": code/segment_anything/segment_anything.md
-
-      - "tensorflow_models":
-          - "EfficientDet": code/tensorflow_models/efficientdet.md
-          - "FasterRCNN": code/tensorflow_models/fasterrcnn.md
+  - "API reference": code/
 
   - "Pixano": https://pixano.github.io

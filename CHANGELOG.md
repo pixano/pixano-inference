@@ -8,6 +8,10 @@ All notable changes to Pixano will be documented in this file.
 
 - Add GitHub actions to format Python, UI, and Markdown code
 
+### Changed
+
+- Generate API reference automatically
+
 ## [0.2.1] - 2023-11-13
 
 ### Added
