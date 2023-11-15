@@ -7,6 +7,7 @@ All notable changes to Pixano will be documented in this file.
 ### Added
 
 - Add GitHub actions to format Python, UI, and Markdown code
+- Add CONTRIBUTING.md for installation information and contribution guidelines
 
 ### Changed
 
