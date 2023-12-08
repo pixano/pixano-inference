@@ -128,8 +128,8 @@ class MaskRCNNv2(InferenceModel):
                             "item_id": batch["id"][x].as_py(),
                             "view_id": view,
                             "bbox": BBox.from_xyxy(
-                                [float(coord) for coord in output["boxes"][i]],
-                                confidence=float(output["scores"][i]),
+                                [coord.item() for coord in output["boxes"][i]],
+                                confidence=output["scores"][i].item(),
                             )
                             .normalize(h, w)
                             .to_dict(),
