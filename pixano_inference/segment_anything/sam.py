@@ -114,7 +114,7 @@ class SAM(InferenceModel):
                             "item_id": batch["id"][x].as_py(),
                             "view_id": view,
                             "bbox": BBox.from_xywh(
-                                output[i]["bbox"],
+                                [float(coord) for coord in output[i]["bbox"]],
                                 confidence=float(output[i]["predicted_iou"]),
                             )
                             .normalize(h, w)

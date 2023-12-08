@@ -128,7 +128,7 @@ class MaskRCNNv2(InferenceModel):
                             "item_id": batch["id"][x].as_py(),
                             "view_id": view,
                             "bbox": BBox.from_xyxy(
-                                list(output["boxes"][i]),
+                                [float(coord) for coord in output["boxes"][i]],
                                 confidence=float(output["scores"][i]),
                             )
                             .normalize(h, w)

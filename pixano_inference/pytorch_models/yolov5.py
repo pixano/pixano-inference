@@ -98,7 +98,8 @@ class YOLOv5(InferenceModel):
                             "item_id": batch["id"][x].as_py(),
                             "view_id": view,
                             "bbox": BBox.from_xyxy(
-                                list(pred[0:4]), confidence=float(pred[4])
+                                [float(coord) for coord in pred[0:4]],
+                                confidence=float(pred[4]),
                             )
                             .normalize(h, w)
                             .to_dict(),
