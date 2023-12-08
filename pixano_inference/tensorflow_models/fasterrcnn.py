@@ -95,10 +95,10 @@ class FasterRCNN(InferenceModel):
                             "view_id": view,
                             "bbox": BBox.from_xyxy(
                                 [
-                                    output["detection_boxes"][0][i][1],
-                                    output["detection_boxes"][0][i][0],
-                                    output["detection_boxes"][0][i][3],
-                                    output["detection_boxes"][0][i][2],
+                                    float(output["detection_boxes"][0][i][1]),
+                                    float(output["detection_boxes"][0][i][0]),
+                                    float(output["detection_boxes"][0][i][3]),
+                                    float(output["detection_boxes"][0][i][2]),
                                 ],
                                 confidence=float(output["detection_scores"][0][i]),
                             ).to_dict(),
