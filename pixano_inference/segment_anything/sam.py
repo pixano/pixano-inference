@@ -33,7 +33,7 @@ class SAM(InferenceModel):
 
     Attributes:
         name (str): Model name
-        id (str): Model ID
+        model_id (str): Model ID
         device (str): Model GPU or CPU device (e.g. "cuda", "cpu")
         description (str): Model description
         model (torch.nn.Module): SAM model
@@ -44,7 +44,7 @@ class SAM(InferenceModel):
         self,
         checkpoint_path: Path,
         size: str = "h",
-        id: str = "",
+        model_id: str = "",
         device: str = "cuda",
     ) -> None:
         """Initialize model
@@ -52,13 +52,13 @@ class SAM(InferenceModel):
         Args:
             checkpoint_path (Path): Model checkpoint path.
             size (str, optional): Model size ("b", "l", "h"). Defaults to "h".
-            id (str, optional): Previously used ID, generate new ID if "". Defaults to "".
+            model_id (str, optional): Previously used ID, generate new ID if "". Defaults to "".
             device (str, optional): Model GPU or CPU device (e.g. "cuda", "cpu"). Defaults to "cuda".
         """
 
         super().__init__(
             name=f"SAM_ViT_{size.upper()}",
-            id=id,
+            model_id=model_id,
             device=device,
             description=f"From GitHub. Segment Anything Model (SAM), ViT-{size.upper()} Backbone.",
         )

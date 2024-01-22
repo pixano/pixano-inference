@@ -53,24 +53,28 @@ class MaskRCNNv2(InferenceModel):
 
     Attributes:
         name (str): Model name
-        id (str): Model ID
+        model_id (str): Model ID
         device (str): Model GPU or CPU device
         description (str): Model description
         model (torch.nn.Module): PyTorch model
         transforms (torch.nn.Module): PyTorch preprocessing transforms
     """
 
-    def __init__(self, id: str = "", device: str = "cuda") -> None:
+    def __init__(
+        self,
+        model_id: str = "",
+        device: str = "cuda",
+    ) -> None:
         """Initialize model
 
         Args:
-            id (str, optional): Previously used ID, generate new ID if "". Defaults to "".
+            model_id (str, optional): Previously used ID, generate new ID if "". Defaults to "".
             device (str, optional): Model GPU or CPU device (e.g. "cuda", "cpu"). Defaults to "cuda".
         """
 
         super().__init__(
             name="MaskRCNNv2",
-            id=id,
+            model_id=model_id,
             device=device,
             description="From PyTorch Hub. MaskRCNN, ResNet-50-FPN v2 Backbone, COCO_V1 Weights.",
         )
