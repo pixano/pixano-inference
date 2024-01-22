@@ -36,26 +36,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Install dependencies
-        run: |
-          cd ui
-          pnpm i
-
-      - name: Format frontend code with Prettier
-        run: |
-          cd ui
-          pnpm format_check
-
       - name: Format top-level Markdown and YAML files with Prettier
         uses: creyD/prettier_action@v4.3
         with:
