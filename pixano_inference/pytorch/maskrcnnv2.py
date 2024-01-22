@@ -140,8 +140,7 @@ class MaskRCNNv2(InferenceModel):
                             "mask": CompressedRLE.from_mask(
                                 unmold_mask(output["masks"][i])
                             ).to_dict(),
-                            "category_id": int(output["labels"][i]),
-                            "category_name": coco_names_91(output["labels"][i]),
+                            "category": coco_names_91(output["labels"][i]),
                         }
                         for i in range(len(output["scores"]))
                         if output["scores"][i] > threshold

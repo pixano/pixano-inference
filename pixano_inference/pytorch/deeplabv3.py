@@ -139,8 +139,7 @@ class DeepLabV3(InferenceModel):
                             "mask": CompressedRLE.from_mask(
                                 unmold_mask(mask)
                             ).to_dict(),
-                            "category_id": int(label),
-                            "category_name": voc_names(label),
+                            "category": voc_names(label),
                         }
                         for label, mask in zip(labels, masks)
                     ]
