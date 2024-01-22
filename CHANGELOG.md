@@ -6,11 +6,14 @@ All notable changes to Pixano will be documented in this file.
 
 ### Added
 
-- Add GitHub actions to format Python, UI, and Markdown code
+- Add GitHub actions to format and lint code
 - Add CONTRIBUTING.md for installation information and contribution guidelines
 
 ### Changed
 
+- **Breaking:** Update to Pixano 0.5.0
+- **Breaking:** Update InferenceModel `id` attribute to `model_id` to stop redefining built-in `id`
+- **Breaking:** Update submodule names to `pytorch` and `tensorflow`
 - Update README with a small header description listing main features and more detailed installation instructions
 - Generate API reference automatically
 - Update documentation website accent color to complementary color of the Pixano main accent color
