@@ -23,7 +23,7 @@ classifiers = [
   "License :: CeCILL-C Free Software License Agreement (CECILL-C)",
 ]
 dependencies = [
-  "pixano ~= 0.5.0",
+  "pixano ~= 0.5.0b1",
   "torch >= 2.0.0",
   "torchaudio >= 2.0.0",
   "torchvision >= 0.15.0",
