@@ -7,6 +7,7 @@ generated-members=
     cv2.*, # members not found
     duckdb.*, # members not found
     torch.*, # members not found
+    tensorflow.*, # members not found
 
 [MAIN]
 max-branches=20
