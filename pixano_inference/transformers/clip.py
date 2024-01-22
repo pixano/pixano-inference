@@ -24,7 +24,7 @@ class CLIP(InferenceModel):
 
     Attributes:
         name (str): Model name
-        id (str): Model ID
+        model_id (str): Model ID
         device (str): Model GPU or CPU device (e.g. "cuda", "cpu")
         description (str): Model description
         model (CLIPModel): CLIP model
@@ -36,18 +36,18 @@ class CLIP(InferenceModel):
     def __init__(
         self,
         pretrained_model: str = "openai/clip-vit-base-patch32",
-        id: str = "",
+        model_id: str = "",
     ) -> None:
         """Initialize model
 
         Args:
             pretrained_model (str): Pretrained model name or path
-            id (str, optional): Previously used ID, generate new ID if "". Defaults to "".
+            model_id (str, optional): Previously used ID, generate new ID if "". Defaults to "".
         """
 
         super().__init__(
-            name=f"CLIP",
-            id=id,
+            name="CLIP",
+            model_id=model_id,
             device="cpu",
             description=f"From HuggingFace Transformers. CLIP: Connecting text and images. {pretrained_model}.",
         )

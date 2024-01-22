@@ -24,24 +24,29 @@ class YOLOv5(InferenceModel):
 
     Attributes:
         name (str): Model name
-        id (str): Model ID
+        model_id (str): Model ID
         device (str): Model GPU or CPU device
         description (str): Model description
         model (torch.nn.Module): PyTorch model
     """
 
-    def __init__(self, size: str = "s", id: str = "", device: str = "cuda") -> None:
+    def __init__(
+        self,
+        size: str = "s",
+        model_id: str = "",
+        device: str = "cuda",
+    ) -> None:
         """Initialize model
 
         Args:
             size (str, optional): Model size ("n", "s", "m", "x"). Defaults to "s".
-            id (str, optional): Previously used ID, generate new ID if "". Defaults to "".
+            model_id (str, optional): Previously used ID, generate new ID if "". Defaults to "".
             device (str, optional): Model GPU or CPU device (e.g. "cuda", "cpu"). Defaults to "cuda".
         """
 
         super().__init__(
             name=f"YOLOv5{size}",
-            id=id,
+            model_id=model_id,
             device=device,
             description=f"From PyTorch Hub. YOLOv5 model, {size.upper()} backbone.",
         )

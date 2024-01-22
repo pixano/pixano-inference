@@ -25,23 +25,27 @@ class FasterRCNN(InferenceModel):
 
     Attributes:
         name (str): Model name
-        id (str): Model ID
+        model_id (str): Model ID
         device (str): Model GPU or CPU device
         description (str): Model description
         model (tf.keras.Model): TensorFlow model
     """
 
-    def __init__(self, id: str = "", device: str = "/GPU:0") -> None:
+    def __init__(
+        self,
+        model_id: str = "",
+        device: str = "/GPU:0",
+    ) -> None:
         """Initialize model
 
         Args:
-            id (str, optional): Previously used ID, generate new ID if "". Defaults to "".
+            model_id (str, optional): Previously used ID, generate new ID if "". Defaults to "".
             device (str, optional): Model GPU or CPU device (e.g. "/GPU:0", "/CPU:0"). Defaults to "/GPU:0".
         """
 
         super().__init__(
             name="FasterRCNN_R50",
-            id=id,
+            model_id=model_id,
             device=device,
             description="From TensorFlow Hub. FasterRCNN model, with ResNet50 architecture.",
         )
