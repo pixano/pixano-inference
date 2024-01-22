@@ -108,10 +108,7 @@ class YOLOv5(InferenceModel):
                             )
                             .normalize(h, w)
                             .to_dict(),
-                            "category_id": coco_ids_80to91(pred[5] + 1),
-                            "category_name": coco_names_91(
-                                coco_ids_80to91(pred[5] + 1)
-                            ),
+                            "category": coco_names_91(coco_ids_80to91(pred[5] + 1)),
                         }
                         for pred in img_output
                         if pred[4] > threshold

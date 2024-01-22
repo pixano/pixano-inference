@@ -104,8 +104,7 @@ class EfficientDet(InferenceModel):
                                 ],
                                 confidence=float(output["detection_scores"][0][i]),
                             ).to_dict(),
-                            "category_id": int(output["detection_classes"][0][i]),
-                            "category_name": coco_names_91(
+                            "category": coco_names_91(
                                 output["detection_classes"][0][i]
                             ),
                         }
