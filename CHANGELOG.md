@@ -4,6 +4,8 @@ All notable changes to Pixano will be documented in this file.
 
 ## [Unreleased]
 
+## [0.3.0b1] - 2024-01-23
+
 ### Added
 
 - Add GitHub actions to format and lint code
@@ -102,6 +104,7 @@ All notable changes to Pixano will be documented in this file.
 - Create first public release
 
 [Unreleased]: https://github.com/pixano/pixano/compare/main...develop
+[0.3.0b1]: https://github.com/pixano/pixano-inference/compare/v0.2.1...v0.3.0b1
 [0.2.1]: https://github.com/pixano/pixano-inference/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/pixano/pixano-inference/compare/v0.1.6...v0.2.0
 [0.1.6]: https://github.com/pixano/pixano-inference/compare/v0.1.5...v0.1.6
