@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/pixano/pixano/main/docs/assets/pixano_wide.png" alt="Pixano" height="100"/>
+<img src="https://raw.githubusercontent.com/pixano/pixano-inference/main/docs/assets/pixano_wide.png" alt="Pixano" height="100"/>
 
 <br/>
 
