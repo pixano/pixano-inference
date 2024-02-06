@@ -11,8 +11,10 @@
 #
 # http://www.cecill.info
 
+from .mobile_sam import MobileSAM
 from .sam import SAM
 
 __all__ = [
     "SAM",
+    "MobileSAM",
 ]
