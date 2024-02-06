@@ -17,4 +17,4 @@ max-args = 10
 max-locals = 20
 
 [SIMILARITIES]
-min-similarity-lines=30 # TEMP (similar lines in the two TensorFlow models)
+min-similarity-lines=200 # (duplicate lines in the TensorFlow models and in the Segment Anything models)
