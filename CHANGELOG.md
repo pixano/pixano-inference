@@ -9,10 +9,12 @@ All notable changes to Pixano will be documented in this file.
 ### Added
 
 - Add **new MobileSAM model** as a lighter alternative to SAM (pixano/pixano-inference#2)
+- Add issue and pull request templates on GitHub repository
 
 ### Fixed
 
-- Fix ignored members in linting configuration
+- Fix ignored members in linting CI configuration
+- Specify black version in formatting CI configuration
 - Fix GitHub version and documentation links in README
 
 ## [0.3.0b1] - 2024-01-23
