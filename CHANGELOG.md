@@ -4,6 +4,17 @@ All notable changes to Pixano will be documented in this file.
 
 ## [Unreleased]
 
+## [0.3.0b2] - 2024-02-19
+
+### Added
+
+- Add **new MobileSAM model** as a lighter alternative to SAM (pixano/pixano-inference#2)
+
+### Fixed
+
+- Fix ignored members in linting configuration
+- Fix GitHub version and documentation links in README
+
 ## [0.3.0b1] - 2024-01-23
 
 ### Added
@@ -104,6 +115,7 @@ All notable changes to Pixano will be documented in this file.
 - Create first public release
 
 [Unreleased]: https://github.com/pixano/pixano/compare/main...develop
+[0.3.0b2]: https://github.com/pixano/pixano-inference/compare/v0.3.0b1...v0.3.0b2
 [0.3.0b1]: https://github.com/pixano/pixano-inference/compare/v0.2.1...v0.3.0b1
 [0.2.1]: https://github.com/pixano/pixano-inference/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/pixano/pixano-inference/compare/v0.1.6...v0.2.0
