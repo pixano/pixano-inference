@@ -11,10 +11,12 @@
 #
 # http://www.cecill.info
 
+from .groundingdino import GroundingDINO
 from .mobile_sam import MobileSAM
 from .sam import SAM
 
 __all__ = [
     "SAM",
+    "GroundingDINO",
     "MobileSAM",
 ]
