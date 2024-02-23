@@ -97,6 +97,7 @@ class DeepLabV3(InferenceModel):
         views: list[str],
         uri_prefix: str,
         threshold: float = 0.0,
+        prompt: str = "",
     ) -> list[dict]:
         """Inference pre-annotation for a batch
 
@@ -105,12 +106,14 @@ class DeepLabV3(InferenceModel):
             views (list[str]): Dataset views
             uri_prefix (str): URI prefix for media files
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
+            prompt (str, optional): Annotation text prompt. Defaults to "".
 
         Returns:
             list[dict]: Processed rows
         """
 
         rows = []
+        _ = prompt  # This model does not use prompts
 
         for view in views:
             # PyTorch Transforms don't support different-sized image batches, so iterate manually
