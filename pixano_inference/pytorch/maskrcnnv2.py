@@ -114,7 +114,7 @@ class MaskRCNNv2(InferenceModel):
             # PyTorch Transforms don't support different-sized image batches, so iterate manually
             for x in range(batch.num_rows):
                 # Preprocess image
-                im = Image.from_dict(batch[view][x].as_py())
+                im: Image = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
                 im = im.as_pillow()
                 im_tensor = self.transforms(im).unsqueeze(0).to(self.device)

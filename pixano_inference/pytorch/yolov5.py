@@ -84,7 +84,7 @@ class YOLOv5(InferenceModel):
             # Preprocess image batch
             im_batch = []
             for x in range(batch.num_rows):
-                im = Image.from_dict(batch[view][x].as_py())
+                im: Image = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
                 im_batch.append(im.as_pillow())
 

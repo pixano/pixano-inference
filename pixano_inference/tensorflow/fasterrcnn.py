@@ -81,7 +81,7 @@ class FasterRCNN(InferenceModel):
             # TF.Hub Models don't support image batches, so iterate manually
             for x in range(batch.num_rows):
                 # Preprocess image
-                im = Image.from_dict(batch[view][x].as_py())
+                im: Image = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
                 im = im.as_pillow()
                 im_tensor = tf.expand_dims(tf.keras.utils.img_to_array(im), 0)

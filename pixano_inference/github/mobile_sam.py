@@ -93,7 +93,7 @@ class MobileSAM(InferenceModel):
             # Iterate manually
             for x in range(batch.num_rows):
                 # Preprocess image
-                im = Image.from_dict(batch[view][x].as_py())
+                im: Image = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
                 im = im.as_cv2()
                 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
@@ -156,7 +156,7 @@ class MobileSAM(InferenceModel):
             # Iterate manually
             for x in range(batch.num_rows):
                 # Preprocess image
-                im = Image.from_dict(batch[view][x].as_py())
+                im: Image = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
                 im = im.as_cv2()
                 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
