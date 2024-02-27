@@ -93,8 +93,8 @@ nav:
 
   - "Pixano Inference":
       - "Getting started":
-          - user/index.md
-          - "Installing Pixano Inference": user/install.md
-          - "Pre-annotation": user/pre_annotation.md
-          - "Interactive annotation": user/interactive_annotation.md
-      - "API reference": code/
+          - getting_started/index.md
+          - "Installing Pixano Inference": getting_started/installing_pixano_inference.md
+          - "Pre-annotation": getting_started/pre_annotation.md
+          - "Interactive annotation": getting_started/interactive_annotation.md
+      - "API reference": api_reference/
