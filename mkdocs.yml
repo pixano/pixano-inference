@@ -87,14 +87,14 @@ plugins:
             heading_level: 1
 
 nav:
-  - "Home": index.md
+  - "Home": https://pixano.github.io/
 
-  - "Getting started":
-      - user/index.md
-      - "Installing Pixano Inference": user/install.md
-      - "Pre-annotation": user/pre_annotation.md
-      - "Interactive annotation": user/interactive_annotation.md
+  - "Pixano": https://pixano.github.io/pixano/
 
-  - "API reference": code/
-
-  - "Pixano": https://pixano.github.io
+  - "Pixano Inference":
+      - "Getting started":
+          - user/index.md
+          - "Installing Pixano Inference": user/install.md
+          - "Pre-annotation": user/pre_annotation.md
+          - "Interactive annotation": user/interactive_annotation.md
+      - "API reference": code/
