@@ -68,7 +68,7 @@ plugins:
             - https://arrow.apache.org/docs/objects.inv
             - https://docs.pydantic.dev/2.4/objects.inv
             - https://ipython.readthedocs.io/en/8.13.2/objects.inv
-            - https://pixano.github.io/objects.inv
+            - https://pixano.github.io/pixano/objects.inv
             - https://pytorch.org/docs/master/objects.inv
             - url: https://github.com/GPflow/tensorflow-intersphinx/raw/master/tf2_py_objects.inv
               base_url: https://www.tensorflow.org/api_docs/python
