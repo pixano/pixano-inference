@@ -4,6 +4,16 @@ All notable changes to Pixano will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Add **new GroundingDINO model** for semantic segmentation with text prompts (pixano/pixano-inference#6)
+
+### Fixed
+
+- Remove top-level imports for GitHub models to prevent import errors (pixano/pixano-inference#6)
+- Fix preannotation with SAM and MobileSAM (pixano/pixano-inference#6)
+- Add type hints for Image PixanoType (pixano/pixano-inference#6)
+
 ## [0.3.0] - 2024-02-29
 
 ### Added
@@ -20,7 +30,7 @@ All notable changes to Pixano will be documented in this file.
 - **Breaking:** Remove SAM and MobileSAM dependencies to allow publishing to PyPI (pixano/pixano-inference#14)
 - **Breaking:** Update to Pixano 0.5.0
 - **Breaking:** Update InferenceModel `id` attribute to `model_id` to stop redefining built-in `id`
-- **Breaking:** Update submodule names to `pytorch` and `tensorflow`
+- **Breaking:** Update submodule names to `pytorch`, `tensorflow`, and `github`
 - Update README with a small header description listing main features and more detailed installation instructions
 - Generate API reference on documentation website automatically
 - Add cross-references to Pixano, TensorFlow, and Hugging Face Transformers in the API reference
