@@ -14,9 +14,10 @@ pip install pixano
 pip install pixano-inference
 ```
 
-To use the inference models available through GitHub, install the following additional packages:
+To use the inference models available through GitHub, install the following additional packages as needed:
 
 ```shell
 python -m pip install segment-anything@git+https://github.com/facebookresearch/segment-anything
 python -m pip install mobile-sam@git+https://github.com/ChaoningZhang/MobileSAM
+python -m pip install groundingdino@git+https://github.com/IDEA-Research/GroundingDINO
 ```
