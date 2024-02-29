@@ -13,3 +13,10 @@ Then, you can install the Pixano and Pixano Inference packages inside that envir
 pip install pixano
 pip install pixano-inference
 ```
+
+To use the inference models available through GitHub, install the following additional packages:
+
+```shell
+python -m pip install segment-anything@git+https://github.com/facebookresearch/segment-anything
+python -m pip install mobile-sam@git+https://github.com/ChaoningZhang/MobileSAM
+```

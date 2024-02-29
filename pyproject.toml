@@ -49,10 +49,6 @@ documentation = [
   "mkdocs-literate-nav ~= 0.6.0",
   "mkdocs-redirects ~= 1.2.1",
 ]
-sam = [
-  "segment-anything@git+https://github.com/facebookresearch/segment-anything",
-  "mobile-sam@git+https://github.com/ChaoningZhang/MobileSAM",
-]
 
 [project.urls]
 Documentation = "https://github.com/pixano/pixano-inference#readme"

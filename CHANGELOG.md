@@ -17,8 +17,7 @@ All notable changes to Pixano will be documented in this file.
 
 ### Changed
 
-- **Breaking:** Make SAM and MobileSAM optional dependencies to allow publishing to PyPI
-  - Install those dependencies with `pip install pixano-inference[sam]`
+- **Breaking:** Remove SAM and MobileSAM dependencies to allow publishing to PyPI
 - **Breaking:** Update to Pixano 0.5.0
 - **Breaking:** Update InferenceModel `id` attribute to `model_id` to stop redefining built-in `id`
 - **Breaking:** Update submodule names to `pytorch` and `tensorflow`
