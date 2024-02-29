@@ -29,8 +29,6 @@ dependencies = [
   "torchvision ~= 0.17.0",
   "tensorflow ~= 2.15.0",
   "tensorflow-hub ~= 0.15.0",
-  "segment-anything@git+https://github.com/facebookresearch/segment-anything",
-  "mobile-sam@git+https://github.com/ChaoningZhang/MobileSAM",
   "transformers >= 4.33.0",
   "timm >= 0.9.12",
   "gitpython >= 3.1.30",
@@ -50,6 +48,10 @@ documentation = [
   "mkdocs-gen-files ~= 0.5.0",
   "mkdocs-literate-nav ~= 0.6.0",
   "mkdocs-redirects ~= 1.2.1",
+]
+sam = [
+  "segment-anything@git+https://github.com/facebookresearch/segment-anything",
+  "mobile-sam@git+https://github.com/ChaoningZhang/MobileSAM",
 ]
 
 [project.urls]
