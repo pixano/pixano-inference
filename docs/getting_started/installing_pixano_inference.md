@@ -11,5 +11,5 @@ Then, you can install the Pixano and Pixano Inference packages inside that envir
 
 ```shell
 pip install pixano
-pip install pixano-inference@git+https://github.com/pixano/pixano-inference
+pip install pixano-inference
 ```
