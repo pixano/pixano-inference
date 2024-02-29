@@ -41,7 +41,7 @@ jobs:
           python-version: "3.10"
 
       # Install PyTorch and TensorFlow CPU versions manually to prevent installing CUDA
-      # Install SAM and MobileSAM manually as they cannot be included in PyPI
+      # Install GitHub models manually as they cannot be included in PyPI
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -50,6 +50,7 @@ jobs:
           python -m pip install tensorflow-cpu~=2.15.0
           python -m pip install segment-anything@git+https://github.com/facebookresearch/segment-anything
           python -m pip install mobile-sam@git+https://github.com/ChaoningZhang/MobileSAM
+          python -m pip install groundingdino@git+https://github.com/IDEA-Research/GroundingDINO
           python -m pip install .
 
       - name: Lint backend code with Pylint
