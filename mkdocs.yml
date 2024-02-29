@@ -1,4 +1,4 @@
-site_name: Pixano Inference Documentation
+site_name: Pixano Documentation
 theme:
   name: material
   logo: assets/pixano_white.png
@@ -55,6 +55,9 @@ plugins:
         - docs/gen_ref_pages.py
   - literate-nav:
       nav_file: SUMMARY.md
+  - redirects:
+      redirect_maps:
+        "index.md": "getting_started/index.md"
   - mkdocstrings:
       enable_inventory: true
       handlers:
@@ -68,7 +71,7 @@ plugins:
             - https://arrow.apache.org/docs/objects.inv
             - https://docs.pydantic.dev/2.4/objects.inv
             - https://ipython.readthedocs.io/en/8.13.2/objects.inv
-            - https://pixano.github.io/objects.inv
+            - https://pixano.github.io/pixano/objects.inv
             - https://pytorch.org/docs/master/objects.inv
             - url: https://github.com/GPflow/tensorflow-intersphinx/raw/master/tf2_py_objects.inv
               base_url: https://www.tensorflow.org/api_docs/python
@@ -87,14 +90,14 @@ plugins:
             heading_level: 1
 
 nav:
-  - "Home": index.md
+  - "Home": https://pixano.github.io/
 
-  - "Getting started":
-      - user/index.md
-      - "Installing Pixano Inference": user/install.md
-      - "Pre-annotation": user/pre_annotation.md
-      - "Interactive annotation": user/interactive_annotation.md
+  - "Pixano": https://pixano.github.io/pixano/
 
-  - "API reference": code/
-
-  - "Pixano": https://pixano.github.io
+  - "Pixano Inference":
+      - "Getting started":
+          - getting_started/index.md
+          - "Installing Pixano Inference": getting_started/installing_pixano_inference.md
+          - "Pre-annotation": getting_started/pre_annotation.md
+          - "Interactive annotation": getting_started/interactive_annotation.md
+      - "API reference": api_reference/

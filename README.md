@@ -37,7 +37,7 @@ conda activate pixano_env
 Then, you can install Pixano Inference inside that environment with pip:
 
 ```shell
-pip install pixano-inference@git+https://github.com/pixano/pixano-inference
+pip install pixano-inference
 ```
 
 As it is a requirement of Pixano Inference, Pixano will automatically be downloaded if it is not already installed.

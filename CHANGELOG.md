@@ -4,40 +4,37 @@ All notable changes to Pixano will be documented in this file.
 
 ## [Unreleased]
 
-## [0.3.0b2] - 2024-02-19
+## [0.3.0] - 2024-02-29
 
 ### Added
 
+- Publish **Pixano Inference on PyPI**
 - Add **new MobileSAM model** as a lighter alternative to SAM (pixano/pixano-inference#2)
-- Add issue and pull request templates on GitHub repository
-
-### Fixed
-
-- Fix ignored members in linting CI configuration
-- Specify black version in formatting CI configuration
-- Fix GitHub version and documentation links in README
-
-## [0.3.0b1] - 2024-01-23
-
-### Added
-
 - Add GitHub actions to format and lint code
+- Add GitHub action to publish docs and PyPI package (pixano/pixano-inference#9)
+- Add issue and pull request templates on GitHub repository
 - Add CONTRIBUTING.md for installation information and contribution guidelines
 
 ### Changed
 
+- **Breaking:** Remove SAM and MobileSAM dependencies to allow publishing to PyPI (pixano/pixano-inference#14)
 - **Breaking:** Update to Pixano 0.5.0
 - **Breaking:** Update InferenceModel `id` attribute to `model_id` to stop redefining built-in `id`
 - **Breaking:** Update submodule names to `pytorch` and `tensorflow`
 - Update README with a small header description listing main features and more detailed installation instructions
-- Generate API reference automatically
-- Update documentation website accent color to complementary color of the Pixano main accent color
-- Add cross-references to Pixano, TensorFlow, and Hugging Face Transformers in the API reference of the documentation website
+- Generate API reference on documentation website automatically
+- Add cross-references to Pixano, TensorFlow, and Hugging Face Transformers in the API reference
+- Update documentation deployment (pixano/pixano-inference#9)
 
 ### Fixed
 
 - Fix links to Pixano notebooks
 - Fix internal cross-references in the API reference of the documentation website
+- Update deprecated GitHub actions (pixano/pixano-inference#11)
+- Prevent CUDA installation in lint GitHub action action
+- Fix ignored members in linting CI configuration
+- Specify black version in formatting CI configuration
+- Fix GitHub version and documentation links in README
 
 ## [0.2.1] - 2023-11-13
 
@@ -117,8 +114,7 @@ All notable changes to Pixano will be documented in this file.
 - Create first public release
 
 [Unreleased]: https://github.com/pixano/pixano/compare/main...develop
-[0.3.0b2]: https://github.com/pixano/pixano-inference/compare/v0.3.0b1...v0.3.0b2
-[0.3.0b1]: https://github.com/pixano/pixano-inference/compare/v0.2.1...v0.3.0b1
+[0.3.0]: https://github.com/pixano/pixano-inference/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/pixano/pixano-inference/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/pixano/pixano-inference/compare/v0.1.6...v0.2.0
 [0.1.6]: https://github.com/pixano/pixano-inference/compare/v0.1.5...v0.1.6
