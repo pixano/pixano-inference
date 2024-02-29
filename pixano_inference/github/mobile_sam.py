@@ -20,12 +20,12 @@ import numpy as np
 import pyarrow as pa
 import shortuuid
 import torch
-from mobile_sam import SamAutomaticMaskGenerator, SamPredictor, sam_model_registry
-from mobile_sam.utils.onnx import SamOnnxModel
 from onnxruntime.quantization import QuantType
 from onnxruntime.quantization.quantize import quantize_dynamic
 from pixano.core import BBox, CompressedRLE, Image
 from pixano.models import InferenceModel
+
+from pixano_inference.utils import attempt_import
 
 
 class MobileSAM(InferenceModel):
@@ -54,6 +54,11 @@ class MobileSAM(InferenceModel):
             device (str, optional): Model GPU or CPU device (e.g. "cuda", "cpu"). Defaults to "cpu".
         """
 
+        # Import MobileSAM
+        mobile_sam = attempt_import(
+            "mobile_sam", "mobile-sam@git+https://github.com/ChaoningZhang/MobileSAM"
+        )
+
         super().__init__(
             name="Mobile_SAM",
             model_id=model_id,
@@ -62,7 +67,7 @@ class MobileSAM(InferenceModel):
         )
 
         # Model
-        self.model = sam_model_registry["vit_t"](checkpoint=checkpoint_path)
+        self.model = mobile_sam.sam_model_registry["vit_t"](checkpoint=checkpoint_path)
         self.model.to(device=self.device)
 
         # Model path
@@ -89,6 +94,11 @@ class MobileSAM(InferenceModel):
             list[dict]: Processed rows
         """
 
+        # Import MobileSAM
+        mobile_sam = attempt_import(
+            "mobile_sam", "mobile-sam@git+https://github.com/ChaoningZhang/MobileSAM"
+        )
+
         rows = []
         _ = prompt  # This model does not use prompts
 
@@ -103,7 +113,7 @@ class MobileSAM(InferenceModel):
 
                 # Inference
                 with torch.no_grad():
-                    generator = SamAutomaticMaskGenerator(self.model)
+                    generator = mobile_sam.SamAutomaticMaskGenerator(self.model)
                     output = generator.generate(im)
 
                 # Process model outputs
@@ -148,6 +158,11 @@ class MobileSAM(InferenceModel):
             pa.RecordBatch: Embedding rows
         """
 
+        # Import MobileSAM
+        mobile_sam = attempt_import(
+            "mobile_sam", "mobile-sam@git+https://github.com/ChaoningZhang/MobileSAM"
+        )
+
         rows = [
             {
                 "id": batch["id"][x].as_py(),
@@ -166,7 +181,7 @@ class MobileSAM(InferenceModel):
 
                 # Inference
                 with torch.no_grad():
-                    predictor = SamPredictor(self.model)
+                    predictor = mobile_sam.SamPredictor(self.model)
                     predictor.set_image(im)
                     img_embedding = predictor.get_image_embedding().cpu().numpy()
 
@@ -184,6 +199,11 @@ class MobileSAM(InferenceModel):
             library_dir (Path): Dataset library directory
         """
 
+        # Import MobileSAM
+        mobile_sam = attempt_import(
+            "mobile_sam", "mobile-sam@git+https://github.com/ChaoningZhang/MobileSAM"
+        )
+
         # Model directory
         model_dir = library_dir / "models"
         model_dir.mkdir(parents=True, exist_ok=True)
@@ -192,7 +212,9 @@ class MobileSAM(InferenceModel):
         self.model.to("cpu")
 
         # Export settings
-        onnx_model = SamOnnxModel(self.model, return_single_mask=True)
+        onnx_model = mobile_sam.utils.onnx.SamOnnxModel(
+            self.model, return_single_mask=True
+        )
         dynamic_axes = {
             "point_coords": {1: "num_points"},
             "point_labels": {1: "num_points"},

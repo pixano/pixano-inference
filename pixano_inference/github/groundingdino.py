@@ -15,10 +15,11 @@ from pathlib import Path
 
 import pyarrow as pa
 import shortuuid
-from groundingdino.util.inference import load_image, load_model, predict
 from pixano.core import BBox, Image
 from pixano.models import InferenceModel
 from torchvision.ops import box_convert
+
+from pixano_inference.utils import attempt_import
 
 
 class GroundingDINO(InferenceModel):
@@ -50,6 +51,12 @@ class GroundingDINO(InferenceModel):
             device (str, optional): Model GPU or CPU device (e.g. "cuda", "cpu"). Defaults to "cuda".
         """
 
+        # Import GroundingDINO
+        groundingdino = attempt_import(
+            "groundingdino",
+            "groundingdino@git+https://github.com/IDEA-Research/GroundingDINO",
+        )
+
         super().__init__(
             name="GroundingDINO",
             model_id=model_id,
@@ -58,7 +65,7 @@ class GroundingDINO(InferenceModel):
         )
 
         # Model
-        self.model = load_model(
+        self.model = groundingdino.util.inference.load_model(
             config_path.as_posix(),
             checkpoint_path.as_posix(),
         )
@@ -87,21 +94,30 @@ class GroundingDINO(InferenceModel):
 
         rows = []
 
+        # Import GroundingDINO
+        groundingdino = attempt_import(
+            "groundingdino",
+            "groundingdino@git+https://github.com/IDEA-Research/GroundingDINO",
+        )
+
         for view in views:
             # Iterate manually
             for x in range(batch.num_rows):
                 # Preprocess image
                 im: Image = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
-                _, image = load_image(im.path.as_posix())
+
+                _, image = groundingdino.util.inference.load_image(im.path.as_posix())
 
                 # Inference
-                bbox_tensor, logit_tensor, category_list = predict(
-                    model=self.model,
-                    image=image,
-                    caption=prompt,
-                    box_threshold=0.35,
-                    text_threshold=0.25,
+                bbox_tensor, logit_tensor, category_list = (
+                    groundingdino.util.inference.predict(
+                        model=self.model,
+                        image=image,
+                        caption=prompt,
+                        box_threshold=0.35,
+                        text_threshold=0.25,
+                    )
                 )
 
                 # Convert bounding boxes from cyxcywh to xywh
