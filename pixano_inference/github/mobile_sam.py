@@ -20,12 +20,12 @@ import numpy as np
 import pyarrow as pa
 import shortuuid
 import torch
-from mobile_sam import SamAutomaticMaskGenerator, SamPredictor, sam_model_registry
-from mobile_sam.utils.onnx import SamOnnxModel
 from onnxruntime.quantization import QuantType
 from onnxruntime.quantization.quantize import quantize_dynamic
 from pixano.core import BBox, CompressedRLE, Image
 from pixano.models import InferenceModel
+
+from pixano_inference.utils import attempt_import
 
 
 class MobileSAM(InferenceModel):
@@ -54,6 +54,11 @@ class MobileSAM(InferenceModel):
             device (str, optional): Model GPU or CPU device (e.g. "cuda", "cpu"). Defaults to "cpu".
         """
 
+        # Import MobileSAM
+        mobile_sam = attempt_import(
+            "mobile_sam", "mobile-sam@git+https://github.com/ChaoningZhang/MobileSAM"
+        )
+
         super().__init__(
             name="Mobile_SAM",
             model_id=model_id,
@@ -62,7 +67,7 @@ class MobileSAM(InferenceModel):
         )
 
         # Model
-        self.model = sam_model_registry["vit_t"](checkpoint=checkpoint_path)
+        self.model = mobile_sam.sam_model_registry["vit_t"](checkpoint=checkpoint_path)
         self.model.to(device=self.device)
 
         # Model path
@@ -74,6 +79,7 @@ class MobileSAM(InferenceModel):
         views: list[str],
         uri_prefix: str,
         threshold: float = 0.0,
+        prompt: str = "",
     ) -> list[dict]:
         """Inference pre-annotation for a batch
 
@@ -82,25 +88,32 @@ class MobileSAM(InferenceModel):
             views (list[str]): Dataset views
             uri_prefix (str): URI prefix for media files
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
+            prompt (str, optional): Annotation text prompt. Defaults to "".
 
         Returns:
             list[dict]: Processed rows
         """
 
+        # Import MobileSAM
+        mobile_sam = attempt_import(
+            "mobile_sam", "mobile-sam@git+https://github.com/ChaoningZhang/MobileSAM"
+        )
+
         rows = []
+        _ = prompt  # This model does not use prompts
 
         for view in views:
             # Iterate manually
             for x in range(batch.num_rows):
                 # Preprocess image
-                im = Image.from_dict(batch[view][x].as_py())
+                im: Image = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
                 im = im.as_cv2()
                 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
                 # Inference
                 with torch.no_grad():
-                    generator = SamAutomaticMaskGenerator(self.model)
+                    generator = mobile_sam.SamAutomaticMaskGenerator(self.model)
                     output = generator.generate(im)
 
                 # Process model outputs
@@ -112,8 +125,8 @@ class MobileSAM(InferenceModel):
                             "item_id": batch["id"][x].as_py(),
                             "view_id": view,
                             "bbox": BBox.from_xywh(
-                                [coord.item() for coord in output[i]["bbox"]],
-                                confidence=output[i]["predicted_iou"].item(),
+                                [int(coord) for coord in output[i]["bbox"]],
+                                confidence=float(output[i]["predicted_iou"]),
                             )
                             .normalize(h, w)
                             .to_dict(),
@@ -145,6 +158,11 @@ class MobileSAM(InferenceModel):
             pa.RecordBatch: Embedding rows
         """
 
+        # Import MobileSAM
+        mobile_sam = attempt_import(
+            "mobile_sam", "mobile-sam@git+https://github.com/ChaoningZhang/MobileSAM"
+        )
+
         rows = [
             {
                 "id": batch["id"][x].as_py(),
@@ -156,14 +174,14 @@ class MobileSAM(InferenceModel):
             # Iterate manually
             for x in range(batch.num_rows):
                 # Preprocess image
-                im = Image.from_dict(batch[view][x].as_py())
+                im: Image = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
                 im = im.as_cv2()
                 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
                 # Inference
                 with torch.no_grad():
-                    predictor = SamPredictor(self.model)
+                    predictor = mobile_sam.SamPredictor(self.model)
                     predictor.set_image(im)
                     img_embedding = predictor.get_image_embedding().cpu().numpy()
 
@@ -181,6 +199,11 @@ class MobileSAM(InferenceModel):
             library_dir (Path): Dataset library directory
         """
 
+        # Import MobileSAM
+        mobile_sam = attempt_import(
+            "mobile_sam", "mobile-sam@git+https://github.com/ChaoningZhang/MobileSAM"
+        )
+
         # Model directory
         model_dir = library_dir / "models"
         model_dir.mkdir(parents=True, exist_ok=True)
@@ -189,7 +212,9 @@ class MobileSAM(InferenceModel):
         self.model.to("cpu")
 
         # Export settings
-        onnx_model = SamOnnxModel(self.model, return_single_mask=True)
+        onnx_model = mobile_sam.utils.onnx.SamOnnxModel(
+            self.model, return_single_mask=True
+        )
         dynamic_axes = {
             "point_coords": {1: "num_points"},
             "point_labels": {1: "num_points"},

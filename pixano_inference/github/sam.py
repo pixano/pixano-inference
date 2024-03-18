@@ -24,8 +24,8 @@ from onnxruntime.quantization import QuantType
 from onnxruntime.quantization.quantize import quantize_dynamic
 from pixano.core import BBox, CompressedRLE, Image
 from pixano.models import InferenceModel
-from segment_anything import SamAutomaticMaskGenerator, SamPredictor, sam_model_registry
-from segment_anything.utils.onnx import SamOnnxModel
+
+from pixano_inference.utils import attempt_import
 
 
 class SAM(InferenceModel):
@@ -56,6 +56,12 @@ class SAM(InferenceModel):
             device (str, optional): Model GPU or CPU device (e.g. "cuda", "cpu"). Defaults to "cuda".
         """
 
+        # Import SAM
+        segment_anything = attempt_import(
+            "segment_anything",
+            "segment-anything@git+https://github.com/facebookresearch/segment-anything",
+        )
+
         super().__init__(
             name=f"SAM_ViT_{size.upper()}",
             model_id=model_id,
@@ -64,7 +70,9 @@ class SAM(InferenceModel):
         )
 
         # Model
-        self.model = sam_model_registry[f"vit_{size}"](checkpoint=checkpoint_path)
+        self.model = segment_anything.sam_model_registry[f"vit_{size}"](
+            checkpoint=checkpoint_path
+        )
         self.model.to(device=self.device)
 
         # Model path
@@ -76,6 +84,7 @@ class SAM(InferenceModel):
         views: list[str],
         uri_prefix: str,
         threshold: float = 0.0,
+        prompt: str = "",
     ) -> list[dict]:
         """Inference pre-annotation for a batch
 
@@ -84,25 +93,33 @@ class SAM(InferenceModel):
             views (list[str]): Dataset views
             uri_prefix (str): URI prefix for media files
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
+            prompt (str, optional): Annotation text prompt. Defaults to "".
 
         Returns:
             list[dict]: Processed rows
         """
 
+        # Import SAM
+        segment_anything = attempt_import(
+            "segment_anything",
+            "segment-anything@git+https://github.com/facebookresearch/segment-anything",
+        )
+
         rows = []
+        _ = prompt  # This model does not use prompts
 
         for view in views:
             # Iterate manually
             for x in range(batch.num_rows):
                 # Preprocess image
-                im = Image.from_dict(batch[view][x].as_py())
+                im: Image = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
                 im = im.as_cv2()
                 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
                 # Inference
                 with torch.no_grad():
-                    generator = SamAutomaticMaskGenerator(self.model)
+                    generator = segment_anything.SamAutomaticMaskGenerator(self.model)
                     output = generator.generate(im)
 
                 # Process model outputs
@@ -114,8 +131,8 @@ class SAM(InferenceModel):
                             "item_id": batch["id"][x].as_py(),
                             "view_id": view,
                             "bbox": BBox.from_xywh(
-                                [coord.item() for coord in output[i]["bbox"]],
-                                confidence=output[i]["predicted_iou"].item(),
+                                [int(coord) for coord in output[i]["bbox"]],
+                                confidence=float(output[i]["predicted_iou"]),
                             )
                             .normalize(h, w)
                             .to_dict(),
@@ -147,6 +164,12 @@ class SAM(InferenceModel):
             pa.RecordBatch: Embedding rows
         """
 
+        # Import SAM
+        segment_anything = attempt_import(
+            "segment_anything",
+            "segment-anything@git+https://github.com/facebookresearch/segment-anything",
+        )
+
         rows = [
             {
                 "id": batch["id"][x].as_py(),
@@ -158,14 +181,14 @@ class SAM(InferenceModel):
             # Iterate manually
             for x in range(batch.num_rows):
                 # Preprocess image
-                im = Image.from_dict(batch[view][x].as_py())
+                im: Image = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
                 im = im.as_cv2()
                 im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
 
                 # Inference
                 with torch.no_grad():
-                    predictor = SamPredictor(self.model)
+                    predictor = segment_anything.SamPredictor(self.model)
                     predictor.set_image(im)
                     img_embedding = predictor.get_image_embedding().cpu().numpy()
 
@@ -183,6 +206,12 @@ class SAM(InferenceModel):
             library_dir (Path): Dataset library directory
         """
 
+        # Import SAM
+        segment_anything = attempt_import(
+            "segment_anything",
+            "segment-anything@git+https://github.com/facebookresearch/segment-anything",
+        )
+
         # Model directory
         model_dir = library_dir / "models"
         model_dir.mkdir(parents=True, exist_ok=True)
@@ -191,7 +220,9 @@ class SAM(InferenceModel):
         self.model.to("cpu")
 
         # Export settings
-        onnx_model = SamOnnxModel(self.model, return_single_mask=True)
+        onnx_model = segment_anything.utils.onnx.SamOnnxModel(
+            self.model, return_single_mask=True
+        )
         dynamic_axes = {
             "point_coords": {1: "num_points"},
             "point_labels": {1: "num_points"},

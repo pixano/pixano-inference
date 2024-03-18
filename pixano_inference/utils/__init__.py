@@ -11,12 +11,8 @@
 #
 # http://www.cecill.info
 
-from .groundingdino import GroundingDINO
-from .mobile_sam import MobileSAM
-from .sam import SAM
+from .main import attempt_import
 
 __all__ = [
-    "SAM",
-    "GroundingDINO",
-    "MobileSAM",
+    "attempt_import",
 ]

@@ -65,6 +65,7 @@ class YOLOv5(InferenceModel):
         views: list[str],
         uri_prefix: str,
         threshold: float = 0.0,
+        prompt: str = "",
     ) -> list[dict]:
         """Inference pre-annotation for a batch
 
@@ -73,18 +74,20 @@ class YOLOv5(InferenceModel):
             views (list[str]): Dataset views
             uri_prefix (str): URI prefix for media files
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
+            prompt (str, optional): Annotation text prompt. Defaults to "".
 
         Returns:
             list[dict]: Processed rows
         """
 
         rows = []
+        _ = prompt  # This model does not use prompts
 
         for view in views:
             # Preprocess image batch
             im_batch = []
             for x in range(batch.num_rows):
-                im = Image.from_dict(batch[view][x].as_py())
+                im: Image = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
                 im_batch.append(im.as_pillow())
 

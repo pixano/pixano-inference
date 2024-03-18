@@ -95,6 +95,7 @@ class MaskRCNNv2(InferenceModel):
         views: list[str],
         uri_prefix: str,
         threshold: float = 0.0,
+        prompt: str = "",
     ) -> list[dict]:
         """Inference pre-annotation for a batch
 
@@ -103,18 +104,20 @@ class MaskRCNNv2(InferenceModel):
             views (list[str]): Dataset views
             uri_prefix (str): URI prefix for media files
             threshold (float, optional): Confidence threshold. Defaults to 0.0.
+            prompt (str, optional): Annotation text prompt. Defaults to "".
 
         Returns:
             list[dict]: Processed rows
         """
 
         rows = []
+        _ = prompt  # This model does not use prompts
 
         for view in views:
             # PyTorch Transforms don't support different-sized image batches, so iterate manually
             for x in range(batch.num_rows):
                 # Preprocess image
-                im = Image.from_dict(batch[view][x].as_py())
+                im: Image = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
                 im = im.as_pillow()
                 im_tensor = self.transforms(im).unsqueeze(0).to(self.device)

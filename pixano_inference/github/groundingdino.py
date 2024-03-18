@@ -11,48 +11,65 @@
 #
 # http://www.cecill.info
 
+from pathlib import Path
+
 import pyarrow as pa
 import shortuuid
-import tensorflow as tf
-import tensorflow_hub as hub
 from pixano.core import BBox, Image
 from pixano.models import InferenceModel
-from pixano.utils import coco_names_91
+from torchvision.ops import box_convert
+
+from pixano_inference.utils import attempt_import
 
 
-class EfficientDet(InferenceModel):
-    """TensorFlow Hub EfficientDet Model
+class GroundingDINO(InferenceModel):
+    """GroundingDINO Model
 
     Attributes:
         name (str): Model name
         model_id (str): Model ID
         device (str): Model GPU or CPU device
         description (str): Model description
-        model (tf.keras.Model): TensorFlow model
+        model (torch.nn.Module): PyTorch model
+        checkpoint_path (Path): Model checkpoint path
+        config_path (Path): Model config path
     """
 
     def __init__(
         self,
+        checkpoint_path: Path,
+        config_path: Path,
         model_id: str = "",
-        device: str = "/GPU:0",
+        device: str = "cuda",
     ) -> None:
         """Initialize model
 
         Args:
+            checkpoint_path (Path): Model checkpoint path (download from https://github.com/IDEA-Research/GroundingDINO)
+            config_path (Path): Model config path (download from https://github.com/IDEA-Research/GroundingDINO)
             model_id (str, optional): Previously used ID, generate new ID if "". Defaults to "".
-            device (str, optional): Model GPU or CPU device (e.g. "/GPU:0", "/CPU:0"). Defaults to "/GPU:0".
+            device (str, optional): Model GPU or CPU device (e.g. "cuda", "cpu"). Defaults to "cuda".
         """
 
+        # Import GroundingDINO
+        gd_inf = attempt_import(
+            "groundingdino.util.inference",
+            "groundingdino@git+https://github.com/IDEA-Research/GroundingDINO",
+        )
+
         super().__init__(
-            name="EfficientDet_D1",
+            name="GroundingDINO",
             model_id=model_id,
             device=device,
-            description="From TensorFlow Hub. EfficientDet model, with D1 architecture.",
+            description="Fom GitHub, GroundingDINO model.",
         )
 
         # Model
-        with tf.device(self.device):
-            self.model = hub.load("https://tfhub.dev/tensorflow/efficientdet/d1/1")
+        self.model = gd_inf.load_model(
+            config_path.as_posix(),
+            checkpoint_path.as_posix(),
+        )
+        self.model.to(self.device)
 
     def preannotate(
         self,
@@ -76,20 +93,36 @@ class EfficientDet(InferenceModel):
         """
 
         rows = []
-        _ = prompt  # This model does not use prompts
+
+        # Import GroundingDINO
+        gd_inf = attempt_import(
+            "groundingdino.util.inference",
+            "groundingdino@git+https://github.com/IDEA-Research/GroundingDINO",
+        )
 
         for view in views:
-            # TF.Hub Models don't support image batches, so iterate manually
+            # Iterate manually
             for x in range(batch.num_rows):
                 # Preprocess image
                 im: Image = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
-                im = im.as_pillow()
-                im_tensor = tf.expand_dims(tf.keras.utils.img_to_array(im), 0)
-                im_tensor = tf.image.convert_image_dtype(im_tensor, dtype="uint8")
+
+                _, image = gd_inf.load_image(im.path.as_posix())
 
                 # Inference
-                output = self.model(im_tensor)
+                bbox_tensor, logit_tensor, category_list = gd_inf.predict(
+                    model=self.model,
+                    image=image,
+                    caption=prompt,
+                    box_threshold=0.35,
+                    text_threshold=0.25,
+                )
+
+                # Convert bounding boxes from cyxcywh to xywh
+                bbox_tensor = box_convert(
+                    boxes=bbox_tensor, in_fmt="cxcywh", out_fmt="xywh"
+                )
+                bbox_list = [[coord.item() for coord in bbox] for bbox in bbox_tensor]
 
                 # Process model outputs
                 rows.extend(
@@ -98,21 +131,14 @@ class EfficientDet(InferenceModel):
                             "id": shortuuid.uuid(),
                             "item_id": batch["id"][x].as_py(),
                             "view_id": view,
-                            "bbox": BBox.from_xyxy(
-                                [
-                                    float(output["detection_boxes"][0][i][1]),
-                                    float(output["detection_boxes"][0][i][0]),
-                                    float(output["detection_boxes"][0][i][3]),
-                                    float(output["detection_boxes"][0][i][2]),
-                                ],
-                                confidence=float(output["detection_scores"][0][i]),
+                            "bbox": BBox.from_xywh(
+                                bbox_list[i],
+                                confidence=logit_tensor[i].item(),
                             ).to_dict(),
-                            "category": coco_names_91(
-                                output["detection_classes"][0][i]
-                            ),
+                            "category": category_list[i],
                         }
-                        for i in range(int(output["num_detections"]))
-                        if output["detection_scores"][0][i] > threshold
+                        for i in range(len(category_list))
+                        if logit_tensor[i].item() > threshold
                     ]
                 )
 
