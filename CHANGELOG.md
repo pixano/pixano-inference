@@ -4,15 +4,22 @@ All notable changes to Pixano will be documented in this file.
 
 ## [Unreleased]
 
+## [0.3.1] - 2024-03-18
+
 ### Added
 
 - Add **new GroundingDINO model** for semantic segmentation with text prompts (pixano/pixano-inference#6)
+
+### Changed
+
+- Update README badges with PyPI release
 
 ### Fixed
 
 - Remove top-level imports for GitHub models to prevent import errors (pixano/pixano-inference#6)
 - Fix preannotation with SAM and MobileSAM (pixano/pixano-inference#6)
 - Add type hints for Image PixanoType (pixano/pixano-inference#6)
+- Update Pixano requirement from 0.5.0 beta to 0.5.0 stable
 
 ## [0.3.0] - 2024-02-29
 
@@ -123,7 +130,8 @@ All notable changes to Pixano will be documented in this file.
 
 - Create first public release
 
-[Unreleased]: https://github.com/pixano/pixano/compare/main...develop
+[Unreleased]: https://github.com/pixano/pixano-inference/compare/main...develop
+[0.3.1]: https://github.com/pixano/pixano-inference/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/pixano/pixano-inference/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/pixano/pixano-inference/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/pixano/pixano-inference/compare/v0.1.6...v0.2.0
