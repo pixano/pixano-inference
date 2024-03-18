@@ -52,8 +52,8 @@ class GroundingDINO(InferenceModel):
         """
 
         # Import GroundingDINO
-        groundingdino = attempt_import(
-            "groundingdino",
+        gd_inf = attempt_import(
+            "groundingdino.util.inference",
             "groundingdino@git+https://github.com/IDEA-Research/GroundingDINO",
         )
 
@@ -65,7 +65,7 @@ class GroundingDINO(InferenceModel):
         )
 
         # Model
-        self.model = groundingdino.util.inference.load_model(
+        self.model = gd_inf.load_model(
             config_path.as_posix(),
             checkpoint_path.as_posix(),
         )
@@ -95,8 +95,8 @@ class GroundingDINO(InferenceModel):
         rows = []
 
         # Import GroundingDINO
-        groundingdino = attempt_import(
-            "groundingdino",
+        gd_inf = attempt_import(
+            "groundingdino.util.inference",
             "groundingdino@git+https://github.com/IDEA-Research/GroundingDINO",
         )
 
@@ -107,17 +107,15 @@ class GroundingDINO(InferenceModel):
                 im: Image = Image.from_dict(batch[view][x].as_py())
                 im.uri_prefix = uri_prefix
 
-                _, image = groundingdino.util.inference.load_image(im.path.as_posix())
+                _, image = gd_inf.load_image(im.path.as_posix())
 
                 # Inference
-                bbox_tensor, logit_tensor, category_list = (
-                    groundingdino.util.inference.predict(
-                        model=self.model,
-                        image=image,
-                        caption=prompt,
-                        box_threshold=0.35,
-                        text_threshold=0.25,
-                    )
+                bbox_tensor, logit_tensor, category_list = gd_inf.predict(
+                    model=self.model,
+                    image=image,
+                    caption=prompt,
+                    box_threshold=0.35,
+                    text_threshold=0.25,
                 )
 
                 # Convert bounding boxes from cyxcywh to xywh

@@ -30,5 +30,5 @@ def attempt_import(module: str, package: str = None) -> ModuleType:
         return importlib.import_module(module)
     except ImportError as e:
         raise ImportError(
-            f"Please install {module} to use this model: pip install {package or module}"
+            f"Please install {module.split('.')[0]} to use this model: pip install {package or module}"
         ) from e
