@@ -24,8 +24,10 @@ class ModelStatus(Enum):
     - IDLE: waiting for an input.
     - RUNNING: computing.
     """
+
     IDLE = 0
     RUNNING = 1
+
 
 class BaseInferenceModel(ABC):
     """Base class for inference models."""
@@ -54,7 +56,7 @@ class BaseInferenceModel(ABC):
         """
         if not isinstance(new_status, ModelStatus):
             raise ValueError(f"Status should be a ModelStatus, got {new_status}.")
-        self._status =  new_status
+        self._status = new_status
 
     @property
     @abstractmethod
