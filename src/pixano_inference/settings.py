@@ -36,7 +36,6 @@ class Settings(BaseSettings):
             data["num_cpus"] = os.cpu_count()
         if "num_gpus" not in data:
             if is_torch_installed():
-                print("torch is installed")
                 if torch.cuda.is_available():
                     data["num_gpus"] = torch.cuda.device_count()
                 else:
