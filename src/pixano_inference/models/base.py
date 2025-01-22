@@ -7,6 +7,7 @@
 """Base class for inference models."""
 
 from abc import ABC, abstractmethod
+from enum import Enum
 from typing import Any
 
 from pixano_inference.pydantic.tasks.image.mask_generation import ImageMaskGenerationOutput
@@ -15,6 +16,16 @@ from pixano_inference.pydantic.tasks.multimodal.conditional_generation import (
 )
 from pixano_inference.pydantic.tasks.video.mask_generation import VideoMaskGenerationOutput
 
+
+class ModelStatus(Enum):
+    """Current status of the model.
+
+    Attributes:
+    - IDLE: waiting for an input.
+    - RUNNING: computing.
+    """
+    IDLE = 0
+    RUNNING = 1
 
 class BaseInferenceModel(ABC):
     """Base class for inference models."""
@@ -28,6 +39,22 @@ class BaseInferenceModel(ABC):
         """
         self.name = name
         self.provider = provider
+        self._status = ModelStatus.IDLE
+
+    @property
+    def status(self) -> ModelStatus:
+        """Get the status of the model."""
+        return self._status
+
+    @status.setter
+    def status(self, new_status: ModelStatus):
+        """Set the status of the model.
+
+        It should be handled outside of the Inference Model by a controller to handle requests sequentially.
+        """
+        if not isinstance(new_status, ModelStatus):
+            raise ValueError(f"Status should be a ModelStatus, got {new_status}.")
+        self._status =  new_status
 
     @property
     @abstractmethod

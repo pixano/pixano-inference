@@ -12,6 +12,7 @@ from typing import TypeVar
 
 from fastapi import HTTPException
 
+from pixano_inference.models.base import ModelStatus
 from pixano_inference.models_registry import get_values_from_model_registry
 from pixano_inference.pydantic.base import BaseRequest, BaseResponse
 from pixano_inference.tasks.image import ImageTask
@@ -42,6 +43,14 @@ async def execute_task_request(request: BaseRequest, task: Task, response_type: 
     if task != model_task:
         return HTTPException(400, detail=f"Model {model} does not support the {task.value} task.")
 
+    sleeping_loops = 0
+    while model.status == ModelStatus.RUNNING and sleeping_loops < 100:
+        time.sleep(0.1)
+        sleeping_loops += 1
+        if sleeping_loops == 100:
+            return HTTPException(503, "Model is running please resend your request.")
+
+    model.status = ModelStatus.RUNNING
     match task:
         case ImageTask.MASK_GENERATION:
             output = provider.image_mask_generation(request, model)
@@ -49,6 +58,7 @@ async def execute_task_request(request: BaseRequest, task: Task, response_type: 
             output = provider.text_image_conditional_generation(request, model)
         case _:
             raise NotImplementedError(f"Task {task.value} is not yet supported.")
+    model.status = ModelStatus.IDLE
     response = response_type(
         timestamp=datetime.now(),
         processing_time=time.time() - start_time,
