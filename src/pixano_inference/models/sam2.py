@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
+from PIL.Image import Image
 
 from pixano_inference.models_registry import unregister_model
 from pixano_inference.pydantic.nd_array import NDArrayFloat
@@ -32,7 +33,6 @@ if is_sam2_installed():
     from sam2.sam2_video_predictor import SAM2VideoPredictor
 
 if TYPE_CHECKING:
-    from PIL.Image import Image
     from torch import Tensor
 
 

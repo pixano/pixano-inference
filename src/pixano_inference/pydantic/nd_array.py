@@ -7,8 +7,8 @@
 """Pydantic models for N-dimensional arrays."""
 
 import base64
-from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Generic, Self, TypeVar
+from abc import ABC
+from typing import TYPE_CHECKING, ClassVar, Generic, Self, TypeVar
 
 import numpy as np
 from pydantic import BaseModel, field_validator
@@ -31,16 +31,12 @@ class NDArray(BaseModel, Generic[T], ABC):
     Attributes:
         values: The list of numpy values encoded in bytes and stored as a base64 string.
         shape: The shape of the array, represented as a list of integers.
+        np_dtype: The NumPy data type of the array.
     """
 
     values: str
     shape: list[int]
-
-    @property
-    @abstractmethod
-    def np_dtype(self) -> np.dtype:
-        """The NumPy data type of the array."""
-        raise NotImplementedError("np_dtype must be implemented in subclasses.")
+    np_dtype: ClassVar[np.dtype]
 
     @field_validator("shape", mode="after")
     @classmethod
@@ -50,17 +46,6 @@ class NDArray(BaseModel, Generic[T], ABC):
         elif any(s < 1 for s in v):
             raise ValueError("Shape elements must be positive.")
         return v
-
-    @classmethod
-    def none(cls) -> Self:
-        """Utility function to get a None equivalent.
-
-        Should be removed when Lance could manage None value.
-
-        Returns:
-            An instance of the class with a single zero value and shape.
-        """
-        return cls(values=[0], shape=[1])
 
     @classmethod
     def from_numpy(cls, arr: np.ndarray) -> Self:
@@ -116,9 +101,7 @@ class NDArrayFloat(NDArray[float]):
     Attributes:
         values: The list of 32-bit floating-point values in the array.
         shape: The shape of the array, represented as a list of integers.
+        np_dtype: The NumPy data type of the array.
     """
 
-    @property
-    def np_dtype(self) -> np.dtype:
-        """The NumPy data type of the array."""
-        return np.float32
+    np_dtype: ClassVar[np.dtype] = np.float32
