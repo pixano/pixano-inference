@@ -1,26 +1,12 @@
-# Editor directories and files
-.vscode
+**/__pycache__/*
+**/_build/*
+**/build/
+**/*.ipynb
+*.egg-info
+.coverage
+.pytest_cache/*
 .vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-*lock.yaml
-
-# Docs
-site
-
-# Environment
-.ipynb_checkpoints
-__pycache__
-*.pyc
-.env
-
-# Inference
-*.pt
-*.pth
-*.onnx
+coverage.*
+dist/
+docs/build/*
+docs/source/generated/*

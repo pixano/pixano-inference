@@ -4,63 +4,120 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pixano-inference"
-dynamic = ["version"]
-description = 'Inference models for Pixano, data-centric AI building blocks for computer vision applications' 
-readme = "README.md"
-requires-python = "~=3.10"
-license = "CeCILL-C"
-authors = [{name = "Pixano Developers", email = "pixano@cea.fr"}]
+description = "Deploy inference models served for Artificial Intelligence solutions including but not limited to Pixano."
 keywords = [
   "computer vision",
-  "deep learning",
+  "inference",
+  "natural language processing",
+  "nlp",
   "machine learning",
-  "data visualization",
-  "data annotation"
+  "deep learning",
+  "pytorch",
 ]
+authors = [
+  { name="Julien Denize", email="julien.denize@cea.fr" },
+]
+requires-python = ">=3.10,<3.13"
 classifiers = [
   "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Environment :: GPU",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+  "Intended Audience :: Information Technology",
+  "Intended Audience :: Science/Research",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.10",
-  "License :: CeCILL-C Free Software License Agreement (CECILL-C)",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Scientific/Engineering :: Image Processing",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+  "Topic :: Software Development :: Libraries",
 ]
+dynamic = ["version"]
 dependencies = [
-  "pixano ~= 0.5.0",
-  "torch ~= 2.2.0",
-  "torchaudio ~= 2.2.0",
-  "torchvision ~= 0.17.0",
-  "tensorflow ~= 2.15.0",
-  "tensorflow-hub ~= 0.15.0",
-  "transformers >= 4.33.0",
-  "timm >= 0.9.12",
-  "gitpython >= 3.1.30",
-  "matplotlib >= 3.3",
-  "psutil >= 5.9.5",
-  "PyYAML >= 5.3.1",
-  "requests >= 2.23.0",
-  "seaborn >= 0.11.0",
-  "scipy >= 1.4.1",
-  "thop >= 0.1.1",
+  "pydantic >= 2.0.0, < 3.0.0",
+  "pydantic_settings",
+  "click >= 8.0.0",
+  "fastapi >= 0.100.0",
+  "uvicorn >= 0.31.0",
+  "Pillow >= 9.0.0",
+  "numpy < 2.0.0",
+  "requests",
+  "polars < 2.0.0",
 ]
+readme = "README.md"
 
 [project.optional-dependencies]
-documentation = [
-  "mkdocs-material ~= 9.4.0",
-  "mkdocstrings-python ~= 1.7.0",
-  "mkdocs-gen-files ~= 0.5.0",
-  "mkdocs-literate-nav ~= 0.6.0",
-  "mkdocs-redirects ~= 1.2.1",
+data = [
+  "pylance >= 0.18.0, < 0.21.0",
+]
+torch=[
+  "torch >= 2.3.0, < 3.0.0",
+]
+transformers=[
+  "torch >= 2.3.0",
+  "transformers >= 4.0.0, < 5.0.0",
+]
+sam2 = [
+  "torch >= 2.3.0",
+  "sam-2 @ git+https://github.com/facebookresearch/sam2.git",
+]
+docs=[
+  "mike >= 2.1.0, < 3.0.0",
+  "mkdocs >= 1.6.0, < 2.0.0",
+  "mkdocs-material >= 9.5.0, < 10.0.0",
+  "mkdocstrings-python >= 1.7.0",
+  "mkdocs-gen-files >= 0.5.0",
+  "mkdocs-literate-nav >= 0.6.0",
+  "mkdocs-redirects >= 1.2.1",
+]
+test=[
+  "pytest",
+  "pytest-cov",
+  "pytest-mock",
+  "pytest-coverage",
 ]
 
-[project.urls]
-Documentation = "https://github.com/pixano/pixano-inference#readme"
-Issues = "https://github.com/pixano/pixano-inference/issues"
-Source = "https://github.com/pixano/pixano-inference"
+[project.scripts]
+serve = "pixano_inference.main:serve"
 
-[tool.hatch.build]
-include = ["/pixano_inference"]
-exclude = ["__pycache__"]
+[project.urls]
+"Bug Tracker" = "http://is154588.intra.cea.fr/pixano/pixano-inference/issues"
+"Download" = "http://is154588.intra.cea.fr/pixano/pixano-inference"
+"Homepage" = "http://is154588.intra.cea.fr/pixano/pixano-inference"
+"Source Code" = "http://is154588.intra.cea.fr/pixano/pixano-inference"
+
+[tool.ruff]
+line-length = 119
+
+[tool.ruff.lint]
+ignore=["C901"]
+select = ["C", "E", "F", "I", "W", "D"]
+ignore-init-module-imports = true
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D", "C408", "C901", "F401"]
+"docs/*" = ["D", "F401"]
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+known-first-party = ["pixano_inference"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.hatch.version]
+path = "src/pixano_inference/__version__.py"
 
 [tool.hatch.metadata]
 allow-direct-references = true
-
-[tool.hatch.version]
-path = "pixano_inference/__version__.py"
