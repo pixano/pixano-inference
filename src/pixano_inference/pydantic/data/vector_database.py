@@ -8,10 +8,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, Self
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 from pydantic import BaseModel, model_validator
+from typing_extensions import Self
 
 from pixano_inference.data.read_vector_databases import read_lance_vector
 

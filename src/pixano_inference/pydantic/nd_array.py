@@ -8,10 +8,11 @@
 
 import base64
 from abc import ABC
-from typing import TYPE_CHECKING, ClassVar, Generic, Self, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
 
 import numpy as np
 from pydantic import BaseModel, field_validator
+from typing_extensions import Self
 
 from pixano_inference.utils.package import assert_torch_installed, is_torch_installed
 
