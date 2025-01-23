@@ -9,7 +9,7 @@
 
 from .base import BaseModel, BaseRequest, BaseResponse
 from .data import LanceVector
-from .models import ModelConfig
+from .models import ModelConfig, ModelInfo
 from .nd_array import NDArrayFloat
 from .tasks import (
     ImageMaskGenerationInput,
