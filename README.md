@@ -23,6 +23,7 @@ pip install pixano-inference
 ```
 
 If you want to dynamically make changes to the library to develop and test, make a dev install by cloning the repo and executing the following commands
+
 ```bash
 cd pixano-inference
 pip install -e .
