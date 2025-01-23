@@ -62,3 +62,8 @@ def get_values_from_model_registry(name: str, provider: str) -> tuple[BaseInfere
     if (name, provider) not in REGISTERED_MODELS:
         raise KeyError(f"Model {name} from provider {provider} is not registered.")
     return REGISTERED_MODELS[(name, provider)]
+
+
+def list_models() -> list[tuple[tuple[str, str], tuple[BaseInferenceModel, BaseProvider, Task]]]:
+    """List all models in the registry."""
+    return list(REGISTERED_MODELS.items())

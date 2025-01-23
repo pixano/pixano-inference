@@ -14,6 +14,20 @@ from pydantic import BaseModel, field_validator
 from pixano_inference.tasks.utils import is_task
 
 
+class ModelInfo(BaseModel):
+    """Model Information.
+
+    Attributes:
+        name: Name of the model.
+        provider: Provider of the model.
+        task: Task of the model.
+    """
+
+    name: str
+    provider: str
+    task: str
+
+
 class ModelConfig(BaseModel):
     """Model configuration for instantiation.
 
