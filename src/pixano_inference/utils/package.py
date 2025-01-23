@@ -75,18 +75,24 @@ def assert_package_installed(package_name: str, error_message: str | None = None
 
 def assert_lance_installed() -> None:
     """Assert that the lance package is installed."""
-    assert_package_installed("lance", "lance is not installed. Please install it using 'pip install ^[data]'.")
+    assert_package_installed(
+        "lance", "lance is not installed. Please install it using 'pip install pixano-inference[data]'."
+    )
 
 
 def assert_sam2_installed() -> None:
     """Assert that the sam2 package is installed."""
-    assert_package_installed("sam2", "sam2 is not installed. Please install it using 'pip install ^[sam2]'.")
+    assert_package_installed(
+        "sam2",
+        "sam2 is not installed. Please install it using 'pip install git+https://github.com/facebookresearch/sam2.git'.",
+    )
 
 
 def assert_transformers_installed() -> None:
     """Assert that the transformers package is installed."""
     assert_package_installed(
-        "transformers", "transformers is not installed. Please install it using 'pip install ^[transformers]'."
+        "transformers",
+        "transformers is not installed. Please install it using 'pip install pixano-inference[transformers]'.",
     )
 
 
