@@ -1,9 +1,15 @@
-<!---
 # =================================
 # Copyright: CEA-LIST/DIASI/SIALV
 # Author : pixano@cea.fr
 # License: CECILL-C
 # =================================
---->
 
-# Getting started with Pixano Inference
+"""Tasks module."""
+
+from enum import Enum
+
+
+class Task(Enum):
+    """Task base class."""
+
+    pass

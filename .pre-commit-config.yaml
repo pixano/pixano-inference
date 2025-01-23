@@ -1,0 +1,46 @@
+# =================================
+# Copyright: CEA-LIST/DIASI/SIALV
+# Author : pixano@cea.fr
+# License: CECILL-C
+# =================================
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-toml
+      - id: check-yaml
+        args:
+          - --allow-multiple-documents
+      - id: mixed-line-ending
+        args:
+          - --fix=lf
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: requirements-txt-fixer
+      - id: check-json
+        exclude: ^(tests)/
+      - id: pretty-format-json
+        exclude: ^(tests)/
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.7.3
+    hooks:
+      - id: ruff
+        args:
+          - --fix
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        exclude: ^(docs|tests)/
+  - repo: local
+    hooks:
+      - id: check_license_header
+        name: check license header
+        entry: python check_license_header.py
+        language: python
+        pass_filenames: false

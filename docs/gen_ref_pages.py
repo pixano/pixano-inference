@@ -1,3 +1,15 @@
+# =================================
+# Copyright: CEA-LIST/DIASI/SIALV
+# Author : pixano@cea.fr
+# License: CECILL-C
+# =================================
+
+# ================================
+# Copyright: CEA-LIST/DIASI/SIALV
+# Author : pixano@cea.fr
+# License: CECILL-C
+# ================================
+
 """Generate the code API reference pages
 
 Refer to https://mkdocstrings.github.io/recipes/ for more details.
@@ -7,12 +19,12 @@ from pathlib import Path
 
 import mkdocs_gen_files
 
-SRC_PATH = "pixano_inference"
+
+SRC_PATH = "./src/pixano_inference"
 REF_PATH = "api_reference"
 IGNORED_FILES = ["__init__.py", "__version__.py"]
 
 nav = mkdocs_gen_files.Nav()
-
 for path in sorted(Path(SRC_PATH).rglob("*.py")):
     module_path = path.relative_to(SRC_PATH).with_suffix("")
     doc_path = path.relative_to(SRC_PATH).with_suffix(".md")
@@ -30,7 +42,8 @@ for path in sorted(Path(SRC_PATH).rglob("*.py")):
         doc_path = doc_path.with_name("index.md")
         full_doc_path = full_doc_path.with_name("index.md")
         nav["index"] = doc_path.as_posix()
-        with open(f"docs/{REF_PATH}/index.md", "r") as index_file:
+        with open(f"./docs/{REF_PATH}/index.md", "r", encoding="utf-8") as index_file:
+            print(index_file)
             lines = index_file.readlines()
             with mkdocs_gen_files.open(full_doc_path, "w") as fd:
                 fd.writelines(lines)
@@ -40,8 +53,7 @@ for path in sorted(Path(SRC_PATH).rglob("*.py")):
     elif not any(ignored in path.name for ignored in IGNORED_FILES):
         nav[parts] = doc_path.as_posix()
         with mkdocs_gen_files.open(full_doc_path, "w") as fd:
-            identifier = ".".join(parts)
-            print("::: pixano_inference." + identifier, file=fd)
+            print("::: pixano_inference." + ".".join(parts), file=fd)
         mkdocs_gen_files.set_edit_path(full_doc_path, path)
 
 

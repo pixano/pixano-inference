@@ -1,4 +1,11 @@
-site_name: Pixano Documentation
+# =================================
+# Copyright: CEA-LIST/DIASI/SIALV
+# Author : pixano@cea.fr
+# License: CECILL-C
+# =================================
+
+site_name: Pixano Inference Documentation
+site_url: https://pixano.github.io/pixano-inference/
 theme:
   name: material
   logo: assets/pixano_white.png
@@ -34,8 +41,6 @@ theme:
 repo_url: https://github.com/pixano/pixano-inference
 repo_name: pixano/pixano-inference
 copyright: Licensed under the CeCILL-C license
-extra_css:
-  - assets/extra.css
 extra:
   social:
     - icon: material/email-outline
@@ -45,14 +50,27 @@ extra:
       link: https://list.cea.fr/en/
       name: CEA LIST
     - icon: fontawesome/brands/github
-      link: https://github.com/pixano/pixano
+      link: https://github.com/pixano/pixano-inference
       name: Pixano on GitHub
+  version:
+    default: latest
+    provider: mike
+extra_css:
+  - assets/extra.css
 plugins:
   - search
   - autorefs
+  - mike:
+      alias_type: symlink
+      redirect_template: null
+      deploy_prefix: ""
+      canonical_version: latest
+      version_selector: true
+      css_dir: css
+      javascript_dir: js
   - gen-files:
       scripts:
-        - docs/gen_ref_pages.py
+        - ./docs/gen_ref_pages.py
   - literate-nav:
       nav_file: SUMMARY.md
   - redirects:
@@ -62,42 +80,44 @@ plugins:
       enable_inventory: true
       handlers:
         python:
-          paths: ["pixano_inference"]
+          paths: ["./src/pixano_inference"]
           import:
-            - https://docs.python.org/3.10/objects.inv
+            - https://docs.python.org/3.12/objects.inv
             - https://numpy.org/doc/1.23/objects.inv
             - https://pandas.pydata.org/pandas-docs/version/1.5/objects.inv
             - https://pillow.readthedocs.io/en/stable/objects.inv
             - https://arrow.apache.org/docs/objects.inv
             - https://docs.pydantic.dev/2.4/objects.inv
             - https://ipython.readthedocs.io/en/8.13.2/objects.inv
-            - https://pixano.github.io/pixano/objects.inv
-            - https://pytorch.org/docs/master/objects.inv
-            - url: https://github.com/GPflow/tensorflow-intersphinx/raw/master/tf2_py_objects.inv
-              base_url: https://www.tensorflow.org/api_docs/python
-            - https://huggingface.co/docs/transformers/main/en/objects.inv
+            - https://lancedb.github.io/lance/objects.inv
+            - https://lancedb.github.io/lancedb/objects.inv
           options:
             docstring_style: google
             docstring_options:
               returns_named_value: false
               ignore_init_summary: yes
-            show_submodules: no
+            show_submodules: true
             docstring_section_style: table
             members_order: alphabetical
             merge_init_into_class: yes
             show_root_heading: true
             show_source: true
             heading_level: 1
+            preload_modules:
+              - pydantic
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
 
 nav:
   - "Home": https://pixano.github.io/
 
-  - "Pixano": https://pixano.github.io/pixano/
-
   - "Pixano Inference":
-      - "Getting started":
-          - getting_started/index.md
-          - "Installing Pixano Inference": getting_started/installing_pixano_inference.md
-          - "Pre-annotation": getting_started/pre_annotation.md
-          - "Interactive annotation": getting_started/interactive_annotation.md
       - "API reference": api_reference/
+      - "Getting Started": getting_started/
