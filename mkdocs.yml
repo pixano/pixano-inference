@@ -4,7 +4,7 @@
 # License: CECILL-C
 # =================================
 
-site_name: Pixano Inference Documentation
+site_name: Pixano-Inference Documentation
 site_url: https://pixano.github.io/pixano-inference/
 theme:
   name: material
@@ -119,6 +119,6 @@ nav:
   - "Home": https://pixano.github.io/
   - "Pixano": https://pixano.github.io/pixano/latest
 
-  - "Pixano Inference":
+  - "Pixano-Inference":
       - "API reference": api_reference/
       - "Getting Started": getting_started/
