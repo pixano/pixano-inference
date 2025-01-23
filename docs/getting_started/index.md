@@ -6,4 +6,6 @@
 # =================================
 --->
 
-# Getting started with Pixano Inference
+# Getting started with Pixano-Inference
+
+The documentation is being written. Please check back soon!
