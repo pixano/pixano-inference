@@ -14,9 +14,7 @@ This library aims to provide a common ecosystem to launch inference from differe
 
 ## Installation
 
-0. Install a Pytorch environment
-
-1. Install Pixano Inference
+To install the library, simply execute the following command
 
 ```bash
 pip install pixano-inference
