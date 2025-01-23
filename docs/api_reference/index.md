@@ -6,10 +6,6 @@
 # =================================
 --->
 
----
-title: Pixano Inference API reference
----
-
 # Pixano Inference API reference
 
 Here you will find the documentation for all of Pixano Inference API.
