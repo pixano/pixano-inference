@@ -48,7 +48,11 @@ HEADERS = {
 }
 
 # Files to exclude
-EXCLUDE_FILES: set[str] = set()
+EXCLUDE_FILES: set[str] = {
+    "PULL_REQUEST_TEMPLATE.md",
+    "bug_report.md",
+    "feature_request.md",
+}
 
 # Files to exclude
 EXCLUDE_PATHS: set[str] = set()

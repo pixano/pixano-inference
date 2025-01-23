@@ -1,11 +1,3 @@
-<!---
-# =================================
-# Copyright: CEA-LIST/DIASI/SIALV
-# Author : pixano@cea.fr
-# License: CECILL-C
-# =================================
---->
-
 ---
 name: Bug report
 about: Report an issue to help us improve

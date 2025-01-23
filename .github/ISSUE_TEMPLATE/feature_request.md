@@ -1,11 +1,3 @@
-<!---
-# =================================
-# Copyright: CEA-LIST/DIASI/SIALV
-# Author : pixano@cea.fr
-# License: CECILL-C
-# =================================
---->
-
 ---
 name: Feature request
 about: Suggest an idea for this project
