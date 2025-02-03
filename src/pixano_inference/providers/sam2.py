@@ -36,6 +36,11 @@ from .base import ModelProvider
 class Sam2Provider(ModelProvider):
     """Provider for the SAM2 model."""
 
+    def __init__(self, **kwargs):
+        """Initialize the SAM2 provider."""
+        assert_sam2_installed()
+        super().__init__(**kwargs)
+
     def load_model(
         self,
         name: str,
@@ -58,7 +63,6 @@ class Sam2Provider(ModelProvider):
         Returns:
             The loaded model.
         """
-        assert_sam2_installed()
         from sam2.build_sam import build_sam2, build_sam2_video_predictor
         from sam2.sam2_image_predictor import SAM2ImagePredictor
 
