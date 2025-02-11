@@ -10,7 +10,6 @@ import re
 import pytest
 import responses
 from fastapi import HTTPException
-from requests import HTTPError
 
 from pixano_inference.client import PixanoInferenceClient
 from pixano_inference.pydantic import ModelInfo
@@ -139,3 +138,9 @@ class TestPixanoInferenceClient:
         responses.add(response)
 
         assert simple_pixano_inference_client.list_models() == models_info
+
+    @responses.activate
+    def test_delete_model(self, simple_pixano_inference_client: PixanoInferenceClient):
+        response = responses.Response(method="DELETE", url=f"{URL}/providers/model/model_name", status=204)
+        responses.add(response)
+        assert simple_pixano_inference_client.delete_model("model_name") is None

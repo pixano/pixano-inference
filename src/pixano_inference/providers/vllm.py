@@ -18,19 +18,10 @@ from pixano_inference.settings import PIXANO_INFERENCE_SETTINGS, Settings
 from pixano_inference.tasks import Task, str_to_task
 from pixano_inference.utils.package import (
     assert_vllm_installed,
-    is_torch_installed,
-    is_vllm_installed,
 )
 
 from .base import ModelProvider
 from .registry import register_provider
-
-
-if is_torch_installed():
-    import torch
-
-if is_vllm_installed():
-    pass
 
 
 @register_provider("vllm")
@@ -82,7 +73,6 @@ class VLLMProvider(ModelProvider):
         register_model(our_model, self, task)
         return our_model
 
-    @torch.inference_mode()
     def text_image_conditional_generation(
         self, request: TextImageConditionalGenerationRequest, model: VLLMModel
     ) -> TextImageConditionalGenerationOutput:
