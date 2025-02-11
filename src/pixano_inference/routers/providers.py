@@ -10,6 +10,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 
+from pixano_inference.models_registry import get_model_from_registry, unregister_model
 from pixano_inference.providers.base import ModelProvider
 from pixano_inference.providers.registry import get_provider, is_provider
 from pixano_inference.pydantic import ModelConfig
@@ -75,3 +76,18 @@ async def instantiate_sam2_model(
         settings: Settings for the instantiation.
     """
     return instantiate_model(config=config, provider="sam2", settings=settings)
+
+
+@router.delete("/model/{model_name}")
+async def delete_model(model_name: str):
+    """Delete a model from the system.
+
+    Args:
+        model_name: The name of the model to be deleted.
+    """
+    try:
+        model = get_model_from_registry(model_name)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=f"Model {model_name} not found") from e
+    unregister_model(model)
+    return
