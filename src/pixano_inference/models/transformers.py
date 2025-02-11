@@ -4,10 +4,11 @@
 # License: CECILL-C
 # =================================
 
-"""Inference models for transformers."""
+"""Inference models for Transformers."""
 
 from __future__ import annotations
 
+import gc
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -85,6 +86,8 @@ class TransformerModel(BaseInferenceModel):
         del self.model
         del self.processor
         unregister_model(self)
+        gc.collect()
+        torch.cuda.empty_cache()
 
     def image_mask_generation(
         self,
@@ -168,10 +171,10 @@ class TransformerModel(BaseInferenceModel):
             generation_config: Configuration for the generation as Hugging Face's GenerationConfig.
             kwargs: Additional keyword arguments.
         """
-        if generation_config is None:
-            generation_config = GenerationConfig()
-
         with torch.inference_mode():
+            if generation_config is None:
+                generation_config = GenerationConfig()
+
             generation_config = self._fill_generation_config(generation_config, **kwargs)
 
             if isinstance(prompt, list):

@@ -9,6 +9,8 @@
 from pathlib import Path
 from typing import Any, cast
 
+from PIL.Image import Image
+
 from pixano_inference import PIXANO_INFERENCE_SETTINGS
 from pixano_inference.models.transformers import TransformerModel
 from pixano_inference.models_registry import register_model
@@ -238,7 +240,6 @@ class TransformersProvider(ModelProvider):
         register_model(our_model, self, task)
         return model
 
-    @torch.inference_mode()
     def image_mask_generation(
         self, request: ImageMaskGenerationRequest, model: TransformerModel, *args: Any, **kwargs: Any
     ) -> ImageMaskGenerationOutput:
@@ -265,7 +266,6 @@ class TransformersProvider(ModelProvider):
         output = model.image_mask_generation(**model_input)
         return output
 
-    @torch.inference_mode()
     def text_image_conditional_generation(
         self, request: TextImageConditionalGenerationRequest, model: TransformerModel
     ) -> TextImageConditionalGenerationOutput:
@@ -278,11 +278,31 @@ class TransformersProvider(ModelProvider):
         Returns:
             Output of text-image conditional generation.
         """
-        model_input = request.to_input().model_dump()
-        model_input["images"] = (
-            [convert_string_to_image(image) for image in model_input["images"]]
-            if len(model_input["images"]) > 0
-            else None
-        )
-        output = model.text_image_conditional_generation(**model_input)
+        model_input = request.to_input()
+
+        images: list[Image] | None
+        if model_input.images is None:
+            if isinstance(model_input.prompt, str):
+                raise ValueError("Images must be provided if the prompt is a string.")
+            images = []
+            for message in model_input.prompt:
+                new_content = []
+                for content in message["content"]:
+                    if content["type"] == "image_url":
+                        images.append(convert_string_to_image(content["image_url"]["url"]))
+                        new_content.append({"type": "image"})
+                    else:
+                        new_content.append(content)
+                message["content"] = new_content
+
+        else:
+            images = (
+                [convert_string_to_image(image) for image in model_input["images"]]
+                if len(model_input["images"]) > 0
+                else None
+            )
+
+        model_input_dump = model_input.model_dump()
+        model_input_dump["images"] = images
+        output = model.text_image_conditional_generation(**model_input_dump)
         return output

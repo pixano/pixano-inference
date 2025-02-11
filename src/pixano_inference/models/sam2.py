@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import gc
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -75,6 +76,8 @@ class Sam2Model(BaseInferenceModel):
         """Delete the model."""
         del self.predictor
         unregister_model(self)
+        gc.collect()
+        torch.cuda.empty_cache()
 
     @property
     def metadata(self) -> dict[str, Any]:
@@ -151,8 +154,8 @@ class Sam2Model(BaseInferenceModel):
             return_image_embedding: Whether to return the image embedding and high-resolution features.
             kwargs: Additional keyword arguments.
         """
+        # Check the input list types
         with torch.inference_mode():
-            # Check the input list types
             if not isinstance(image, (np.ndarray, Image)):
                 raise ValueError("The image should be an numpy array or a PIL image.")
             if (
@@ -310,8 +313,8 @@ class Sam2Model(BaseInferenceModel):
         Returns:
             Output of the generation.
         """
+        # Check the input list types
         with torch.inference_mode():
-            # Check the input list types
             if not isinstance(video_dir, (Path)) or not video_dir.exists():
                 raise ValueError("The video_dir should be a valid path.")
             if (

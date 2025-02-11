@@ -9,8 +9,6 @@
 from pathlib import Path
 from typing import Any, cast
 
-import torch
-
 from pixano_inference import PIXANO_INFERENCE_SETTINGS
 from pixano_inference.models.base import BaseInferenceModel
 from pixano_inference.models.sam2 import Sam2Model
@@ -27,10 +25,14 @@ from pixano_inference.tasks.task import Task
 from pixano_inference.tasks.utils import str_to_task
 from pixano_inference.tasks.video import VideoTask
 from pixano_inference.utils.image import convert_string_to_image
-from pixano_inference.utils.package import assert_sam2_installed
+from pixano_inference.utils.package import assert_sam2_installed, is_torch_installed
 from pixano_inference.utils.vector import vector_to_tensor
 
 from .base import ModelProvider
+
+
+if is_torch_installed():
+    import torch
 
 
 @register_provider("sam2")
@@ -102,7 +104,6 @@ class Sam2Provider(ModelProvider):
 
         return our_model
 
-    @torch.inference_mode()
     def image_mask_generation(
         self, request: ImageMaskGenerationRequest, model: Sam2Model, *args: Any, **kwargs: Any
     ) -> ImageMaskGenerationOutput:
@@ -133,7 +134,6 @@ class Sam2Provider(ModelProvider):
         model.predictor.reset_predictor()
         return output
 
-    @torch.inference_mode()
     def video_mask_generation(
         self, request: VideoMaskGenerationRequest, model: BaseInferenceModel, *args: Any, **kwargs: Any
     ) -> VideoMaskGenerationResponse:

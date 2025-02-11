@@ -10,7 +10,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 
-from pixano_inference.models_registry import get_model_from_registry, unregister_model
+from pixano_inference.models_registry import get_model_from_registry
 from pixano_inference.providers.base import ModelProvider
 from pixano_inference.providers.registry import get_provider, is_provider
 from pixano_inference.pydantic import ModelConfig
@@ -45,6 +45,11 @@ async def instantiate_model(
             p = get_provider("sam2")()  # type: ignore[assignment]
         except ImportError:
             raise HTTPException(status_code=500, detail="Sam2 is not installed.")
+    elif provider == "vllm":
+        try:
+            p = get_provider("vllm")()  # type: ignore[assignment]
+        except ImportError:
+            raise HTTPException(status_code=500, detail="vLLM library is not installed.")
     else:
         p = get_provider(provider)()  # type: ignore[assignment]
 
@@ -89,5 +94,5 @@ async def delete_model(model_name: str):
         model = get_model_from_registry(model_name)
     except KeyError as e:
         raise HTTPException(status_code=404, detail=f"Model {model_name} not found") from e
-    unregister_model(model)
+    model.delete()
     return

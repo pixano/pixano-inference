@@ -19,13 +19,13 @@ class TextImageConditionalGenerationInput(BaseModel):
 
     Attributes:
         prompt: Prompt for the generation. Can be a string or a list of dictionaries to apply a chat template.
-        images: Images for the generation.
+        images: Images for the generation. Can be None if images are passed in the prompt.
         max_new_tokens: Maximum number of new tokens to generate.
         temperature: Temperature for the generation.
     """
 
     prompt: str | list[dict[str, Any]]
-    images: list[str | Path]
+    images: list[str | Path] | None = None
     max_new_tokens: int
     temperature: float = 1.0
 

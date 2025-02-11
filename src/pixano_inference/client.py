@@ -149,6 +149,14 @@ class PixanoInferenceClient(Settings):
         self.post("providers/instantiate", json=json_content)
         return
 
+    def delete_model(self, model_name: str) -> None:
+        """Delete a model.
+
+        Args:
+            model_name: The name of the model.
+        """
+        self.delete(f"providers/model/{model_name}")
+
     def inference(self, url: str, request: BaseRequest, response_type: type[BaseResponse]) -> BaseResponse:
         """Perform a POST request to the pixano inference server.
 
