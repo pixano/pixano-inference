@@ -8,7 +8,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 
 from pixano_inference.providers.base import ModelProvider
 from pixano_inference.providers.registry import get_provider, is_provider
@@ -21,7 +21,9 @@ router = APIRouter(prefix="/providers", tags=["models"])
 
 @router.post("/instantiate")
 async def instantiate_model(
-    config: ModelConfig, provider: str, settings: Annotated[Settings, Depends(get_pixano_inference_settings)]
+    config: ModelConfig,
+    provider: Annotated[str, Body()],
+    settings: Annotated[Settings, Depends(get_pixano_inference_settings)],
 ):
     """Instantiate a model from a provider.
 
@@ -34,16 +36,16 @@ async def instantiate_model(
         raise HTTPException(status_code=404, detail=f"Provider {provider} does not exist.")
     elif provider == "transformers":
         try:
-            p: ModelProvider = get_provider("transformers")()  # type: ignore[operator]
+            p: ModelProvider = get_provider("transformers")()  # type: ignore[assignment]
         except ImportError:
             raise HTTPException(status_code=500, detail="Transformers library is not installed.")
     elif provider == "sam2":
         try:
-            p = get_provider("sam2")()  # type: ignore[operator]
+            p = get_provider("sam2")()  # type: ignore[assignment]
         except ImportError:
             raise HTTPException(status_code=500, detail="Sam2 is not installed.")
     else:
-        p = get_provider(provider)()  # type: ignore[operator]
+        p = get_provider(provider)()  # type: ignore[assignment]
 
     p.load_model(settings=settings, **config.model_dump())
     return

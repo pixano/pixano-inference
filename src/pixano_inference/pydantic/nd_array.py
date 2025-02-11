@@ -6,7 +6,6 @@
 
 """Pydantic models for N-dimensional arrays."""
 
-import base64
 from abc import ABC
 from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
 
@@ -30,12 +29,12 @@ class NDArray(BaseModel, Generic[T], ABC):
     """Represents an N-dimensional array.
 
     Attributes:
-        values: The list of numpy values encoded in bytes and stored as a base64 string.
+        values: The list of values.
         shape: The shape of the array, represented as a list of integers.
         np_dtype: The NumPy data type of the array.
     """
 
-    values: str
+    values: list[T]
     shape: list[int]
     np_dtype: ClassVar[np.dtype]
 
@@ -61,7 +60,10 @@ class NDArray(BaseModel, Generic[T], ABC):
         """
         shape = list(arr.shape)
         arr = arr.astype(dtype=cls.np_dtype)
-        return cls(values=base64.b64encode(arr.reshape(-1).tobytes()).decode("utf-8"), shape=shape)
+        return cls(
+            values=arr.reshape(-1).tolist(),
+            shape=shape,
+        )
 
     @classmethod
     def from_torch(cls, tensor: "Tensor") -> Self:
@@ -83,8 +85,8 @@ class NDArray(BaseModel, Generic[T], ABC):
         Returns:
             A NumPy array with values and shape derived from the instance.
         """
-        array = np.frombuffer(base64.b64decode(self.values), dtype=self.np_dtype).copy()
-        return array.reshape(self.shape)
+        array = np.array(self.values, dtype=self.np_dtype).reshape(self.shape)
+        return array
 
     def to_torch(self) -> "Tensor":
         """Convert the instance to a PyTorch tensor.

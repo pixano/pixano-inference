@@ -15,7 +15,7 @@ from pixano_inference.models.base import BaseInferenceModel
 from pixano_inference.models_registry import unregister_model
 from pixano_inference.pydantic import NDArrayFloat
 from pixano_inference.pydantic.tasks.image.mask_generation import ImageMaskGenerationOutput
-from pixano_inference.pydantic.tasks.image.utils import RLEMask
+from pixano_inference.pydantic.tasks.image.utils import CompressedRLE
 from pixano_inference.pydantic.tasks.multimodal.conditional_generation import (
     TextImageConditionalGenerationOutput,
     UsageConditionalGeneration,
@@ -144,7 +144,8 @@ class TransformerModel(BaseInferenceModel):
             )[0].cpu()
             return ImageMaskGenerationOutput(
                 masks=[
-                    [RLEMask(**encode_mask_to_rle(mask)) for mask in prediction_masks] for prediction_masks in masks
+                    [CompressedRLE(**encode_mask_to_rle(mask)) for mask in prediction_masks]
+                    for prediction_masks in masks
                 ],
                 scores=NDArrayFloat.from_torch(outputs.iou_scores[0].cpu()),
                 image_embedding=(
@@ -153,13 +154,17 @@ class TransformerModel(BaseInferenceModel):
             )
 
     def text_image_conditional_generation(
-        self, prompt: str, image: "Tensor", generation_config: "GenerationConfig" | None = None, **kwargs: Any
+        self,
+        prompt: str | list[dict[str, Any]],
+        images: list["Tensor"],
+        generation_config: "GenerationConfig" | None = None,
+        **kwargs: Any,
     ) -> TextImageConditionalGenerationOutput:
         """Generate text from an image and a prompt.
 
         Args:
             prompt: Prompt for the generation.
-            image: Image for the generation.
+            images: Images for the generation.
             generation_config: Configuration for the generation as Hugging Face's GenerationConfig.
             kwargs: Additional keyword arguments.
         """
@@ -169,15 +174,19 @@ class TransformerModel(BaseInferenceModel):
         with torch.inference_mode():
             generation_config = self._fill_generation_config(generation_config, **kwargs)
 
-            inputs = self.processor(prompt, image, return_tensors="pt").to(self.model.device)
+            if isinstance(prompt, list):
+                prompt = self.processor.apply_chat_template(prompt, add_generation_prompt=True)
+
+            inputs = self.processor(prompt, images, return_tensors="pt").to(self.model.device)
             generate_ids = self.model.generate(**inputs, generation_config=generation_config)
-            output = self.processor.batch_decode(
-                generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False
-            )[0]
 
             total_tokens: int = generate_ids.shape[1]
             prompt_tokens: int = inputs["input_ids"].shape[1]
             completion_tokens: int = total_tokens - prompt_tokens
+
+            output = self.processor.decode(
+                generate_ids[0, prompt_tokens:], skip_special_tokens=True, clean_up_tokenization_spaces=False
+            )
 
             return TextImageConditionalGenerationOutput(
                 generated_text=output,

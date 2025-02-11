@@ -31,4 +31,6 @@ async def mask_generation(
     Returns:
         Response for mask generation.
     """
-    return await execute_task_request(request, VideoTask.MASK_GENERATION, VideoMaskGenerationResponse)
+    return await execute_task_request(
+        request=request, task=VideoTask.MASK_GENERATION, response_type=VideoMaskGenerationResponse
+    )

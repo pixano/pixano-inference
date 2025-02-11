@@ -11,7 +11,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, field_validator
 
 from pixano_inference.pydantic.base import BaseRequest, BaseResponse
-from pixano_inference.pydantic.tasks.image.utils import RLEMask
+from pixano_inference.pydantic.tasks.image.utils import CompressedRLE
 
 
 class VideoMaskGenerationInput(BaseModel):
@@ -19,8 +19,6 @@ class VideoMaskGenerationInput(BaseModel):
 
     Attributes:
         frames: Frames for mask generation.
-        image_embedding: Image embedding for the mask generation.
-        high_resolution_features: High resolution features for the mask generation.
         points: Points for the mask generation. The first fimension is the number of objects the second
             the number of points for each object and the third the coordinates of the points.
         labels: Labels for the mask generation. The first fimension is the number of objects, the second
@@ -51,12 +49,11 @@ class VideoMaskGenerationInput(BaseModel):
 
     @field_validator("boxes")
     @classmethod
-    def _check_boxes(cls, v: list[list[list[int]]] | None) -> list[list[list[int]]] | None:
+    def _check_boxes(cls, v: list[list[int]] | None) -> list[list[int]] | None:
         if v is not None:
-            for list_ in v:
-                for box in list_:
-                    if len(box) != 4:
-                        raise ValueError("Each box should have 4 coordinates.")
+            for box in v:
+                if len(box) != 4:
+                    raise ValueError("Each box should have 4 coordinates.")
         return v
 
     @field_validator("objects_ids")
@@ -97,7 +94,7 @@ class VideoMaskGenerationOutput(BaseModel):
 
     objects_ids: list[int]
     frame_indexes: list[int]
-    masks: list[RLEMask]
+    masks: list[CompressedRLE]
 
 
 class VideoMaskGenerationResponse(BaseResponse):

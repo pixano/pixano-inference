@@ -14,7 +14,7 @@ from pixano_inference.pydantic.base import BaseRequest, BaseResponse
 from pixano_inference.pydantic.data.vector_database import LanceVector
 from pixano_inference.pydantic.nd_array import NDArrayFloat
 
-from .utils import RLEMask
+from .utils import CompressedRLE
 
 
 class ImageMaskGenerationInput(BaseModel):
@@ -38,7 +38,7 @@ class ImageMaskGenerationInput(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     image: str | Path
     image_embedding: NDArrayFloat | LanceVector | None = None
-    high_resolution_features: NDArrayFloat | LanceVector | None = None
+    high_resolution_features: list[NDArrayFloat] | list[LanceVector] | None = None
     points: list[list[list[int]]] | None = None
     labels: list[list[int]] | None = None
     boxes: list[list[int]] | None = None
@@ -58,12 +58,11 @@ class ImageMaskGenerationInput(BaseModel):
 
     @field_validator("boxes")
     @classmethod
-    def _check_boxes(cls, v: list[list[list[int]]] | None) -> list[list[list[int]]] | None:
+    def _check_boxes(cls, v: list[list[int]] | None) -> list[list[int]] | None:
         if v is not None:
-            for list_ in v:
-                for box in list_:
-                    if len(box) != 4:
-                        raise ValueError("Each box should have 4 coordinates.")
+            for box in v:
+                if len(box) != 4:
+                    raise ValueError("Each box should have 4 coordinates.")
         return v
 
 
@@ -98,10 +97,10 @@ class ImageMaskGenerationOutput(BaseModel):
         high_resolution_features: High resolution features.
     """
 
-    masks: list[list[RLEMask]]
+    masks: list[list[CompressedRLE]]
     scores: NDArrayFloat
     image_embedding: NDArrayFloat | None = None
-    high_resolution_features: NDArrayFloat | None = None
+    high_resolution_features: list[NDArrayFloat] | None = None
 
 
 class ImageMaskGenerationResponse(BaseResponse):

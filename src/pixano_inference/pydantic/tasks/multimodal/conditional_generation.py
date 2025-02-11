@@ -18,14 +18,14 @@ class TextImageConditionalGenerationInput(BaseModel):
     """Input for text-image conditional generation.
 
     Attributes:
-        prompt: Prompt for the generation.
-        image: Image for the generation.
+        prompt: Prompt for the generation. Can be a string or a list of dictionaries to apply a chat template.
+        images: Images for the generation.
         max_new_tokens: Maximum number of new tokens to generate.
         temperature: Temperature for the generation.
     """
 
-    prompt: str
-    image: str | Path
+    prompt: str | list[dict[str, Any]]
+    images: list[str | Path]
     max_new_tokens: int
     temperature: float = 1.0
 
@@ -37,7 +37,7 @@ class TextImageConditionalGenerationRequest(BaseRequest, TextImageConditionalGen
         """Convert the request to the input."""
         return TextImageConditionalGenerationInput(
             prompt=self.prompt,
-            image=self.image,
+            images=self.images,
             max_new_tokens=self.max_new_tokens,
             temperature=self.temperature,
         )

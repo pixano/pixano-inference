@@ -19,12 +19,10 @@ class ModelInfo(BaseModel):
 
     Attributes:
         name: Name of the model.
-        provider: Provider of the model.
         task: Task of the model.
     """
 
     name: str
-    provider: str
     task: str
 
 
@@ -41,7 +39,7 @@ class ModelConfig(BaseModel):
 
     name: str
     task: str
-    path: Path | None = None
+    path: Path | str | None = None
     config: dict[str, Any] = {}
     processor_config: dict[str, Any] = {}
 

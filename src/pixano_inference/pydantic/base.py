@@ -17,11 +17,9 @@ class BaseRequest(BaseModel):
     """Base request model.
 
     Attributes:
-        provider: Name of the provider.
         model: Name of the model.
     """
 
-    provider: str
     model: str
 
 

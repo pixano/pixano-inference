@@ -4,7 +4,4 @@
 # License: CECILL-C
 # =================================
 
-# ruff: noqa: F401
-# ruff: noqa: D104
-
-from . import app, image, multimodal, nlp, providers, video
+from .fixtures.client import simple_pixano_inference_client

@@ -35,30 +35,32 @@ async def execute_task_request(request: BaseRequest, task: Task, response_type: 
         Response of the request
     """
     start_time = time.time()
-    model_str, provider_str = request.model, request.provider
+    model_str = request.model
     try:
-        model, provider, model_task = get_values_from_model_registry(model_str, provider_str)
+        model, provider, model_task = get_values_from_model_registry(model_str)
     except KeyError:
-        return HTTPException(404, detail=f"Model {model_str} from provider {provider_str} is not registered.")
+        raise HTTPException(404, detail=f"Model {model_str} is not registered.")
     if task != model_task:
-        return HTTPException(400, detail=f"Model {model} does not support the {task.value} task.")
+        raise HTTPException(400, detail=f"Model {model} does not support the {task.value} task.")
 
-    sleeping_loops = 0
-    while model.status == ModelStatus.RUNNING and sleeping_loops < 100:
-        time.sleep(0.1)
-        sleeping_loops += 1
-        if sleeping_loops == 100:
-            return HTTPException(503, "Model is running please resend your request.")
+    if model.status == ModelStatus.RUNNING:
+        raise HTTPException(503, "Model is running please wait for it to finish and try again.")
 
     model.status = ModelStatus.RUNNING
-    match task:
-        case ImageTask.MASK_GENERATION:
-            output = provider.image_mask_generation(request, model)
-        case MultimodalImageNLPTask.CONDITIONAL_GENERATION:
-            output = provider.text_image_conditional_generation(request, model)
-        case _:
-            raise NotImplementedError(f"Task {task.value} is not yet supported.")
-    model.status = ModelStatus.IDLE
+    try:
+        match task:
+            case ImageTask.MASK_GENERATION:
+                output = provider.image_mask_generation(request, model)
+            case MultimodalImageNLPTask.CONDITIONAL_GENERATION:
+                output = provider.text_image_conditional_generation(request, model)
+            case _:
+                raise NotImplementedError(f"Task {task.value} is not yet supported.")
+    except Exception as e:
+        model.status = ModelStatus.IDLE
+        raise e
+    else:
+        model.status = ModelStatus.IDLE
+
     response = response_type(
         timestamp=datetime.now(),
         processing_time=time.time() - start_time,

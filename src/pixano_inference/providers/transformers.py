@@ -35,7 +35,7 @@ if is_torch_installed():
     import torch
 
 if is_transformers_installed():
-    from transformers import AutoProcessor
+    from transformers import AutoProcessor, BitsAndBytesConfig
     from transformers.modeling_utils import PreTrainedModel
 
 
@@ -218,6 +218,9 @@ class TransformersProvider(ModelProvider):
         processor = AutoProcessor.from_pretrained(path, **processor_config)
 
         device = settings.gpus_available[0] if settings.gpus_available else "cpu"
+        quantization_config = config.pop("quantization_config", {})
+        quantization_config = BitsAndBytesConfig(**quantization_config)
+        config["quantization_config"] = quantization_config
 
         model = get_transformer_automodel_from_pretrained(path, task, device_map=device, **config)
         if model is None:
@@ -276,6 +279,10 @@ class TransformersProvider(ModelProvider):
             Output of text-image conditional generation.
         """
         model_input = request.to_input().model_dump()
-        model_input["image"] = convert_string_to_image(model_input["image"])
+        model_input["images"] = (
+            [convert_string_to_image(image) for image in model_input["images"]]
+            if len(model_input["images"]) > 0
+            else None
+        )
         output = model.text_image_conditional_generation(**model_input)
         return output

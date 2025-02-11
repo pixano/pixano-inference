@@ -8,11 +8,11 @@
 # ruff: noqa: D104
 
 from .image import (
+    CompressedRLE,
     ImageMaskGenerationInput,
     ImageMaskGenerationOutput,
     ImageMaskGenerationRequest,
     ImageMaskGenerationResponse,
-    RLEMask,
 )
 from .multimodal import (
     TextImageConditionalGenerationInput,
