@@ -32,7 +32,7 @@ def raise_if_error(response: Response) -> None:
     """Raise an error from a response."""
     if response.ok:
         return
-    error = f"HTTP {response.status_code}: {response.reason}"
+    error_out = f"HTTP {response.status_code}: {response.reason}"
     try:
         json_detail = response.json()
     except Exception:
@@ -40,8 +40,11 @@ def raise_if_error(response: Response) -> None:
 
     detail = json_detail.get("detail", None)
     if detail is not None:
-        error += f" - {detail}"
-    raise HTTPException(response.status_code, detail=error)
+        error_out += f" - {detail}"
+    error = json_detail.get("error", None)
+    if error is not None:
+        error_out += f" - {error}"
+    raise HTTPException(response.status_code, detail=error_out)
 
 
 class PixanoInferenceClient(Settings):

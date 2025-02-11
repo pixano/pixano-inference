@@ -9,6 +9,7 @@ import re
 
 import pytest
 import responses
+from fastapi import HTTPException
 from requests import HTTPError
 
 from pixano_inference.client import PixanoInferenceClient
@@ -77,7 +78,7 @@ class TestPixanoInferenceClient:
                 status=400,
             )
         )
-        with pytest.raises(HTTPError) as exc_info:
+        with pytest.raises(HTTPException) as exc_info:
             simple_pixano_inference_client._rest_call("data/", "POST")
             assert exc_info.value.status_code == 400
             assert exc_info.value.response.json() == {

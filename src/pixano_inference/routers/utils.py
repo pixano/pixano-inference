@@ -54,7 +54,7 @@ async def execute_task_request(request: BaseRequest, task: Task, response_type: 
             case MultimodalImageNLPTask.CONDITIONAL_GENERATION:
                 output = provider.text_image_conditional_generation(request, model)
             case _:
-                raise NotImplementedError(f"Task {task.value} is not yet supported.")
+                raise HTTPException(400, f"Task {task.value} is not yet supported.")
     except Exception as e:
         model.status = ModelStatus.IDLE
         raise e
