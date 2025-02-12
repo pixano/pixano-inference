@@ -91,5 +91,5 @@ class VLLMProvider(ModelProvider):
         if isinstance(model_input.prompt, str):
             raise ValueError("Pixano-inference only support a chat template for vLLM.")
 
-        output = model.text_image_conditional_generation(**model_input.model_dump())
+        output = model.text_image_conditional_generation(**model_input.model_dump(exclude="images"))
         return output
