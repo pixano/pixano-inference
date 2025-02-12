@@ -8,4 +8,5 @@
 # ruff: noqa: D104
 
 from .image import convert_string_to_image, decode_rle_to_mask, encode_mask_to_rle
+from .url import is_url
 from .vector import vector_to_tensor

@@ -16,7 +16,8 @@ import numpy as np
 import requests  # type: ignore[import-untyped]
 from PIL import Image
 
-from pixano_inference.utils.package import assert_torch_installed, is_torch_installed
+from .package import assert_torch_installed, is_torch_installed
+from .url import is_url
 
 
 if is_torch_installed():
@@ -24,6 +25,25 @@ if is_torch_installed():
 
 if TYPE_CHECKING:
     from torch import Tensor
+
+regex_base64 = r"^(data:image/[a-zA-Z]+;base64,)"
+
+
+def is_base64_image(image: str) -> bool:
+    """Check if a string is a base64 image.
+
+    The expected format is "data:image/{image_format};base64,{base64}".
+    """
+    match = re.match(regex_base64, image)
+    return match is not None
+
+
+def extract_image_from_base64(image: str):
+    """Extract from a base64 image the actual base64 part."""
+    match = re.match(regex_base64, image)
+    if match is None:
+        return ""
+    return image[len(match.group(1)) :]
 
 
 def convert_string_to_image(str_image: str | Path) -> Image.Image:
@@ -36,27 +56,17 @@ def convert_string_to_image(str_image: str | Path) -> Image.Image:
         Image.
     """
     if isinstance(str_image, str):
-        url_validation_regex = re.compile(  # from Django
-            r"^(?:http|ftp)s?://"  # http:// or https://
-            r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|"  # domain...
-            r"localhost|"  # localhost...
-            r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"  # ...or ip
-            r"(?::\d+)?"  # optional port
-            r"(?:/?|[/?]\S+)$",
-            re.IGNORECASE,
-        )
-        if re.match(url_validation_regex, str_image) is not None:
+        if is_url(str_image):
             image_pil = Image.open(requests.get(str_image, stream=True).raw)
         else:
-            try:
-                image_bytes = base64.b64decode(str_image)
+            if is_base64_image(str_image):
+                image_bytes = base64.b64decode(extract_image_from_base64(str_image))
                 image_pil = Image.open(BytesIO(image_bytes))
-            except Exception:
-                if Path(str_image).exists():
-                    image_pil = Image.open(str_image)
+            elif Path(str_image).exists():
+                image_pil = Image.open(str_image)
             else:
                 raise ValueError("The image is not a valid path, URL or base64 string.")
-    if isinstance(str_image, Path):
+    elif isinstance(str_image, Path):
         image_pil = Image.open(str_image)
     else:
         raise ValueError("The image is not a valid path, URL or base64 string.")

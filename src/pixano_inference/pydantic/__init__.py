@@ -12,11 +12,11 @@ from .data import LanceVector
 from .models import ModelConfig, ModelInfo
 from .nd_array import NDArrayFloat
 from .tasks import (
+    CompressedRLE,
     ImageMaskGenerationInput,
     ImageMaskGenerationOutput,
     ImageMaskGenerationRequest,
     ImageMaskGenerationResponse,
-    RLEMask,
     TextImageConditionalGenerationInput,
     TextImageConditionalGenerationOutput,
     TextImageConditionalGenerationRequest,

@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import gc
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -17,9 +18,8 @@ from PIL.Image import Image
 from pixano_inference.models_registry import unregister_model
 from pixano_inference.pydantic.nd_array import NDArrayFloat
 from pixano_inference.pydantic.tasks.image.mask_generation import ImageMaskGenerationOutput
-from pixano_inference.pydantic.tasks.image.utils import RLEMask
+from pixano_inference.pydantic.tasks.image.utils import CompressedRLE
 from pixano_inference.pydantic.tasks.video.mask_generation import VideoMaskGenerationOutput
-from pixano_inference.utils.image import encode_mask_to_rle
 from pixano_inference.utils.package import assert_sam2_installed, is_sam2_installed, is_torch_installed
 
 from .base import BaseInferenceModel
@@ -31,6 +31,7 @@ if is_torch_installed():
 if is_sam2_installed():
     from sam2.sam2_image_predictor import SAM2ImagePredictor
     from sam2.sam2_video_predictor import SAM2VideoPredictor
+    from torch import Tensor
 
 if TYPE_CHECKING:
     from torch import Tensor
@@ -75,6 +76,8 @@ class Sam2Model(BaseInferenceModel):
         """Delete the model."""
         del self.predictor
         unregister_model(self)
+        gc.collect()
+        torch.cuda.empty_cache()
 
     @property
     def metadata(self) -> dict[str, Any]:
@@ -82,7 +85,7 @@ class Sam2Model(BaseInferenceModel):
         return {
             "name": self.name,
             "provider": self.provider,
-            "torch_dtype": self.torch_dtype,
+            "torch_dtype": str(self.torch_dtype),
             "config": self.config,
         }
 
@@ -117,8 +120,11 @@ class Sam2Model(BaseInferenceModel):
                 raise NotImplementedError("Image format not supported")
 
             self.predictor._features = {
-                "image_embed": image_embedding.unsqueeze(0),
-                "high_res_features": high_resolution_features.unsqueeze(0),
+                "image_embed": image_embedding.unsqueeze(0).to(device=self.predictor.model.device),
+                "high_res_feats": [
+                    features.unsqueeze(0).to(device=self.predictor.model.device)
+                    for features in high_resolution_features
+                ],
             }
             self.predictor._is_image_set = True
 
@@ -148,8 +154,8 @@ class Sam2Model(BaseInferenceModel):
             return_image_embedding: Whether to return the image embedding and high-resolution features.
             kwargs: Additional keyword arguments.
         """
+        # Check the input list types
         with torch.inference_mode():
-            # Check the input list types
             if not isinstance(image, (np.ndarray, Image)):
                 raise ValueError("The image should be an numpy array or a PIL image.")
             if (
@@ -239,6 +245,7 @@ class Sam2Model(BaseInferenceModel):
                 masks, scores, _ = self.predictor.predict(
                     point_coords=input_points,
                     point_labels=input_labels,
+                    box=boxes,
                     mask_input=None,
                     multimask_output=multimask_output,
                     return_logits=False,
@@ -248,21 +255,34 @@ class Sam2Model(BaseInferenceModel):
                     masks = np.expand_dims(masks, 0)
                     scores = np.expand_dims(scores, 0)
 
-                masks = torch.from_numpy(masks)
+                if return_image_embedding:
+                    image_embedding: Tensor = self.predictor._features["image_embed"]
+                    image_embedding_list = image_embedding.to(torch.float32).flatten().tolist()
+                    high_resolution_features: list[Tensor] = self.predictor._features["high_res_feats"]
+                    high_resolution_features_list = [
+                        features.to(torch.float32).flatten().tolist() for features in high_resolution_features
+                    ]
+                    image_embedding_ndarray = NDArrayFloat(
+                        values=image_embedding_list, shape=image_embedding.shape[1:]
+                    )
+                    high_resolution_features_ndarray = [
+                        NDArrayFloat(values=features_list, shape=features.shape[1:])
+                        for features, features_list in zip(high_resolution_features, high_resolution_features_list)
+                    ]
+                else:
+                    image_embedding_ndarray = None
+                    high_resolution_features_ndarray = None
 
-                return ImageMaskGenerationOutput(
+                masks = ImageMaskGenerationOutput(
                     masks=[
-                        [RLEMask(**encode_mask_to_rle(mask)) for mask in prediction_masks]
+                        [CompressedRLE.from_mask(mask.astype(np.uint8)) for mask in prediction_masks]
                         for prediction_masks in masks
                     ],
                     scores=NDArrayFloat.from_numpy(scores),
-                    image_embedding=self.predictor._features["image_embed"][0].cpu()
-                    if return_image_embedding
-                    else None,
-                    high_resolution_features=self.predictor._features["high_res_features"][0].cpu()
-                    if return_image_embedding
-                    else None,
+                    image_embedding=image_embedding_ndarray,
+                    high_resolution_features=high_resolution_features_ndarray,
                 )
+                return masks
 
     def video_mask_generation(
         self,
@@ -293,8 +313,8 @@ class Sam2Model(BaseInferenceModel):
         Returns:
             Output of the generation.
         """
+        # Check the input list types
         with torch.inference_mode():
-            # Check the input list types
             if not isinstance(video_dir, (Path)) or not video_dir.exists():
                 raise ValueError("The video_dir should be a valid path.")
             if (
@@ -403,5 +423,5 @@ class Sam2Model(BaseInferenceModel):
             return VideoMaskGenerationOutput(
                 objects_ids=out_objects_ids,
                 frame_indexes=out_frame_indexes,
-                masks=[RLEMask(**encode_mask_to_rle(torch.from_numpy(mask).squeeze(0))) for mask in out_masks],
+                masks=[CompressedRLE.from_mask(mask.astype(np.uint8)) for mask in out_masks],
             )

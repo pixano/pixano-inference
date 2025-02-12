@@ -31,4 +31,6 @@ async def mask_generation(
     Returns:
         Response for mask generation.
     """
-    return await execute_task_request(request, ImageTask.MASK_GENERATION, ImageMaskGenerationResponse)
+    return await execute_task_request(
+        request=request, task=ImageTask.MASK_GENERATION, response_type=ImageMaskGenerationResponse
+    )

@@ -25,8 +25,5 @@ async def get_settings() -> Settings:
 @router.get("/models/", response_model=list[ModelInfo])
 async def get_list_models() -> list[ModelInfo]:
     """List all models available in the app."""
-    models = [
-        ModelInfo(name=model_name, provider=provider_name, task=task.value)
-        for (model_name, provider_name), (model, provider, task) in list_models()
-    ]
+    models = [ModelInfo(name=model_name, task=task.value) for model_name, (model, provider, task) in list_models()]
     return models

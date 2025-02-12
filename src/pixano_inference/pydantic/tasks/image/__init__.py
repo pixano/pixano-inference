@@ -13,4 +13,4 @@ from .mask_generation import (
     ImageMaskGenerationRequest,
     ImageMaskGenerationResponse,
 )
-from .utils import RLEMask
+from .utils import CompressedRLE

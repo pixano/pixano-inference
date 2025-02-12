@@ -32,5 +32,7 @@ async def image_text_conditional_generation(
         Response for text-image conditional generation.
     """
     return await execute_task_request(
-        request, MultimodalImageNLPTask.CONDITIONAL_GENERATION, TextImageConditionalGenerationResponse
+        request=request,
+        task=MultimodalImageNLPTask.CONDITIONAL_GENERATION,
+        response_type=TextImageConditionalGenerationResponse,
     )

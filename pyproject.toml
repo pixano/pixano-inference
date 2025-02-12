@@ -40,15 +40,16 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-  "pydantic >= 2.0.0, < 3.0.0",
-  "pydantic_settings",
   "click >= 8.0.0",
   "fastapi >= 0.100.0",
-  "uvicorn >= 0.31.0",
-  "Pillow >= 9.0.0",
   "numpy < 2.0.0",
-  "requests",
+  "pydantic >= 2.0.0, < 3.0.0",
+  "pydantic_settings",
+  "Pillow >= 9.0.0",
   "polars < 2.0.0",
+  "pycocotools",
+  "requests",
+  "uvicorn >= 0.31.0",
 ]
 readme = "README.md"
 
@@ -62,6 +63,9 @@ torch=[
 transformers=[
   "torch >= 2.3.0, < 3.0.0",
   "transformers >= 4.0.0, < 5.0.0",
+]
+vllm=[
+  "vllm",
 ]
 docs=[
   "mike >= 2.1.0, < 3.0.0",
@@ -77,10 +81,11 @@ test=[
   "pytest-cov",
   "pytest-mock",
   "pytest-coverage",
+  "responses",
 ]
 
 [project.scripts]
-serve = "pixano_inference.main:serve"
+pixano-inference = "pixano_inference.main:serve"
 
 [project.urls]
 "Bug Tracker" = "http://is154588.intra.cea.fr/pixano/pixano-inference/issues"

@@ -4,6 +4,4 @@
 # License: CECILL-C
 # =================================
 
-# ruff: noqa: D100
-
-__version__ = "0.4.0b2"
+from .fixtures.client import simple_pixano_inference_client

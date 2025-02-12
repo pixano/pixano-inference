@@ -7,4 +7,4 @@
 # ruff: noqa: F401
 # ruff: noqa: D104
 
-from . import image, multimodal, nlp, providers, video
+from . import app, image, multimodal, nlp, providers, video

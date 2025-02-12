@@ -58,6 +58,15 @@ def is_transformers_installed() -> bool:
     return is_package_installed("transformers")
 
 
+def is_vllm_installed() -> bool:
+    """Check if the vllm package is installed.
+
+    Returns:
+        True if the vLLM package is installed, False otherwise
+    """
+    return is_package_installed("vllm")
+
+
 def assert_package_installed(package_name: str, error_message: str | None = None) -> None:
     """Assert that a Python package is installed.
 
@@ -98,4 +107,13 @@ def assert_transformers_installed() -> None:
 
 def assert_torch_installed() -> None:
     """Assert that the torch package is installed."""
-    assert_package_installed("torch", "torch is not installed. Please install it using 'pip install ^[torch]'.")
+    assert_package_installed(
+        "torch", "torch is not installed. Please install it using 'pip install pixano-inference[torch]'."
+    )
+
+
+def assert_vllm_installed() -> None:
+    """Assert that the vllm package is installed."""
+    assert_package_installed(
+        "vllm", "vLLM is not installed. Please install it using 'pip install pixano-inference[vllm]'."
+    )

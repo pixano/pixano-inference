@@ -21,6 +21,7 @@ def create_app() -> FastAPI:
     app.include_router(routers.multimodal.router)
     app.include_router(routers.providers.router)
     app.include_router(routers.video.router)
+    app.include_router(routers.app.router)
     return app
 
 
@@ -35,7 +36,7 @@ def create_app() -> FastAPI:
 @click.option(
     "--port",
     type=int,
-    default=0,
+    default=80,
     help="Pixano Inference app URL port",
     show_default=True,
 )
