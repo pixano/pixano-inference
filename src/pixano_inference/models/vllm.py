@@ -11,8 +11,6 @@ from __future__ import annotations
 import gc
 from typing import Any
 
-from vllm import CompletionOutput, RequestOutput
-
 from pixano_inference.models.base import BaseInferenceModel
 from pixano_inference.models_registry import unregister_model
 from pixano_inference.pydantic.tasks.multimodal.conditional_generation import (
@@ -30,8 +28,9 @@ if is_torch_installed():
     import torch
 
 if is_vllm_installed():
+    import msgspec
     import vllm
-    from vllm import LLM
+    from vllm import LLM, CompletionOutput, RequestOutput, SamplingParams
 
 
 class VLLMModel(BaseInferenceModel):
@@ -84,18 +83,23 @@ class VLLMModel(BaseInferenceModel):
     def text_image_conditional_generation(
         self,
         prompt: list[dict[str, Any]],
-        generation_config: dict[str, Any] = {},
-        **kwargs: Any,
+        temperature: float = 1.0,
+        max_new_tokens: int = 16,
+        **kwargs,
     ) -> TextImageConditionalGenerationOutput:
         """Generate text from an image and a prompt from the vLLM's `LLM.chat` method.
 
         Args:
             prompt: Prompt for the generation.
-            generation_config: Configuration for the generation.
-            kwargs: Additional keyword arguments.
+            temperature: Temperature for the generation.
+            max_new_tokens: Maximum number of tokens to generate.
+            kwargs: Additional generation arguments.
         """
+        sampling_params = SamplingParams(temperature=temperature, max_tokens=max_new_tokens, **kwargs)
         with torch.inference_mode():
-            request_output: RequestOutput = self.model.chat(messages=prompt, use_tqdm=False, **generation_config)[0]
+            request_output: RequestOutput = self.model.chat(
+                messages=prompt, use_tqdm=False, sampling_params=sampling_params
+            )[0]
             prompt = request_output.prompt
             output: CompletionOutput = request_output.outputs[0]
 
@@ -110,5 +114,5 @@ class VLLMModel(BaseInferenceModel):
                     completion_tokens=completion_tokens,
                     total_tokens=total_tokens,
                 ),
-                generation_config=generation_config,
+                generation_config=msgspec.to_builtins(sampling_params),
             )
