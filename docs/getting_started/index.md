@@ -82,22 +82,27 @@ The client provide methods to run the different models on various tasks. For ima
 from pixano_inference.pydantic import TextImageConditionalGenerationRequest, TextImageConditionalGenerationResponse
 
 
+from pixano_inference.pydantic import TextImageConditionalGenerationRequest
+
+
 request = TextImageConditionalGenerationRequest(
+    model="llava",
     prompt=[
-        {'content': [
-            {'type': 'image_url',
-             'image_url': {
-                'url': 'https://upload.wikimedia.org/wikipedia/commons/9/9e/Ours_brun_parcanimalierpyrenees_1.jpg'}
-            },
-            {'type': 'text',
-             'text': 'What is displayed in this image ? Answer concisely. '}
-        ],
-         'role': 'user'
+        {
+            "content": [
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Ours_brun_parcanimalierpyrenees_1.jpg"
+                    },
+                },
+                {"type": "text", "text": "What is displayed in this image ? Answer concisely. "},
+            ],
+            "role": "user",
         }
     ],
     image_path="/path/to/image.jpg",
-    max_new_tokens=2,
-    model="vllm",
+    max_new_tokens=100,
 )
 
 
