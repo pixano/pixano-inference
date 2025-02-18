@@ -20,7 +20,17 @@ if is_torch_installed():
 
 
 class Settings(BaseSettings):
-    """Application settings."""
+    """Application settings.
+
+    Attributes:
+        app_name: The name of the application.
+        app_version: The version of the application.
+        app_description: A description of the application.
+        num_cpus: The number of CPUs accessible to the application.
+        num_gpus: The number of GPUs available for inference.
+        num_nodes: The number of nodes available for inference.
+        gpus_used: The list of GPUs used by the application.
+    """
 
     app_name: str = "Pixano Inference"
     app_version: str = __version__

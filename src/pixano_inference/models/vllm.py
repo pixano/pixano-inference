@@ -85,7 +85,7 @@ class VLLMModel(BaseInferenceModel):
         prompt: list[dict[str, Any]],
         temperature: float = 1.0,
         max_new_tokens: int = 16,
-        **kwargs,
+        **kwargs: Any,
     ) -> TextImageConditionalGenerationOutput:
         """Generate text from an image and a prompt from the vLLM's `LLM.chat` method.
 

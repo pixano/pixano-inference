@@ -52,3 +52,7 @@ pip install -e .
 ## Usage
 
 Look at the [documentation](https://pixano.github.io/pixano-inference/latest/) to use Pixano-Inference.
+
+## License
+
+Pixano-Inference is released under the terms of the [CeCILL-C license](LICENSE).

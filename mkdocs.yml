@@ -75,7 +75,7 @@ plugins:
       nav_file: SUMMARY.md
   - redirects:
       redirect_maps:
-        "index.md": "getting_started/index.md"
+        "index.md": "home/index.md"
   - mkdocstrings:
       enable_inventory: true
       handlers:
@@ -120,5 +120,6 @@ nav:
   - "Pixano": https://pixano.github.io/pixano/latest
 
   - "Pixano-Inference":
-      - "API reference": api_reference/
+      - "Home": home/
       - "Getting Started": getting_started/
+      - "API reference": api_reference/

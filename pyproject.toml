@@ -57,16 +57,6 @@ readme = "README.md"
 data = [
   "pylance >= 0.18.0, < 0.21.0",
 ]
-torch=[
-  "torch >= 2.3.0, < 3.0.0",
-]
-transformers=[
-  "torch >= 2.3.0, < 3.0.0",
-  "transformers >= 4.0.0, < 5.0.0",
-]
-vllm=[
-  "vllm",
-]
 docs=[
   "mike >= 2.1.0, < 3.0.0",
   "mkdocs >= 1.6.0, < 2.0.0",
@@ -76,12 +66,22 @@ docs=[
   "mkdocs-literate-nav >= 0.6.0",
   "mkdocs-redirects >= 1.2.1",
 ]
+torch=[
+  "torch >= 2.3.0, < 3.0.0",
+]
+transformers=[
+  "torch >= 2.3.0, < 3.0.0",
+  "transformers >= 4.0.0, < 5.0.0",
+]
 test=[
   "pytest",
   "pytest-cov",
   "pytest-mock",
   "pytest-coverage",
   "responses",
+]
+vllm=[
+  "vllm",
 ]
 
 [project.scripts]

@@ -8,5 +8,4 @@
 # ruff: noqa: D104
 
 from .__version__ import __version__
-from .client import PixanoInferenceClient
 from .settings import PIXANO_INFERENCE_SETTINGS, get_pixano_inference_settings
