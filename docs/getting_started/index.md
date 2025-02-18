@@ -36,7 +36,7 @@ pip install pixano-inference[vllm]
 Pixano-Inference can invoke a server that will serve the API. To do so, simply execute the following command:
 
 ```bash
-pixano_inference --port 8000
+pixano-inference --port 8000
 ```
 
 The default port is `8000`. You can change it by passing the `--port` argument.
@@ -46,7 +46,7 @@ The default port is `8000`. You can change it by passing the `--port` argument.
 The easiest way to interact with Pixano-Inference is through the Python client.
 
 ```python
-from pixano_inference import PixanoInferenceClient
+from pixano_inference.client import PixanoInferenceClient
 
 
 client = PixanoInferenceClient(url="http://localhost:8000")
