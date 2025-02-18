@@ -36,7 +36,7 @@ pip install pixano-inference[vllm]
 Pixano-Inference can invoke a server that will serve the API. To do so, simply execute the following command:
 
 ```bash
-pixano_inference --port 8000
+pixano-inference --port 8000
 ```
 
 The default port is `8000`. You can change it by passing the `--port` argument.
@@ -46,7 +46,7 @@ The default port is `8000`. You can change it by passing the `--port` argument.
 The easiest way to interact with Pixano-Inference is through the Python client.
 
 ```python
-from pixano_inference import PixanoInferenceClient
+from pixano_inference.client import PixanoInferenceClient
 
 
 client = PixanoInferenceClient(url="http://localhost:8000")
@@ -82,20 +82,27 @@ The client provide methods to run the different models on various tasks. For ima
 from pixano_inference.pydantic import TextImageConditionalGenerationRequest, TextImageConditionalGenerationResponse
 
 
+from pixano_inference.pydantic import TextImageConditionalGenerationRequest
+
+
 request = TextImageConditionalGenerationRequest(
+    model="llava",
     prompt=[
-        {'content': [
-            {'type': 'image_url',
-             'image_url': {
-                'url': 'https://upload.wikimedia.org/wikipedia/commons/9/9e/Ours_brun_parcanimalierpyrenees_1.jpg'}
-            },
-            {'type': 'text',
-             'text': 'What is displayed in this image ? Answer concisely. '}
-        ],
-         'role': 'user'
+        {
+            "content": [
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Ours_brun_parcanimalierpyrenees_1.jpg"
+                    },
+                },
+                {"type": "text", "text": "What is displayed in this image ? Answer concisely. "},
+            ],
+            "role": "user",
         }
     ],
     image_path="/path/to/image.jpg",
+    max_new_tokens=100,
 )
 
 
