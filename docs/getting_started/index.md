@@ -96,6 +96,8 @@ request = TextImageConditionalGenerationRequest(
         }
     ],
     image_path="/path/to/image.jpg",
+    max_new_tokens=2,
+    model="vllm",
 )
 
 
