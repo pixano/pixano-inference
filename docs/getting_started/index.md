@@ -64,9 +64,9 @@ from pixano_inference.tasks import MultimodalImageNLPTask
 client.instantiate_model(
     provider="vllm",
     config=ModelConfig(
-        name="llava",
+        name="llava-qwen",
         task=MultimodalImageNLPTask.CONDITIONAL_GENERATION.value,
-        path="llava-hf/llava-v1.6-mistral-7b-hf",
+        path="llava-hf/llava-onevision-qwen2-0.5b-ov-hf",
         config={
             "dtype": "bfloat16",
         },
@@ -82,11 +82,8 @@ The client provide methods to run the different models on various tasks. For ima
 from pixano_inference.pydantic import TextImageConditionalGenerationRequest, TextImageConditionalGenerationResponse
 
 
-from pixano_inference.pydantic import TextImageConditionalGenerationRequest
-
-
 request = TextImageConditionalGenerationRequest(
-    model="llava",
+    model="llava-qwen",
     prompt=[
         {
             "content": [
@@ -101,10 +98,9 @@ request = TextImageConditionalGenerationRequest(
             "role": "user",
         }
     ],
-    image_path="/path/to/image.jpg",
+    images=None,
     max_new_tokens=100,
 )
-
 
 response: TextImageConditionalGenerationResponse = client.text_image_conditional_generation(request)
 print(response.data.generated_text)
