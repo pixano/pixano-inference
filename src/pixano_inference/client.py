@@ -87,6 +87,9 @@ class PixanoInferenceClient(Settings):
                     f"Invalid REST call method. Expected one of ['GET', 'POST', 'PUT', 'DELETE'], but got '{method}'."
                 )
 
+        if path.startswith("/"):
+            path = path[1:]
+
         url = f"{self.url}/{path}"
         response = request_fn(url, **kwargs)
         raise_if_error(response)
@@ -157,25 +160,25 @@ class PixanoInferenceClient(Settings):
         """
         self.delete(f"providers/model/{model_name}")
 
-    def inference(self, url: str, request: BaseRequest, response_type: type[BaseResponse]) -> BaseResponse:
+    def inference(self, root: str, request: BaseRequest, response_type: type[BaseResponse]) -> BaseResponse:
         """Perform a POST request to the pixano inference server.
 
         Args:
-            url: The path of the request.
+            root: The root to the request.
             request: The request of the model.
             response_type: The type of the response.
 
         Returns:
             A response from the pixano inference server.
         """
-        return response_type.model_validate(self.post(url, json=request.model_dump()).json())
+        return response_type.model_validate(self.post(root, json=request.model_dump()).json())
 
     def text_image_conditional_generation(
         self, request: TextImageConditionalGenerationRequest
     ) -> TextImageConditionalGenerationResponse:
         """Perform an inference to perform text-image conditional generation."""
         return self.inference(
-            url="/tasks/multimodal/image-text/conditional_generation/",
+            root="tasks/multimodal/image-text/conditional_generation/",
             request=request,
             response_type=TextImageConditionalGenerationResponse,
         )
@@ -183,11 +186,11 @@ class PixanoInferenceClient(Settings):
     def image_mask_generation(self, request: ImageMaskGenerationRequest) -> ImageMaskGenerationResponse:
         """Perform an inference to perform image mask generation."""
         return self.inference(
-            url="/tasks/image/mask_generation", request=request, response_type=ImageMaskGenerationResponse
+            root="tasks/image/mask_generation", request=request, response_type=ImageMaskGenerationResponse
         )
 
     def video_mask_generation(self, request: VideoMaskGenerationRequest) -> VideoMaskGenerationResponse:
         """Perform an inference to perform video mask generation."""
         return self.inference(
-            url="/tasks/video/mask_generation", request=request, response_type=VideoMaskGenerationResponse
+            root="tasks/video/mask_generation", request=request, response_type=VideoMaskGenerationResponse
         )
