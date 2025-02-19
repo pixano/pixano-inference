@@ -52,7 +52,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set VERSION environment variable
-        run: echo "VERSION=$(cat VERSION)" >> $GITHUB_ENV
+        run: echo "VERSION=$(grep -oP '__version__\s*=\s*"\K[0-9a-zA-Z]+\.[0-9a-zA-Z]+\.[0-9a-zA-Z]+' src/pixano_inference/__version__.py)" >> $GITHUB_ENV
 
       - name: Configure git credentials
         run: |
