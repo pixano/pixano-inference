@@ -49,7 +49,7 @@ The easiest way to interact with Pixano-Inference is through the Python client.
 from pixano_inference.client import PixanoInferenceClient
 
 
-client = PixanoInferenceClient(url="http://localhost:8000")
+client = PixanoInferenceClient.connect(url="http://localhost:8000")
 ```
 
 ### Instantiate a model
