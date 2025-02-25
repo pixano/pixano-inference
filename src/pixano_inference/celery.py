@@ -123,7 +123,7 @@ def model_queue_name(model_name: str) -> str:
     return f"{model_name}_queue"
 
 
-def add_queue_model(provider: str, model_config: ModelConfig, gpu: int | None):
+def add_celery_worker_and_queue(provider: str, model_config: ModelConfig, gpu: int | None) -> CeleryTask:
     """Add a new worker and a queue to the celery app to handle model."""
     queue = model_queue_name(model_config.name)
     celery_app.control.add_consumer(queue=model_queue_name(model_config.name), reply=True)
@@ -158,7 +158,7 @@ def add_queue_model(provider: str, model_config: ModelConfig, gpu: int | None):
     return CeleryTask(id=task.id, status=task_result.status)
 
 
-def delete_queue_model(model_name: str):
+def delete_celery_worker_and_queue(model_name: str):
     """Delete a worker and a queue of the celery app that handled a model."""
     queue = model_queue_name(model_name)
     celery_app.control.cancel_consumer(queue=queue)

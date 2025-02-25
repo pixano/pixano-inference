@@ -150,7 +150,7 @@ class PixanoInferenceClient(Settings):
     async def list_models(self) -> list[ModelInfo]:
         """List all models."""
         response = await self.get("app/models/")
-        return [ModelInfo.model_construct(model) for model in response.json()]
+        return [ModelInfo.model_construct(**model) for model in response.json()]
 
     async def instantiate_model(self, provider: str, config: ModelConfig) -> None:
         """Instantiate a model.

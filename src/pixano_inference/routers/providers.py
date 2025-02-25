@@ -10,7 +10,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 
-from pixano_inference.celery import add_queue_model, celery_app, delete_queue_model
+from pixano_inference.celery import add_celery_worker_and_queue, celery_app, delete_celery_worker_and_queue
 from pixano_inference.providers.utils import instantiate_provider
 from pixano_inference.pydantic import CeleryTask, ModelConfig
 from pixano_inference.settings import Settings, get_pixano_inference_settings
@@ -44,7 +44,7 @@ async def instantiate_model(
         raise HTTPException(status_code=404, detail=f"Task {config.task} is not a supported task.")
 
     gpu = settings.add_model(config.name, config.task)
-    task = add_queue_model(model_config=config, provider=provider, gpu=gpu)
+    task = add_celery_worker_and_queue(model_config=config, provider=provider, gpu=gpu)
     return task
 
 
@@ -71,5 +71,5 @@ async def delete_model(
     if model_name not in settings.models:
         raise HTTPException(status_code=404, detail=f"Model {model_name} not found")
     settings.remove_model(model_name)
-    delete_queue_model(model_name)
+    delete_celery_worker_and_queue(model_name)
     return

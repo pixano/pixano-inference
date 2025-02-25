@@ -79,9 +79,11 @@ transformers=[
 ]
 test=[
   "pytest",
+  "pytest.asyncio",
   "pytest-cov",
-  "pytest-mock",
   "pytest-coverage",
+  "pytest_httpx",
+  "pytest-mock",
   "responses",
 ]
 vllm=[
