@@ -6,22 +6,25 @@
 
 """Provider for vLLM models."""
 
-from typing import Any, cast
+from typing import Any
 
 from pixano_inference.models.vllm import VLLMModel
-from pixano_inference.models_registry import register_model
 from pixano_inference.pydantic.tasks.multimodal.conditional_generation import (
     TextImageConditionalGenerationOutput,
     TextImageConditionalGenerationRequest,
 )
-from pixano_inference.settings import PIXANO_INFERENCE_SETTINGS, Settings
 from pixano_inference.tasks import Task, str_to_task
 from pixano_inference.utils.package import (
     assert_vllm_installed,
+    is_torch_installed,
 )
 
 from .base import ModelProvider
 from .registry import register_provider
+
+
+if is_torch_installed():
+    import torch
 
 
 @register_provider("vllm")
@@ -37,7 +40,7 @@ class VLLMProvider(ModelProvider):
         self,
         name: str,
         task: Task | str,
-        settings: Settings = PIXANO_INFERENCE_SETTINGS,
+        device: "torch.device",
         path: str | None = None,  # type: ignore[override]
         processor_config: dict = {},
         config: dict = {},
@@ -47,7 +50,7 @@ class VLLMProvider(ModelProvider):
         Args:
             name: Name of the model.
             task: Task of the model.
-            settings: Settings to use for the provider.
+            device: Device to use for the model.
             path: Path to the model or its Hugging Face hub's identifier.
             processor_config: Configuration for the processor.
             config: Configuration for the model.
@@ -60,27 +63,26 @@ class VLLMProvider(ModelProvider):
         if isinstance(task, str):
             task = str_to_task(task)
 
-        device = settings.gpus_available[0] if settings.gpus_available else "cpu"
-
         our_model = VLLMModel(
             name=name, vllm_model=path, model_config=config, processor_config=processor_config, device=device
         )
 
-        if device != "cpu":
-            device = cast(int, device)
-            settings.gpus_used.append(device)
-
-        register_model(our_model, self, task)
         return our_model
 
     def text_image_conditional_generation(
-        self, request: TextImageConditionalGenerationRequest, model: VLLMModel
+        self,
+        request: TextImageConditionalGenerationRequest,
+        model: VLLMModel,  # type: ignore[override]
+        *args: Any,
+        **kwargs: Any,
     ) -> TextImageConditionalGenerationOutput:
         """Generate text from an image and a prompt.
 
         Args:
             request: Request for text-image conditional generation.
             model: Model for text-image conditional generation
+            args: Additional arguments.
+            kwargs: Additional keyword arguments.
 
         Returns:
             Output of text-image conditional generation.

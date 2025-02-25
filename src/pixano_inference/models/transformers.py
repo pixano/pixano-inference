@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pixano_inference.models.base import BaseInferenceModel
-from pixano_inference.models_registry import unregister_model
 from pixano_inference.pydantic import NDArrayFloat
 from pixano_inference.pydantic.tasks.image.mask_generation import ImageMaskGenerationOutput
 from pixano_inference.pydantic.tasks.image.utils import CompressedRLE
@@ -85,7 +84,6 @@ class TransformerModel(BaseInferenceModel):
         """Delete the model."""
         del self.model
         del self.processor
-        unregister_model(self)
         gc.collect()
         torch.cuda.empty_cache()
 

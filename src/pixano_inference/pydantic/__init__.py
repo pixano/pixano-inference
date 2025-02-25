@@ -7,7 +7,7 @@
 # ruff: noqa: F401
 # ruff: noqa: D104
 
-from .base import BaseModel, BaseRequest, BaseResponse
+from .base import BaseModel, BaseRequest, BaseResponse, CeleryTask
 from .data import LanceVector
 from .models import ModelConfig, ModelInfo
 from .nd_array import NDArrayFloat

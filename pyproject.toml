@@ -48,8 +48,11 @@ dependencies = [
   "Pillow >= 9.0.0",
   "polars < 2.0.0",
   "pycocotools",
+  "python-dotenv~=1.0.1",
   "requests",
   "uvicorn >= 0.31.0",
+  "celery[redis]==5.5.0rc4",
+  "redis[hiredis]~=5.2.1"
 ]
 readme = "README.md"
 

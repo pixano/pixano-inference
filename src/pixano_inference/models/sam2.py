@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING, Any, Literal
 import numpy as np
 from PIL.Image import Image
 
-from pixano_inference.models_registry import unregister_model
 from pixano_inference.pydantic.nd_array import NDArrayFloat
 from pixano_inference.pydantic.tasks.image.mask_generation import ImageMaskGenerationOutput
 from pixano_inference.pydantic.tasks.image.utils import CompressedRLE
@@ -75,7 +74,6 @@ class Sam2Model(BaseInferenceModel):
     def delete(self) -> None:
         """Delete the model."""
         del self.predictor
-        unregister_model(self)
         gc.collect()
         torch.cuda.empty_cache()
 

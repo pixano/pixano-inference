@@ -10,17 +10,17 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 
-from pixano_inference.models_registry import get_model_from_registry
-from pixano_inference.providers.base import ModelProvider
-from pixano_inference.providers.registry import get_provider, is_provider
-from pixano_inference.pydantic import ModelConfig
+from pixano_inference.celery import add_queue_model, celery_app, delete_queue_model
+from pixano_inference.providers.utils import instantiate_provider
+from pixano_inference.pydantic import CeleryTask, ModelConfig
 from pixano_inference.settings import Settings, get_pixano_inference_settings
+from pixano_inference.tasks.utils import is_task
 
 
 router = APIRouter(prefix="/providers", tags=["models"])
 
 
-@router.post("/instantiate")
+@router.post("/instantiate", response_model=CeleryTask)
 async def instantiate_model(
     config: ModelConfig,
     provider: Annotated[str, Body()],
@@ -31,68 +31,45 @@ async def instantiate_model(
     Args:
         config: Model configuration for instantiation.
         provider: The model provider.
-        settings: Settings for the instantiation.
+        settings: Settings of the app.
     """
-    if not is_provider(provider):
-        raise HTTPException(status_code=404, detail=f"Provider {provider} does not exist.")
-    elif provider == "transformers":
-        try:
-            p: ModelProvider = get_provider("transformers")()  # type: ignore[assignment]
-        except ImportError:
-            raise HTTPException(status_code=500, detail="Transformers library is not installed.")
-    elif provider == "sam2":
-        try:
-            p = get_provider("sam2")()  # type: ignore[assignment]
-        except ImportError:
-            raise HTTPException(status_code=500, detail="Sam2 is not installed.")
-    elif provider == "vllm":
-        try:
-            p = get_provider("vllm")()  # type: ignore[assignment]
-        except ImportError:
-            raise HTTPException(status_code=500, detail="vLLM library is not installed.")
-    else:
-        p = get_provider(provider)()  # type: ignore[assignment]
+    try:
+        instantiate_provider(provider)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=f"Provider {provider} does not exist.") from e
+    except ImportError as e:
+        raise HTTPException(status_code=500, detail=f"Provider {provider} is not installed.") from e
 
-    p.load_model(settings=settings, **config.model_dump())
-    return
+    if not is_task(config.task):
+        raise HTTPException(status_code=404, detail=f"Task {config.task} is not a supported task.")
+
+    gpu = settings.add_model(config.name, config.task)
+    task = add_queue_model(model_config=config, provider=provider, gpu=gpu)
+    return task
 
 
-@router.post("/transformers/instantiate/")
-async def instantiate_transformer_model(
-    config: ModelConfig, settings: Annotated[Settings, Depends(get_pixano_inference_settings)]
-):
-    """Instantiate a model from transformers.
-
-    Args:
-        config: Model configuration for instantiation.
-        settings: Settings for the instantiation.
-    """
-    return instantiate_model(config=config, provider="transformers", settings=settings)
-
-
-@router.post("/sam2/instantiate/")
-async def instantiate_sam2_model(
-    config: ModelConfig, settings: Annotated[Settings, Depends(get_pixano_inference_settings)]
-):
-    """Instantiate a model from sam2.
-
-    Args:
-        config: Model configuration for instantiation.
-        settings: Settings for the instantiation.
-    """
-    return instantiate_model(config=config, provider="sam2", settings=settings)
+@router.get("/instantiate/{task_id}", response_model=CeleryTask)
+async def get_instantiate_model_status(
+    task_id: str,
+) -> CeleryTask:
+    """Return status of model instantiation."""
+    task_result = celery_app.AsyncResult(task_id)
+    return CeleryTask(id=task_result.id, status=task_result.status)
 
 
 @router.delete("/model/{model_name}")
-async def delete_model(model_name: str):
+async def delete_model(
+    model_name: str,
+    settings: Annotated[Settings, Depends(get_pixano_inference_settings)],
+):
     """Delete a model from the system.
 
     Args:
         model_name: The name of the model to be deleted.
+        settings: Settings of the app.
     """
-    try:
-        model = get_model_from_registry(model_name)
-    except KeyError as e:
-        raise HTTPException(status_code=404, detail=f"Model {model_name} not found") from e
-    model.delete()
+    if model_name not in settings.models:
+        raise HTTPException(status_code=404, detail=f"Model {model_name} not found")
+    settings.remove_model(model_name)
+    delete_queue_model(model_name)
     return

@@ -7,19 +7,16 @@
 """Provider for the SAM2 model."""
 
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
-from pixano_inference import PIXANO_INFERENCE_SETTINGS
 from pixano_inference.models.base import BaseInferenceModel
 from pixano_inference.models.sam2 import Sam2Model
-from pixano_inference.models_registry import register_model
 from pixano_inference.providers.registry import register_provider
 from pixano_inference.pydantic.tasks.image.mask_generation import ImageMaskGenerationOutput, ImageMaskGenerationRequest
 from pixano_inference.pydantic.tasks.video.mask_generation import (
     VideoMaskGenerationRequest,
     VideoMaskGenerationResponse,
 )
-from pixano_inference.settings import Settings
 from pixano_inference.tasks.image import ImageTask
 from pixano_inference.tasks.task import Task
 from pixano_inference.tasks.utils import str_to_task
@@ -48,7 +45,7 @@ class Sam2Provider(ModelProvider):
         self,
         name: str,
         task: Task | str,
-        settings: Settings = PIXANO_INFERENCE_SETTINGS,
+        device: "torch.device",
         path: Path | str | None = None,
         processor_config: dict = {},
         config: dict = {},
@@ -58,7 +55,7 @@ class Sam2Provider(ModelProvider):
         Args:
             name: Name of the model.
             task: Task of the model.
-            settings: Settings to use for the provider.
+            device: Device to use for the model.
             path: Path to the model.
             processor_config: Processor configuration.
             config: Configuration for the model.
@@ -68,8 +65,6 @@ class Sam2Provider(ModelProvider):
         """
         from sam2.build_sam import build_sam2, build_sam2_hf, build_sam2_video_predictor, build_sam2_video_predictor_hf
         from sam2.sam2_image_predictor import SAM2ImagePredictor
-
-        device = settings.gpus_available[0] if settings.gpus_available else "cpu"
 
         task = str_to_task(task) if isinstance(task, str) else task
         if task == ImageTask.MASK_GENERATION:
@@ -88,10 +83,6 @@ class Sam2Provider(ModelProvider):
         else:
             raise ValueError(f"Invalid task '{task}' for the SAM2 provider.")
 
-        if device != "cpu":
-            device = cast(int, device)
-            settings.gpus_used.append(device)
-
         our_model = Sam2Model(
             name=name,
             provider="sam2",
@@ -100,12 +91,14 @@ class Sam2Provider(ModelProvider):
             config=config,
         )
 
-        register_model(our_model, self, task)
-
         return our_model
 
     def image_mask_generation(
-        self, request: ImageMaskGenerationRequest, model: Sam2Model, *args: Any, **kwargs: Any
+        self,
+        request: ImageMaskGenerationRequest,
+        model: Sam2Model,  # type: ignore[override]
+        *args: Any,
+        **kwargs: Any,
     ) -> ImageMaskGenerationOutput:
         """Generate a mask from the image.
 
