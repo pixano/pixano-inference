@@ -7,20 +7,17 @@
 """Provider for Hugging Face Transformers models."""
 
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from PIL.Image import Image
 
-from pixano_inference import PIXANO_INFERENCE_SETTINGS
 from pixano_inference.models.transformers import TransformerModel
-from pixano_inference.models_registry import register_model
 from pixano_inference.providers.registry import register_provider
 from pixano_inference.pydantic.tasks.image.mask_generation import ImageMaskGenerationOutput, ImageMaskGenerationRequest
 from pixano_inference.pydantic.tasks.multimodal.conditional_generation import (
     TextImageConditionalGenerationOutput,
     TextImageConditionalGenerationRequest,
 )
-from pixano_inference.settings import Settings
 from pixano_inference.tasks import ImageTask, MultimodalImageNLPTask, NLPTask, Task, str_to_task
 from pixano_inference.utils.image import convert_string_to_image
 from pixano_inference.utils.package import (
@@ -195,7 +192,7 @@ class TransformersProvider(ModelProvider):
         self,
         name: str,
         task: Task | str,
-        settings: Settings = PIXANO_INFERENCE_SETTINGS,
+        device: "torch.device",
         path: Path | str | None = None,
         processor_config: dict = {},
         config: dict = {},
@@ -205,7 +202,7 @@ class TransformersProvider(ModelProvider):
         Args:
             name: Name of the model.
             task: Task of the model.
-            settings: Settings to use for the provider.
+            device: Device to use for the model.
             path: Path to the model or its Hugging Face hub's identifier.
             processor_config: Configuration for the processor.
             config: Configuration for the model.
@@ -219,7 +216,6 @@ class TransformersProvider(ModelProvider):
             task = str_to_task(task)
         processor = AutoProcessor.from_pretrained(path, **processor_config)
 
-        device = settings.gpus_available[0] if settings.gpus_available else "cpu"
         quantization_config = config.pop("quantization_config", {})
         quantization_config = BitsAndBytesConfig(**quantization_config)
         config["quantization_config"] = quantization_config
@@ -229,19 +225,18 @@ class TransformersProvider(ModelProvider):
             if task in [NLPTask.CONDITONAL_GENERATION, MultimodalImageNLPTask.CONDITIONAL_GENERATION]:
                 model = get_conditional_generation_transformer_from_pretrained(name, path, device_map=device, **config)
 
-        if device != "cpu":
-            device = cast(int, device)
-            settings.gpus_used.append(device)
-
         model = model.eval()
         model = torch.compile(model)
 
         our_model = TransformerModel(name, path, processor, model)
-        register_model(our_model, self, task)
-        return model
+        return our_model
 
     def image_mask_generation(
-        self, request: ImageMaskGenerationRequest, model: TransformerModel, *args: Any, **kwargs: Any
+        self,
+        request: ImageMaskGenerationRequest,
+        model: TransformerModel,  # type: ignore[override]
+        *args: Any,
+        **kwargs: Any,
     ) -> ImageMaskGenerationOutput:
         """Generate a mask from the image.
 
@@ -267,13 +262,19 @@ class TransformersProvider(ModelProvider):
         return output
 
     def text_image_conditional_generation(
-        self, request: TextImageConditionalGenerationRequest, model: TransformerModel
+        self,
+        request: TextImageConditionalGenerationRequest,
+        model: TransformerModel,  # type: ignore[override]
+        *args: Any,
+        **kwargs: Any,
     ) -> TextImageConditionalGenerationOutput:
         """Generate text from an image and a prompt.
 
         Args:
             request: Request for text-image conditional generation.
             model: Model for text-image conditional generation
+            args: Additional arguments.
+            kwargs: Additional keyword arguments.
 
         Returns:
             Output of text-image conditional generation.

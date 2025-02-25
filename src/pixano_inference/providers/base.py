@@ -8,7 +8,7 @@
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pixano_inference.models.base import BaseInferenceModel
 from pixano_inference.pydantic.base import APIRequest, BaseResponse
@@ -18,16 +18,18 @@ from pixano_inference.pydantic.tasks.multimodal.conditional_generation import (
     TextImageConditionalGenerationRequest,
 )
 from pixano_inference.pydantic.tasks.video.mask_generation import (
+    VideoMaskGenerationOutput,
     VideoMaskGenerationRequest,
-    VideoMaskGenerationResponse,
 )
-from pixano_inference.settings import PIXANO_INFERENCE_SETTINGS, Settings
 from pixano_inference.tasks.task import Task
 from pixano_inference.utils.package import is_torch_installed
 
 
 if is_torch_installed():
     import torch
+
+if TYPE_CHECKING:
+    from pixano_inference.models import BaseInferenceModel
 
 
 class BaseProvider(ABC):
@@ -37,7 +39,6 @@ class BaseProvider(ABC):
         """Initialize the provider."""
         pass
 
-    @torch.inference_mode()
     def image_mask_generation(
         self, request: ImageMaskGenerationRequest, model: BaseInferenceModel, *args: Any, **kwargs: Any
     ) -> ImageMaskGenerationOutput:
@@ -51,7 +52,6 @@ class BaseProvider(ABC):
         """
         raise NotImplementedError("This provider does not support image mask generation.")
 
-    @torch.inference_mode()
     def text_image_conditional_generation(
         self, request: TextImageConditionalGenerationRequest, model: BaseInferenceModel, *args: Any, **kwargs: Any
     ) -> TextImageConditionalGenerationOutput:
@@ -68,10 +68,9 @@ class BaseProvider(ABC):
         """
         raise NotImplementedError("This provider does not support text-image conditional generation.")
 
-    @torch.inference_mode()
     def video_mask_generation(
         self, request: VideoMaskGenerationRequest, model: BaseInferenceModel, *args: Any, **kwargs: Any
-    ) -> VideoMaskGenerationResponse:
+    ) -> VideoMaskGenerationOutput:
         """Generate a mask from the video.
 
         Args:
@@ -116,17 +115,17 @@ class ModelProvider(BaseProvider):
         self,
         name: str,
         task: Task | str,
-        settings: Settings = PIXANO_INFERENCE_SETTINGS,
+        device: "torch.device",
         path: Path | str | None = None,
         processor_config: dict = {},
         config: dict = {},
-    ) -> Any:
+    ) -> "BaseInferenceModel":
         """Load the model from the provider.
 
         Args:
             name: Name of the model.
             task: Task of the model.
-            settings: Settings to use for the provider.
+            device: Device to use for the model.
             path: Path to the model.
             processor_config: Processor configuration.
             config: Configuration for the model.

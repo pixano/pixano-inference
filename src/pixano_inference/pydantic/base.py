@@ -35,16 +35,32 @@ class APIRequest(BaseRequest):
     secret_key: str
 
 
+class CeleryTask(BaseModel):
+    """Celery task model.
+
+    Attributes:
+        task_id: ID of the celery task.
+        status: Status of the celery task.
+    """
+
+    id: str
+    status: str
+
+
 class BaseResponse(BaseModel, ABC):
     """Base response model.
 
     Attributes:
+        task_id: ID of the celery task.
+        status: Status of the celery task.
         timestamp: Timestamp of the response.
         processing_time: Processing time of the response.
         metadata: Metadata of the response.
         data: Data of the response.
     """
 
+    id: str
+    status: str
     timestamp: datetime
     processing_time: float = 0.0
     metadata: dict[str, Any]

@@ -6,24 +6,30 @@
 
 """API routes for the app."""
 
-from fastapi import APIRouter
+from typing import Annotated
 
-from pixano_inference.models_registry import list_models
+from fastapi import APIRouter, Depends
+
 from pixano_inference.pydantic.models import ModelInfo
-from pixano_inference.settings import PIXANO_INFERENCE_SETTINGS, Settings
+from pixano_inference.settings import Settings, get_pixano_inference_settings
 
 
 router = APIRouter(prefix="/app", tags=["App"])
 
 
 @router.get("/settings/", response_model=Settings)
-async def get_settings() -> Settings:
+async def get_settings(
+    settings: Annotated[Settings, Depends(get_pixano_inference_settings)],
+) -> Settings:
     """Get the current settings of the app."""
-    return PIXANO_INFERENCE_SETTINGS
+    return settings
 
 
 @router.get("/models/", response_model=list[ModelInfo])
-async def get_list_models() -> list[ModelInfo]:
+async def get_list_models(
+    settings: Annotated[Settings, Depends(get_pixano_inference_settings)],
+) -> list[ModelInfo]:
     """List all models available in the app."""
-    models = [ModelInfo(name=model_name, task=task.value) for model_name, (model, provider, task) in list_models()]
+    models = [ModelInfo(name=model_name, task=task) for model_name, task in settings.models_to_task.items()]
+    print(models)
     return models

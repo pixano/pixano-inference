@@ -7,4 +7,4 @@
 # ruff: noqa: F401
 # ruff: noqa: D104
 
-from . import app, providers, tasks
+from .tasks import router

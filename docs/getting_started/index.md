@@ -33,6 +33,8 @@ pip install pixano-inference[vllm]
 
 ### Run the application
 
+Pixano-Inference requires a running [Redis server](https://redis.io/docs/latest/operate/oss_and_stack/install/install-redis/install-redis-on-linux/). Its URL can be configured in a `.env` file at the root of the server. By default it will serve the localhost at the 6379 port.
+
 Pixano-Inference can invoke a server that will serve the API. To do so, simply execute the following command:
 
 ```bash
@@ -61,7 +63,7 @@ from pixano_inference.pydantic import ModelConfig
 from pixano_inference.tasks import MultimodalImageNLPTask
 
 
-client.instantiate_model(
+await client.instantiate_model(
     provider="vllm",
     config=ModelConfig(
         name="llava-qwen",
@@ -102,6 +104,6 @@ request = TextImageConditionalGenerationRequest(
     max_new_tokens=100,
 )
 
-response: TextImageConditionalGenerationResponse = client.text_image_conditional_generation(request)
+response: TextImageConditionalGenerationResponse = await client.text_image_conditional_generation(request)
 print(response.data.generated_text)
 ```

@@ -12,7 +12,6 @@ import gc
 from typing import Any
 
 from pixano_inference.models.base import BaseInferenceModel
-from pixano_inference.models_registry import unregister_model
 from pixano_inference.pydantic.tasks.multimodal.conditional_generation import (
     TextImageConditionalGenerationOutput,
     UsageConditionalGeneration,
@@ -76,7 +75,6 @@ class VLLMModel(BaseInferenceModel):
     def delete(self):
         """Delete the model."""
         del self.model
-        unregister_model(self)
         gc.collect()
         torch.cuda.empty_cache()
 

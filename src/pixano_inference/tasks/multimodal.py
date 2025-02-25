@@ -13,7 +13,6 @@ class MultimodalImageNLPTask(Task):
     """Multimodal tasks."""
 
     CAPTIONING = "image_captioning"
-    CONDITIONAL_GENERATION = "image_text_conditional_generation"
-    EMBEDDING = "image_text_embedding"
-    MATCHING = "image_text_matching"
-    QUESTION_ANSWERING = "image_question_answering"
+    CONDITIONAL_GENERATION = "text_image_conditional_generation"
+    EMBEDDING = "text_image_embedding"
+    MATCHING = "text_image_matching"

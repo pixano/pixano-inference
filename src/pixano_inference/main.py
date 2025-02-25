@@ -8,21 +8,34 @@
 
 import click
 import uvicorn
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
+from fastapi.responses import RedirectResponse
 
 from . import routers
+
+
+router = APIRouter()
+
+
+@router.get("/", include_in_schema=False)
+async def docs_redirect() -> RedirectResponse:
+    """Redirect homepage to docs."""
+    return RedirectResponse(url="/docs")
 
 
 def create_app() -> FastAPI:
     """Create the FastAPI application."""
     app = FastAPI()
-    app.include_router(routers.image.router)
-    app.include_router(routers.nlp.router)
-    app.include_router(routers.multimodal.router)
+
+    app.include_router(routers.tasks.router)
     app.include_router(routers.providers.router)
-    app.include_router(routers.video.router)
     app.include_router(routers.app.router)
+
+    app.include_router(router)
     return app
+
+
+fast_api_app = create_app()
 
 
 @click.command(context_settings={"auto_envvar_prefix": "UVICORN"})
@@ -42,7 +55,6 @@ def create_app() -> FastAPI:
 )
 def serve(host: str, port: int):
     """Main application entry point."""
-    app = create_app()
-    config = uvicorn.Config(app, host=host, port=port)
+    config = uvicorn.Config(fast_api_app, host=host, port=port)
     server = uvicorn.Server(config)
     server.run()

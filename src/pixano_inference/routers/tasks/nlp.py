@@ -9,4 +9,4 @@
 from fastapi import APIRouter
 
 
-router = APIRouter(prefix="/tasks/nlp", tags=["NLP Tasks"])
+router = APIRouter(prefix="/nlp", tags=["NLP"])
