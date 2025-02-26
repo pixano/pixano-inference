@@ -9,6 +9,8 @@
 import logging
 import os
 import signal
+import subprocess
+import sys
 import time
 from datetime import datetime
 from subprocess import Popen
@@ -131,27 +133,27 @@ def add_celery_worker_and_queue(provider: str, model_config: ModelConfig, gpu: i
     queue = model_queue_name(model_config.name)
     celery_app.control.add_consumer(queue=model_queue_name(model_config.name), reply=True)
 
-    # command = [
-    #     sys.executable,
-    #     "-m",
-    #     "celery",
-    #     "-A",
-    #     "pixano_inference.celery.celery_app",
-    #     "worker",
-    #     "--loglevel=INFO",
-    #     "-Q",
-    #     queue,
-    #     "--pool=solo",
-    # ]
-    # worker = Popen(
-    #     command,
-    #     stdout=subprocess.PIPE,
-    #     stderr=subprocess.PIPE,
-    #     start_new_session=True,
-    # )
+    command = [
+        sys.executable,
+        "-m",
+        "celery",
+        "-A",
+        "pixano_inference.celery.celery_app",
+        "worker",
+        "--loglevel=INFO",
+        "-Q",
+        queue,
+        "--pool=solo",
+    ]
+    worker = Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        start_new_session=True,
+    )
 
-    # uvicorn_logger.info(f"Spawned Celery worker {worker.pid} handling model {model_config.name}.")
-    # queues_to_workers[queue] = worker
+    uvicorn_logger.info(f"Spawned Celery worker {worker.pid} handling model {model_config.name}.")
+    queues_to_workers[queue] = worker
 
     task: AsyncResult = instantiate_model.apply_async(
         (provider, jsonable_encoder(model_config.model_dump()), gpu), queue=queue
