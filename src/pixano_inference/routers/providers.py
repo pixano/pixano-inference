@@ -44,7 +44,12 @@ async def instantiate_model(
         raise HTTPException(status_code=404, detail=f"Task {config.task} is not a supported task.")
 
     gpu = settings.add_model(config.name, config.task)
-    task = add_celery_worker_and_queue(model_config=config, provider=provider, gpu=gpu)
+    try:
+        task = add_celery_worker_and_queue(model_config=config, provider=provider, gpu=gpu)
+    except Exception as e:
+        settings.remove_model(config.name)
+        delete_celery_worker_and_queue(config.name)
+        raise HTTPException(status_code=400, detail=f"Error while instantiating {config.task} - {str(e)}") from e
     return task
 
 

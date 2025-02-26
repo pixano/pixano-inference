@@ -65,6 +65,5 @@ async def get_task_result(task_id: str, response_type: type[BaseResponse]) -> Ce
 
 async def delete_task(task_id: str) -> None:
     """Delete a task."""
-    celery_app.AsyncResult(task_id).delete()
     celery_app.control.revoke(task_id, terminate=True)
     return
