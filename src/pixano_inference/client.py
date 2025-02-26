@@ -460,7 +460,3 @@ class PixanoInferenceClient(Settings):
             task_id=task_id,
             asynchronous=asynchronous,
         )
-
-
-client = PixanoInferenceClient()
-a = client.video_mask_generation(request=VideoMaskGenerationRequest())  # call the method here...
