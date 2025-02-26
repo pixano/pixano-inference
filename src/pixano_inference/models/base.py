@@ -10,11 +10,12 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any
 
-from pixano_inference.pydantic.tasks.image.mask_generation import ImageMaskGenerationOutput
-from pixano_inference.pydantic.tasks.multimodal.conditional_generation import (
+from pixano_inference.pydantic import (
+    ImageMaskGenerationOutput,
+    ImageZeroShotDetectionOutput,
     TextImageConditionalGenerationOutput,
+    VideoMaskGenerationOutput,
 )
-from pixano_inference.pydantic.tasks.video.mask_generation import VideoMaskGenerationOutput
 
 
 class ModelStatus(Enum):
@@ -80,3 +81,7 @@ class BaseInferenceModel(ABC):
     def video_mask_generation(self, *args: Any, **kwargs) -> VideoMaskGenerationOutput:
         """Generate a mask from the video."""
         raise NotImplementedError("This model does not support video mask generation.")
+
+    def image_zero_shot_detection(self, *args: Any, **kwargs) -> ImageZeroShotDetectionOutput:
+        """Perform zero shot detection on an image."""
+        raise NotImplementedError("This model does not support image zero shot detection.")

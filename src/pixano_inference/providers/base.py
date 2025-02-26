@@ -11,17 +11,19 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pixano_inference.models.base import BaseInferenceModel
-from pixano_inference.pydantic.base import APIRequest, BaseResponse
-from pixano_inference.pydantic.tasks.image.mask_generation import ImageMaskGenerationOutput, ImageMaskGenerationRequest
-from pixano_inference.pydantic.tasks.multimodal.conditional_generation import (
+from pixano_inference.pydantic import (
+    APIRequest,
+    BaseResponse,
+    ImageMaskGenerationOutput,
+    ImageMaskGenerationRequest,
+    ImageZeroShotDetectionOutput,
+    ImageZeroShotDetectionRequest,
     TextImageConditionalGenerationOutput,
     TextImageConditionalGenerationRequest,
-)
-from pixano_inference.pydantic.tasks.video.mask_generation import (
     VideoMaskGenerationOutput,
     VideoMaskGenerationRequest,
 )
-from pixano_inference.tasks.task import Task
+from pixano_inference.tasks import Task
 from pixano_inference.utils.package import is_torch_installed
 
 
@@ -83,6 +85,12 @@ class BaseProvider(ABC):
             Output of the generation
         """
         raise NotImplementedError("This provider does not support video mask generation.")
+
+    def image_zero_shot_detection(
+        self, request: ImageZeroShotDetectionRequest, model: BaseInferenceModel, *args: Any, **kwargs: Any
+    ) -> ImageZeroShotDetectionOutput:
+        """Perform zero-shot image detection."""
+        raise NotImplementedError("This provider does not support image zero-shot detection.")
 
 
 class APIProvider(BaseProvider):

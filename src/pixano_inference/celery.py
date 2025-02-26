@@ -24,14 +24,14 @@ from pixano_inference.models import BaseInferenceModel
 from pixano_inference.providers.base import BaseProvider, ModelProvider
 from pixano_inference.providers.utils import instantiate_provider
 from pixano_inference.pydantic import (
+    CeleryTask,
     ImageMaskGenerationRequest,
+    ImageZeroShotDetectionRequest,
+    ModelConfig,
     TextImageConditionalGenerationRequest,
     VideoMaskGenerationRequest,
 )
-from pixano_inference.pydantic.base import CeleryTask
-from pixano_inference.pydantic.models import ModelConfig
-from pixano_inference.tasks import ImageTask, MultimodalImageNLPTask, Task, VideoTask
-from pixano_inference.tasks.utils import str_to_task
+from pixano_inference.tasks import ImageTask, MultimodalImageNLPTask, Task, VideoTask, str_to_task
 from pixano_inference.utils.package import assert_torch_installed, is_torch_installed
 
 
@@ -106,6 +106,10 @@ def predict(request: dict[str, Any]) -> dict[str, Any]:
         case VideoTask.MASK_GENERATION:
             output = worker_provider.video_mask_generation(
                 request=VideoMaskGenerationRequest.model_construct(**request), model=worker_model
+            )
+        case ImageTask.ZERO_SHOT_DETECTION:
+            output = worker_provider.image_zero_shot_detection(
+                request=ImageZeroShotDetectionRequest.model_construct(**request), model=worker_model
             )
         case _:
             raise ValueError(f"Unknown task: {worker_task}")

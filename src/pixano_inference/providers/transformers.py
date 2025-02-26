@@ -13,8 +13,11 @@ from PIL.Image import Image
 
 from pixano_inference.models.transformers import TransformerModel
 from pixano_inference.providers.registry import register_provider
-from pixano_inference.pydantic.tasks.image.mask_generation import ImageMaskGenerationOutput, ImageMaskGenerationRequest
-from pixano_inference.pydantic.tasks.multimodal.conditional_generation import (
+from pixano_inference.pydantic import (
+    ImageMaskGenerationOutput,
+    ImageMaskGenerationRequest,
+    ImageZeroShotDetectionOutput,
+    ImageZeroShotDetectionRequest,
     TextImageConditionalGenerationOutput,
     TextImageConditionalGenerationRequest,
 )
@@ -216,9 +219,9 @@ class TransformersProvider(ModelProvider):
             task = str_to_task(task)
         processor = AutoProcessor.from_pretrained(path, **processor_config)
 
-        quantization_config = config.pop("quantization_config", {})
-        quantization_config = BitsAndBytesConfig(**quantization_config)
-        config["quantization_config"] = quantization_config
+        if (quantization_config := config.pop("quantization_config", None)) is not None:
+            quantization_config = BitsAndBytesConfig(**quantization_config)
+            config["quantization_config"] = quantization_config
 
         model = get_transformer_automodel_from_pretrained(path, task, device_map=device, **config)
         if model is None:
@@ -306,4 +309,26 @@ class TransformersProvider(ModelProvider):
         model_input_dump = model_input.model_dump()
         model_input_dump["images"] = images
         output = model.text_image_conditional_generation(**model_input_dump)
+        return output
+
+    def image_zero_shot_detection(
+        self,
+        request: ImageZeroShotDetectionRequest,
+        model: TransformerModel,  # type: ignore[override]
+        *args: Any,
+        **kwargs: Any,
+    ) -> ImageZeroShotDetectionOutput:
+        """Perform zero-shot image detection."""
+        request_input = request.to_input()
+
+        image = convert_string_to_image(request_input.image)
+        classes = request.classes
+        if isinstance(classes, list):
+            classes = ". ".join(classes)
+
+        model_input = request_input.model_dump(exclude=["image", "classes"])
+        model_input["image"] = image
+        model_input["classes"] = classes
+
+        output = model.image_zero_shot_detection(**model_input)
         return output
