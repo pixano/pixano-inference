@@ -2390,7 +2390,7 @@
 
     <div class="doc doc-contents first">
 
-        <p>Pydantic models for mask generation task.</p>
+        <p>Pydantic models for image mask generation task.</p>
 
 
 
@@ -2424,7 +2424,7 @@
               Bases: <code><a class="autorefs autorefs-external" title="pydantic.BaseModel" href="https://docs.pydantic.dev/2.4/api/base_model/#pydantic.BaseModel">BaseModel</a></code></p>
 
 
-        <p>Input for mask generation.</p>
+        <p>Input for image mask generation.</p>
 
 
 <p><span class="doc-section-title">Attributes:</span></p>
@@ -2444,7 +2444,7 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Image for mask generation.</p>
+                <p>Image for image mask generation.</p>
               </div>
             </td>
           </tr>
@@ -2455,7 +2455,7 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Image embedding for the mask generation.</p>
+                <p>Image embedding for the image mask generation.</p>
               </div>
             </td>
           </tr>
@@ -2466,7 +2466,7 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p>High resolution features for the mask generation.</p>
+                <p>High resolution features for the image mask generation.</p>
               </div>
             </td>
           </tr>
@@ -2477,7 +2477,7 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Points for the mask generation. The first fimension is the number of prompts the second
+                <p>Points for the image mask generation. The first fimension is the number of prompts the second
 the number of points per mask and the third the coordinates of the points.</p>
               </div>
             </td>
@@ -2489,7 +2489,7 @@ the number of points per mask and the third the coordinates of the points.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Labels for the mask generation. The first fimension is the number of prompts, the second
+                <p>Labels for the image mask generation. The first fimension is the number of prompts, the second
 the number of labels per mask.</p>
               </div>
             </td>
@@ -2501,7 +2501,7 @@ the number of labels per mask.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Boxes for the mask generation. The first fimension is the number of prompts, the second
+                <p>Boxes for the image mask generation. The first fimension is the number of prompts, the second
 the coordinates of the boxes.</p>
               </div>
             </td>
@@ -2584,7 +2584,7 @@ the coordinates of the boxes.</p>
               Bases: <code><a class="autorefs autorefs-external" title="pydantic.BaseModel" href="https://docs.pydantic.dev/2.4/api/base_model/#pydantic.BaseModel">BaseModel</a></code></p>
 
 
-        <p>Output for mask generation.</p>
+        <p>Output for image mask generation.</p>
 
 
 <p><span class="doc-section-title">Attributes:</span></p>
@@ -2688,7 +2688,7 @@ per prediction.</p>
               Bases: <code><a class="autorefs autorefs-internal" title="BaseRequest (pixano_inference.pydantic.base.BaseRequest)" href="../../../base/#pixano_inference.pydantic.base.BaseRequest">BaseRequest</a></code>, <code><a class="autorefs autorefs-internal" title="ImageMaskGenerationInput (pixano_inference.pydantic.tasks.image.mask_generation.ImageMaskGenerationInput)" href="#pixano_inference.pydantic.tasks.image.mask_generation.ImageMaskGenerationInput">ImageMaskGenerationInput</a></code></p>
 
 
-        <p>Request for mask generation.</p>
+        <p>Request for image mask generation.</p>
 
 
 
@@ -2725,27 +2725,9 @@ per prediction.</p>
               <summary>Source code in <code>pixano_inference/pydantic/tasks/image/mask_generation.py</code></summary>
               <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-74">74</a></span>
 <span class="normal"><a href="#__codelineno-0-75">75</a></span>
-<span class="normal"><a href="#__codelineno-0-76">76</a></span>
-<span class="normal"><a href="#__codelineno-0-77">77</a></span>
-<span class="normal"><a href="#__codelineno-0-78">78</a></span>
-<span class="normal"><a href="#__codelineno-0-79">79</a></span>
-<span class="normal"><a href="#__codelineno-0-80">80</a></span>
-<span class="normal"><a href="#__codelineno-0-81">81</a></span>
-<span class="normal"><a href="#__codelineno-0-82">82</a></span>
-<span class="normal"><a href="#__codelineno-0-83">83</a></span>
-<span class="normal"><a href="#__codelineno-0-84">84</a></span>
-<span class="normal"><a href="#__codelineno-0-85">85</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_input</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageMaskGenerationInput</span><span class="p">:</span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_input</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageMaskGenerationInput</span><span class="p">:</span>
 </span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert the request to the input.&quot;&quot;&quot;</span>
-</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="k">return</span> <span class="n">ImageMaskGenerationInput</span><span class="p">(</span>
-</span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a>        <span class="n">image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">,</span>
-</span><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="n">points</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">,</span>
-</span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a>        <span class="n">boxes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="p">,</span>
-</span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a>        <span class="n">num_multimask_outputs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_multimask_outputs</span><span class="p">,</span>
-</span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a>        <span class="n">multimask_output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">multimask_output</span><span class="p">,</span>
-</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a>        <span class="n">image_embedding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image_embedding</span><span class="p">,</span>
-</span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a>        <span class="n">high_resolution_features</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">high_resolution_features</span><span class="p">,</span>
-</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a>        <span class="n">return_image_embedding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">return_image_embedding</span><span class="p">,</span>
-</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="p">)</span>
+</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_base_model</span><span class="p">(</span><span class="n">ImageMaskGenerationInput</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2776,7 +2758,7 @@ per prediction.</p>
               Bases: <code><a class="autorefs autorefs-internal" title="BaseResponse (pixano_inference.pydantic.base.BaseResponse)" href="../../../base/#pixano_inference.pydantic.base.BaseResponse">BaseResponse</a></code></p>
 
 
-        <p>Response for mask generation.</p>
+        <p>Response for image mask generation.</p>
 
 
 <p><span class="doc-section-title">Attributes:</span></p>

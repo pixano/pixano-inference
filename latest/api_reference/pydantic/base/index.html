@@ -1221,6 +1221,21 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="BaseRequest">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pixano_inference.pydantic.base.BaseRequest.to_base_model" class="md-nav__link">
+    <span class="md-ellipsis">
+      to_base_model
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2402,7 +2417,7 @@
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="BaseRequest (pixano_inference.pydantic.base.BaseRequest)" href="#pixano_inference.pydantic.base.BaseRequest">BaseRequest</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="BaseRequest (pixano_inference.pydantic.base.BaseRequest)" href="#pixano_inference.pydantic.base.BaseRequest">BaseRequest</a></code>, <code><a class="autorefs autorefs-external" title="abc.ABC" href="https://docs.python.org/3.12/library/abc.html#abc.ABC">ABC</a></code></p>
 
 
         <p>API request model.</p>
@@ -2482,7 +2497,7 @@
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-external" title="pydantic.BaseModel" href="https://docs.pydantic.dev/2.4/api/base_model/#pydantic.BaseModel">BaseModel</a></code></p>
+              Bases: <code><a class="autorefs autorefs-external" title="pydantic.BaseModel" href="https://docs.pydantic.dev/2.4/api/base_model/#pydantic.BaseModel">BaseModel</a></code>, <code><a class="autorefs autorefs-external" title="abc.ABC" href="https://docs.python.org/3.12/library/abc.html#abc.ABC">ABC</a></code></p>
 
 
         <p>Base request model.</p>
@@ -2529,6 +2544,36 @@
 
 
 
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="pixano_inference.pydantic.base.BaseRequest.to_base_model" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">to_base_model</span><span class="p">(</span><span class="n">base_model</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Convert request to input type.</p>
+
+            <details class="quote">
+              <summary>Source code in <code>pixano_inference/pydantic/base.py</code></summary>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-28">28</a></span>
+<span class="normal"><a href="#__codelineno-0-29">29</a></span>
+<span class="normal"><a href="#__codelineno-0-30">30</a></span>
+<span class="normal"><a href="#__codelineno-0-31">31</a></span>
+<span class="normal"><a href="#__codelineno-0-32">32</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_base_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_model</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert request to input type.&quot;&quot;&quot;</span>
+</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">base_model</span><span class="p">,</span> <span class="n">BaseModel</span><span class="p">):</span>
+</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;base_model must be a subclass of pydantic&#39;s BaseModel, got </span><span class="si">{</span><span class="n">base_model</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a>    <span class="k">return</span> <span class="n">base_model</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">base_model</span><span class="o">.</span><span class="n">model_fields</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+</span></code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
 
 
 
