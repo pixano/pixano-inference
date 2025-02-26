@@ -7,7 +7,7 @@
 """Pixano inference client."""
 
 import asyncio
-from typing import Any, Literal
+from typing import Any, Literal, overload
 
 import httpx
 import requests  # type: ignore[import-untyped]
@@ -35,6 +35,11 @@ class InferenceTooLongError(Exception):
     """Exeption when inference took too long."""
 
     pass
+
+
+def _validate_id_asynchronous(id: str | None, asynchronous: bool):
+    if not asynchronous and id is not None:
+        raise ValueError("id must be none for asynchronous calls.")
 
 
 def raise_if_error(response: Response) -> None:
@@ -147,8 +152,15 @@ class PixanoInferenceClient(Settings):
         """
         return await self._rest_call(path=path, method="DELETE")
 
-    async def list_models(self) -> list[ModelInfo]:
+    @overload
+    async def list_models(self, id: None, asynchronous: Literal[True]) -> str: ...
+    @overload
+    async def list_models(self, id: str, asynchronous: Literal[True]) -> str: ...
+    @overload
+    async def list_models(self, id: str | None, asynchronous: Literal[False]) -> list[ModelInfo]: ...
+    async def list_models(self, id: str | None = None, asynchronous: bool = False) -> list[ModelInfo] | str:
         """List all models."""
+        _validate_id_asynchronous(id=id, asynchronous=asynchronous)
         response = await self.get("app/models/")
         return [ModelInfo.model_construct(**model) for model in response.json()]
 
