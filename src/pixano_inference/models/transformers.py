@@ -13,10 +13,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pixano_inference.models.base import BaseInferenceModel
-from pixano_inference.pydantic import NDArrayFloat
-from pixano_inference.pydantic.tasks.image.mask_generation import ImageMaskGenerationOutput
-from pixano_inference.pydantic.tasks.image.utils import CompressedRLE
-from pixano_inference.pydantic.tasks.multimodal.conditional_generation import (
+from pixano_inference.pydantic import (
+    CompressedRLE,
+    ImageMaskGenerationOutput,
+    ImageZeroShotDetectionOutput,
+    NDArrayFloat,
     TextImageConditionalGenerationOutput,
     UsageConditionalGeneration,
 )
@@ -197,4 +198,47 @@ class TransformerModel(BaseInferenceModel):
                     total_tokens=total_tokens,
                 ),
                 generation_config=generation_config.to_diff_dict(),
+            )
+
+    def image_zero_shot_detection(
+        self,
+        image: "Tensor" | Image,
+        classes: str,
+        box_threshold: float,
+        text_threshold: float,
+        **kwargs: Any,
+    ) -> ImageZeroShotDetectionOutput:
+        """Perform zero shot detection on an image.
+
+        Args:
+            image: The image.
+            classes: The list of classes to detect in the format 'class1. class2'.
+            box_threshold: The threshold for bounding boxes detection.
+            text_threshold: The threshold for the classes identification during zero shot learning phase.
+            kwargs: Additional arguments.
+
+        Returns:
+            The output of image zero-shot detection task.
+        """
+        with torch.inference_mode():
+            inputs = self.processor(images=image, text=classes, return_tensors="pt").to(self.model.device)
+
+            outputs = self.model(**inputs)
+
+            target_size = (
+                (image.shape[-2], image.shape[-1]) if isinstance(image, torch.Tensor) else (image.height, image.width)
+            )
+
+            result = self.processor.post_process_grounded_object_detection(
+                outputs,
+                inputs.input_ids,
+                box_threshold=box_threshold,
+                text_threshold=text_threshold,
+                target_sizes=[target_size],
+            )[0]
+
+            return ImageZeroShotDetectionOutput(
+                boxes=[[int(round(x, 0)) for x in box.tolist()] for box in result["boxes"]],
+                scores=result["scores"],
+                classes=result["labels"],
             )

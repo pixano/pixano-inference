@@ -14,3 +14,9 @@ from .mask_generation import (
     ImageMaskGenerationResponse,
 )
 from .utils import CompressedRLE
+from .zero_shot_detection import (
+    ImageZeroShotDetectionInput,
+    ImageZeroShotDetectionOutput,
+    ImageZeroShotDetectionRequest,
+    ImageZeroShotDetectionResponse,
+)

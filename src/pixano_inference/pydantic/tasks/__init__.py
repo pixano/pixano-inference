@@ -13,6 +13,10 @@ from .image import (
     ImageMaskGenerationOutput,
     ImageMaskGenerationRequest,
     ImageMaskGenerationResponse,
+    ImageZeroShotDetectionInput,
+    ImageZeroShotDetectionOutput,
+    ImageZeroShotDetectionRequest,
+    ImageZeroShotDetectionResponse,
 )
 from .multimodal import (
     TextImageConditionalGenerationInput,
