@@ -31,5 +31,4 @@ async def get_list_models(
 ) -> list[ModelInfo]:
     """List all models available in the app."""
     models = [ModelInfo(name=model_name, task=task) for model_name, task in settings.models_to_task.items()]
-    print(models)
     return models

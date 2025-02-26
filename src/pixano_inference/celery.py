@@ -85,7 +85,10 @@ def delete_model() -> None:
     """Delete model."""
     global worker_model
 
-    worker_model.delete()
+    try:
+        worker_model.delete()
+    except NameError:
+        pass
 
 
 @celery_app.task
@@ -165,11 +168,30 @@ def add_celery_worker_and_queue(provider: str, model_config: ModelConfig, gpu: i
 def delete_celery_worker_and_queue(model_name: str):
     """Delete a worker and a queue of the celery app that handled a model."""
     queue = model_queue_name(model_name)
+
+    command = [
+        sys.executable,
+        "-m",
+        "celery",
+        "-Q",
+        queue,
+        "purge",
+    ]
+    purge_process = Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        start_new_session=True,
+    )
+    purge_process.wait()
+    purge_process.kill()
+    try:
+        worker = queues_to_workers.pop(queue)
+    except KeyError:  # Instantiation failed before storing the worker
+        pass
+    else:
+        delete_model.apply_async(queue=queue).get()
+        os.killpg(os.getpgid(worker.pid), signal.SIGTERM)
+        worker.wait()
+        uvicorn_logger.info(f"Killed Celery worker {worker.pid} handling model {model_name}.")
     celery_app.control.cancel_consumer(queue=queue)
-    delete_model.apply_async(queue=queue)
-    worker = queues_to_workers.pop(queue)
-
-    uvicorn_logger.info(f"Killing Celery worker {worker.pid} handling model {model_name}.")
-
-    os.killpg(os.getpgid(worker.pid), signal.SIGTERM)
-    worker.wait()

@@ -17,11 +17,16 @@ from fastapi.encoders import jsonable_encoder
 from httpx import Response
 from pydantic import field_validator
 
-from .pydantic import BaseRequest, BaseResponse, CeleryTask
-from .pydantic.models import ModelConfig, ModelInfo
-from .pydantic.tasks import (
+from .pydantic import (
+    BaseRequest,
+    BaseResponse,
+    CeleryTask,
     ImageMaskGenerationRequest,
     ImageMaskGenerationResponse,
+    ImageZeroShotDetectionRequest,
+    ImageZeroShotDetectionResponse,
+    ModelConfig,
+    ModelInfo,
     TextImageConditionalGenerationRequest,
     TextImageConditionalGenerationResponse,
     VideoMaskGenerationRequest,
@@ -267,15 +272,17 @@ class PixanoInferenceClient(Settings):
         """
         _validate_task_id_asynchronous(task_id=task_id, asynchronous=asynchronous)
         _validate_poll_interval_timeout(poll_interval=poll_interval, timeout=timeout)
-        celery_response: Response = await self.post(route, json=request.model_dump())
-        celery_task: CeleryTask = CeleryTask.model_construct(**celery_response.json())
+
+        if not asynchronous or task_id is None:
+            celery_response: Response = await self.post(route, json=request.model_dump())
+            celery_task: CeleryTask = CeleryTask.model_construct(**celery_response.json())
 
         # Asynchronous calls
         if asynchronous and task_id is None:
             return celery_task
         elif asynchronous and task_id is not None:
             has_slash = route.endswith("/")
-            task_route = route + f"{'' if has_slash else '/'}{celery_task.id}"
+            task_route = route + f"{'' if has_slash else '/'}{task_id}"
             response: dict[str, Any] = (await self.get(task_route)).json()
             if response["status"] == states.SUCCESS:
                 return response_type.model_validate(response)
@@ -455,6 +462,61 @@ class PixanoInferenceClient(Settings):
             route="tasks/video/mask_generation/",
             request=request,
             response_type=VideoMaskGenerationResponse,
+            poll_interval=poll_interval,
+            timeout=timeout,
+            task_id=task_id,
+            asynchronous=asynchronous,
+        )
+
+    @overload
+    async def image_zero_shot_detection(
+        self,
+        request: ImageZeroShotDetectionRequest,
+        poll_interval: float,
+        timeout: float,
+        task_id: str,
+        asynchronous: Literal[True],
+    ) -> ImageZeroShotDetectionResponse | CeleryTask: ...
+    @overload
+    async def image_zero_shot_detection(
+        self,
+        request: ImageZeroShotDetectionRequest,
+        poll_interval: float,
+        timeout: float,
+        task_id: None,
+        asynchronous: Literal[True],
+    ) -> CeleryTask: ...
+    @overload
+    async def image_zero_shot_detection(
+        self,
+        request: ImageZeroShotDetectionRequest,
+        poll_interval: float,
+        timeout: float,
+        task_id: str | None,
+        asynchronous: Literal[False],
+    ) -> ImageZeroShotDetectionResponse: ...
+    @overload
+    async def image_zero_shot_detection(
+        self,
+        request: ImageZeroShotDetectionRequest,
+        poll_interval: float,
+        timeout: float,
+        task_id: str | None,
+        asynchronous: bool,
+    ) -> ImageZeroShotDetectionResponse | CeleryTask: ...
+    async def image_zero_shot_detection(
+        self,
+        request: ImageZeroShotDetectionRequest,
+        poll_interval: float = 0.1,
+        timeout: float = 60,
+        task_id: str | None = None,
+        asynchronous: bool = False,
+    ) -> ImageZeroShotDetectionResponse | CeleryTask:
+        """Perform an inference to perform video mask generation."""
+        return await self.inference(
+            route="tasks/image/zero_shot_detection/",
+            request=request,
+            response_type=ImageZeroShotDetectionResponse,
             poll_interval=poll_interval,
             timeout=timeout,
             task_id=task_id,
