@@ -24,15 +24,14 @@ from pixano_inference.models import BaseInferenceModel
 from pixano_inference.providers.base import BaseProvider, ModelProvider
 from pixano_inference.providers.utils import instantiate_provider
 from pixano_inference.pydantic import (
+    CeleryTask,
     ImageMaskGenerationRequest,
+    ImageZeroShotDetectionRequest,
+    ModelConfig,
     TextImageConditionalGenerationRequest,
     VideoMaskGenerationRequest,
 )
-from pixano_inference.pydantic.base import CeleryTask
-from pixano_inference.pydantic.models import ModelConfig
-from pixano_inference.pydantic.tasks.image.zero_shot_detection import ImageZeroShotDetectionRequest
-from pixano_inference.tasks import ImageTask, MultimodalImageNLPTask, Task, VideoTask
-from pixano_inference.tasks.utils import str_to_task
+from pixano_inference.tasks import ImageTask, MultimodalImageNLPTask, Task, VideoTask, str_to_task
 from pixano_inference.utils.package import assert_torch_installed, is_torch_installed
 
 
