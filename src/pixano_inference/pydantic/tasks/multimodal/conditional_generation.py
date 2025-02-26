@@ -35,12 +35,7 @@ class TextImageConditionalGenerationRequest(BaseRequest, TextImageConditionalGen
 
     def to_input(self) -> TextImageConditionalGenerationInput:
         """Convert the request to the input."""
-        return TextImageConditionalGenerationInput(
-            prompt=self.prompt,
-            images=self.images,
-            max_new_tokens=self.max_new_tokens,
-            temperature=self.temperature,
-        )
+        return self.to_base_model(TextImageConditionalGenerationInput)
 
 
 class UsageConditionalGeneration(BaseModel):

@@ -73,14 +73,7 @@ class VideoMaskGenerationRequest(BaseRequest, VideoMaskGenerationInput):
 
     def to_input(self) -> VideoMaskGenerationInput:
         """Convert the request to the input."""
-        return VideoMaskGenerationInput(
-            video=self.video,
-            points=self.points,
-            labels=self.labels,
-            boxes=self.boxes,
-            objects_ids=self.objects_ids,
-            frame_indexes=self.frame_indexes,
-        )
+        return self.to_base_model(VideoMaskGenerationInput)
 
 
 class VideoMaskGenerationOutput(BaseModel):

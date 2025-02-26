@@ -8,12 +8,15 @@
 
 from abc import ABC
 from datetime import datetime
-from typing import Any
+from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
 
-class BaseRequest(BaseModel):
+T = TypeVar("T", bound=BaseModel)
+
+
+class BaseRequest(BaseModel, ABC):
     """Base request model.
 
     Attributes:
@@ -22,8 +25,14 @@ class BaseRequest(BaseModel):
 
     model: str
 
+    def to_base_model(self, base_model: type[T]) -> T:
+        """Convert request to input type."""
+        if not issubclass(base_model, BaseModel):
+            raise ValueError(f"base_model must be a subclass of pydantic's BaseModel, got {base_model.__name__}.")
+        return base_model.model_validate(self.model_dump(include=list(base_model.model_fields.keys())))
 
-class APIRequest(BaseRequest):
+
+class APIRequest(BaseRequest, ABC):
     """API request model.
 
     Attributes:

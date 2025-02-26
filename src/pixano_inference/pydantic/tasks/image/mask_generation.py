@@ -4,7 +4,7 @@
 # License: CECILL-C
 # =================================
 
-"""Pydantic models for mask generation task."""
+"""Pydantic models for image mask generation task."""
 
 from pathlib import Path
 
@@ -18,17 +18,17 @@ from .utils import CompressedRLE
 
 
 class ImageMaskGenerationInput(BaseModel):
-    """Input for mask generation.
+    """Input for image mask generation.
 
     Attributes:
-        image: Image for mask generation.
-        image_embedding: Image embedding for the mask generation.
-        high_resolution_features: High resolution features for the mask generation.
-        points: Points for the mask generation. The first fimension is the number of prompts the second
+        image: Image for image mask generation.
+        image_embedding: Image embedding for the image mask generation.
+        high_resolution_features: High resolution features for the image mask generation.
+        points: Points for the image mask generation. The first fimension is the number of prompts the second
             the number of points per mask and the third the coordinates of the points.
-        labels: Labels for the mask generation. The first fimension is the number of prompts, the second
+        labels: Labels for the image mask generation. The first fimension is the number of prompts, the second
             the number of labels per mask.
-        boxes: Boxes for the mask generation. The first fimension is the number of prompts, the second
+        boxes: Boxes for the image mask generation. The first fimension is the number of prompts, the second
             the coordinates of the boxes.
         num_multimask_outputs: Number of masks to generate per prediction.
         multimask_output: Whether to generate multiple masks per prediction.
@@ -67,26 +67,17 @@ class ImageMaskGenerationInput(BaseModel):
 
 
 class ImageMaskGenerationRequest(BaseRequest, ImageMaskGenerationInput):
-    """Request for mask generation."""
+    """Request for image mask generation."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def to_input(self) -> ImageMaskGenerationInput:
         """Convert the request to the input."""
-        return ImageMaskGenerationInput(
-            image=self.image,
-            points=self.points,
-            boxes=self.boxes,
-            num_multimask_outputs=self.num_multimask_outputs,
-            multimask_output=self.multimask_output,
-            image_embedding=self.image_embedding,
-            high_resolution_features=self.high_resolution_features,
-            return_image_embedding=self.return_image_embedding,
-        )
+        return self.to_base_model(ImageMaskGenerationInput)
 
 
 class ImageMaskGenerationOutput(BaseModel):
-    """Output for mask generation.
+    """Output for image mask generation.
 
     Attributes:
         masks: Generated masks. The first dimension is the number of predictions, the second the number of masks per
@@ -104,7 +95,7 @@ class ImageMaskGenerationOutput(BaseModel):
 
 
 class ImageMaskGenerationResponse(BaseResponse):
-    """Response for mask generation.
+    """Response for image mask generation.
 
     Attributes:
         data: Output of the generation.
