@@ -485,7 +485,7 @@ class PixanoInferenceClient(Settings):
     @overload
     async def image_zero_shot_detection(
         self,
-        request: ImageZeroShotDetectionRequest,
+        request: ImageZeroShotDetectionRequest | None,
         poll_interval: float,
         timeout: float,
         task_id: str,
@@ -494,7 +494,7 @@ class PixanoInferenceClient(Settings):
     @overload
     async def image_zero_shot_detection(
         self,
-        request: ImageZeroShotDetectionRequest,
+        request: ImageZeroShotDetectionRequest | None,
         poll_interval: float,
         timeout: float,
         task_id: None,
@@ -512,7 +512,7 @@ class PixanoInferenceClient(Settings):
     @overload
     async def image_zero_shot_detection(
         self,
-        request: ImageZeroShotDetectionRequest,
+        request: ImageZeroShotDetectionRequest | None,
         poll_interval: float,
         timeout: float,
         task_id: str | None,
@@ -520,7 +520,7 @@ class PixanoInferenceClient(Settings):
     ) -> ImageZeroShotDetectionResponse | CeleryTask: ...
     async def image_zero_shot_detection(
         self,
-        request: ImageZeroShotDetectionRequest,
+        request: ImageZeroShotDetectionRequest | None = None,
         poll_interval: float = 0.1,
         timeout: float = 60,
         task_id: str | None = None,
