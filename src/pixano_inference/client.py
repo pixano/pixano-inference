@@ -7,7 +7,7 @@
 """Pixano inference client."""
 
 import asyncio
-from typing import Any, Literal, overload
+from typing import Any, Literal, cast, overload
 
 import httpx
 import requests  # type: ignore[import-untyped]
@@ -42,12 +42,20 @@ class InferenceTooLongError(Exception):
     pass
 
 
-def _validate_task_id_asynchronous(task_id: str | None, asynchronous: bool):
+def _validate_task_id_asynchronous_request_response_type(
+    task_id: str | None, asynchronous: bool, request: BaseRequest | None, response_type: type[BaseResponse] | None
+) -> None:
     if not asynchronous and task_id is not None:
         raise ValueError("Task id must be None for synchronous calls.")
+    elif not asynchronous and (request is None or response_type is None):
+        raise ValueError("Request and response type must be provided for synchronous calls.")
+    elif asynchronous and task_id is None and (request is None or response_type is None):
+        raise ValueError("Either request and response_type or task id must be provided for asynchronous calls.")
+    elif asynchronous and isinstance(task_id, str) and response_type is None:
+        raise TypeError("Response type must be provided to retrieve results from asynchronous calls.")
 
 
-def _validate_poll_interval_timeout(poll_interval: float, timeout: float):
+def _validate_poll_interval_timeout(poll_interval: float, timeout: float) -> None:
     if not isinstance(poll_interval, (float, int)):
         raise ValueError("Poll interval should be a number that define an interval in seconds.")
     if not isinstance(timeout, (float, int)):
@@ -204,8 +212,8 @@ class PixanoInferenceClient(Settings):
     async def inference(
         self,
         route: str,
-        request: BaseRequest,
-        response_type: type[BaseResponse],
+        request: BaseRequest | None,
+        response_type: type[BaseResponse] | None,
         poll_interval: float,
         timeout: float,
         task_id: str,
@@ -215,8 +223,8 @@ class PixanoInferenceClient(Settings):
     async def inference(
         self,
         route: str,
-        request: BaseRequest,
-        response_type: type[BaseResponse],
+        request: BaseRequest | None,
+        response_type: type[BaseResponse] | None,
         poll_interval: float,
         timeout: float,
         task_id: None,
@@ -237,8 +245,8 @@ class PixanoInferenceClient(Settings):
     async def inference(
         self,
         route: str,
-        request: BaseRequest,
-        response_type: type[BaseResponse],
+        request: BaseRequest | None,
+        response_type: type[BaseResponse] | None,
         poll_interval: float,
         timeout: float,
         task_id: str | None,
@@ -247,8 +255,8 @@ class PixanoInferenceClient(Settings):
     async def inference(
         self,
         route: str,
-        request: BaseRequest,
-        response_type: type[BaseResponse],
+        request: BaseRequest | None = None,
+        response_type: type[BaseResponse] | None = None,
         poll_interval: float = 0.1,
         timeout: float = 60.0,
         task_id: str | None = None,
@@ -270,10 +278,13 @@ class PixanoInferenceClient(Settings):
         Returns:
             A response from the pixano inference server.
         """
-        _validate_task_id_asynchronous(task_id=task_id, asynchronous=asynchronous)
+        _validate_task_id_asynchronous_request_response_type(
+            task_id=task_id, asynchronous=asynchronous, request=request, response_type=response_type
+        )
         _validate_poll_interval_timeout(poll_interval=poll_interval, timeout=timeout)
 
         if not asynchronous or task_id is None:
+            request = cast(BaseRequest, request)
             celery_response: Response = await self.post(route, json=request.model_dump())
             celery_task: CeleryTask = CeleryTask.model_construct(**celery_response.json())
 
@@ -281,6 +292,7 @@ class PixanoInferenceClient(Settings):
         if asynchronous and task_id is None:
             return celery_task
         elif asynchronous and task_id is not None:
+            response_type = cast(type[BaseResponse], response_type)
             has_slash = route.endswith("/")
             task_route = route + f"{'' if has_slash else '/'}{task_id}"
             response: dict[str, Any] = (await self.get(task_route)).json()
@@ -289,6 +301,8 @@ class PixanoInferenceClient(Settings):
             return CeleryTask.model_construct(**response)
 
         # Synchronous calls with polling for result retrieval and deletion of celery tasks after timeout.
+        response_type = cast(type[BaseResponse], response_type)
+
         time = 0.0
         has_slash = route.endswith("/")
         task_route = route + f"{'' if has_slash else '/'}{celery_task.id}"
@@ -306,7 +320,7 @@ class PixanoInferenceClient(Settings):
     @overload
     async def text_image_conditional_generation(
         self,
-        request: TextImageConditionalGenerationRequest,
+        request: TextImageConditionalGenerationRequest | None,
         poll_interval: float,
         timeout: float,
         task_id: str,
@@ -315,7 +329,7 @@ class PixanoInferenceClient(Settings):
     @overload
     async def text_image_conditional_generation(
         self,
-        request: TextImageConditionalGenerationRequest,
+        request: TextImageConditionalGenerationRequest | None,
         poll_interval: float,
         timeout: float,
         task_id: None,
@@ -333,7 +347,7 @@ class PixanoInferenceClient(Settings):
     @overload
     async def text_image_conditional_generation(
         self,
-        request: TextImageConditionalGenerationRequest,
+        request: TextImageConditionalGenerationRequest | None,
         poll_interval: float,
         timeout: float,
         task_id: str | None,
@@ -341,7 +355,7 @@ class PixanoInferenceClient(Settings):
     ) -> TextImageConditionalGenerationResponse | CeleryTask: ...
     async def text_image_conditional_generation(
         self,
-        request: TextImageConditionalGenerationRequest,
+        request: TextImageConditionalGenerationRequest | None = None,
         poll_interval: float = 0.1,
         timeout: float = 60,
         task_id: str | None = None,
@@ -361,7 +375,7 @@ class PixanoInferenceClient(Settings):
     @overload
     async def image_mask_generation(
         self,
-        request: ImageMaskGenerationRequest,
+        request: ImageMaskGenerationRequest | None,
         poll_interval: float,
         timeout: float,
         task_id: str,
@@ -370,7 +384,7 @@ class PixanoInferenceClient(Settings):
     @overload
     async def image_mask_generation(
         self,
-        request: ImageMaskGenerationRequest,
+        request: ImageMaskGenerationRequest | None,
         poll_interval: float,
         timeout: float,
         task_id: None,
@@ -388,7 +402,7 @@ class PixanoInferenceClient(Settings):
     @overload
     async def image_mask_generation(
         self,
-        request: ImageMaskGenerationRequest,
+        request: ImageMaskGenerationRequest | None,
         poll_interval: float,
         timeout: float,
         task_id: str | None,
@@ -396,7 +410,7 @@ class PixanoInferenceClient(Settings):
     ) -> ImageMaskGenerationResponse | CeleryTask: ...
     async def image_mask_generation(
         self,
-        request: ImageMaskGenerationRequest,
+        request: ImageMaskGenerationRequest | None = None,
         poll_interval: float = 0.1,
         timeout: float = 60,
         task_id: str | None = None,
@@ -416,7 +430,7 @@ class PixanoInferenceClient(Settings):
     @overload
     async def video_mask_generation(
         self,
-        request: VideoMaskGenerationRequest,
+        request: VideoMaskGenerationRequest | None,
         poll_interval: float,
         timeout: float,
         task_id: str,
@@ -425,7 +439,7 @@ class PixanoInferenceClient(Settings):
     @overload
     async def video_mask_generation(
         self,
-        request: VideoMaskGenerationRequest,
+        request: VideoMaskGenerationRequest | None,
         poll_interval: float,
         timeout: float,
         task_id: None,
@@ -443,7 +457,7 @@ class PixanoInferenceClient(Settings):
     @overload
     async def video_mask_generation(
         self,
-        request: VideoMaskGenerationRequest,
+        request: VideoMaskGenerationRequest | None,
         poll_interval: float,
         timeout: float,
         task_id: str | None,
@@ -451,7 +465,7 @@ class PixanoInferenceClient(Settings):
     ) -> VideoMaskGenerationResponse | CeleryTask: ...
     async def video_mask_generation(
         self,
-        request: VideoMaskGenerationRequest,
+        request: VideoMaskGenerationRequest | None = None,
         poll_interval: float = 0.1,
         timeout: float = 60,
         task_id: str | None = None,
