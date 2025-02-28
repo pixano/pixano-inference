@@ -95,6 +95,7 @@ output = model.video_mask_generation(
     propagate=True,
 )
 ```
+
 ## Display the result
 
 ```python

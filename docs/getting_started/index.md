@@ -32,6 +32,7 @@ pip install pixano-inference[vllm]
 ## Usage
 
 Pixano-Inference can be used as:
+
 - a Python library to instantiate models from providers and call inference
 - a server with the same features as the Library that can can **asynchronously**
 

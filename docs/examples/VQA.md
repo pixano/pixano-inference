@@ -11,6 +11,7 @@
 ## Instantiate the model
 
 In this example, we will use the LLaVa model with Qwen 2 for its LLM component.
+
 ```python
 from pixano_inference.providers import VLLMProvider
 from pixano_inference.tasks import MultimodalImageNLPTask

@@ -136,6 +136,7 @@ masks_output = sam2.video_mask_generation(
     propagate=True,
 )
 ```
+
 ## Display the result
 
 ```python

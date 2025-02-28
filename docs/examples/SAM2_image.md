@@ -100,6 +100,7 @@ generation_output = model.image_mask_generation(
     image=image, points=points, labels=labels, boxes=None, multimask_output=True
 )
 ```
+
 ## Display the result
 
 ```python

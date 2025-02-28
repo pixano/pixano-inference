@@ -21,6 +21,7 @@ client.models
 ## Instantiate the model
 
 In this example, we will use the transformers implementation of Grounding DINO.
+
 ```python
 from pixano_inference.pydantic import ModelConfig
 from pixano_inference.tasks import ImageTask
@@ -49,6 +50,7 @@ request = ImageZeroShotDetectionRequest(
     image="http://images.cocodataset.org/val2017/000000039769.jpg",
 )
 ```
+
 ## Call the model for inference (synchronous)
 
 ```python
