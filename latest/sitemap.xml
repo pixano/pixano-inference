@@ -181,6 +181,30 @@
          <lastmod>2025-02-28</lastmod>
     </url>
     <url>
+         <loc>https://pixano.github.io/pixano-inference/latest/examples/</loc>
+         <lastmod>2025-02-28</lastmod>
+    </url>
+    <url>
+         <loc>https://pixano.github.io/pixano-inference/latest/examples/Grounding_%2B_SAM2/</loc>
+         <lastmod>2025-02-28</lastmod>
+    </url>
+    <url>
+         <loc>https://pixano.github.io/pixano-inference/latest/examples/Grounding_DINO/</loc>
+         <lastmod>2025-02-28</lastmod>
+    </url>
+    <url>
+         <loc>https://pixano.github.io/pixano-inference/latest/examples/SAM2_image/</loc>
+         <lastmod>2025-02-28</lastmod>
+    </url>
+    <url>
+         <loc>https://pixano.github.io/pixano-inference/latest/examples/SAM2_video/</loc>
+         <lastmod>2025-02-28</lastmod>
+    </url>
+    <url>
+         <loc>https://pixano.github.io/pixano-inference/latest/examples/VQA/</loc>
+         <lastmod>2025-02-28</lastmod>
+    </url>
+    <url>
          <loc>https://pixano.github.io/pixano-inference/latest/getting_started/</loc>
          <lastmod>2025-02-28</lastmod>
     </url>
