@@ -122,4 +122,5 @@ nav:
   - "Pixano-Inference":
       - "Home": home/
       - "Getting Started": getting_started/
+      - "Examples": examples/
       - "API reference": api_reference/
