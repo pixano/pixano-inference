@@ -294,9 +294,9 @@ class Sam2Model(BaseInferenceModel):
         frames: list[str] | list[Path],
         image_size: int,
         offload_video_to_cpu: bool,
+        compute_device: "torch.device",
         images_mean: tuple[float, float, float] = (0.485, 0.456, 0.406),
         images_std: tuple[float, float, float] = (0.229, 0.224, 0.225),
-        compute_device: torch.device = torch.device("cuda"),
     ) -> tuple[Tensor, int, int]:
         """Load the video frames from a directory of JPEG files ("<frame_index>.jpg" format).
 
