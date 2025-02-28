@@ -16,7 +16,7 @@ Pixano-Inference aims to provide a simple and easy-to-use interface for develope
 
 ## How to use Pixano-Inference
 
-Please refer to the [Getting Started](./getting_started/index.md) guide for instructions on how to install, configure, and use Pixano-Inference in your project.
+Please refer to the [Getting Started](../getting_started/index.md) guide for instructions on how to install, configure, and use Pixano-Inference in your project.
 
 For going in-depth on how to use the APIs, please refer to the [API Reference](../api_reference/index.md).
 
