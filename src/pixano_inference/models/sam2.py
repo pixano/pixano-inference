@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 from PIL.Image import Image
-from torch._tensor import Tensor
 from tqdm import tqdm
 
 from pixano_inference.pydantic.nd_array import NDArrayFloat
