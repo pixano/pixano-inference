@@ -21,7 +21,7 @@ from pixano_inference.pydantic import (
     TextImageConditionalGenerationOutput,
     UsageConditionalGeneration,
 )
-from pixano_inference.utils.image import encode_mask_to_rle
+from pixano_inference.utils.media import encode_mask_to_rle
 from pixano_inference.utils.package import (
     assert_transformers_installed,
     is_torch_installed,

@@ -22,7 +22,7 @@ from pixano_inference.pydantic import (
     TextImageConditionalGenerationRequest,
 )
 from pixano_inference.tasks import ImageTask, MultimodalImageNLPTask, NLPTask, Task, str_to_task
-from pixano_inference.utils.image import convert_string_to_image
+from pixano_inference.utils.media import convert_string_to_image
 from pixano_inference.utils.package import (
     assert_transformers_installed,
     is_torch_installed,

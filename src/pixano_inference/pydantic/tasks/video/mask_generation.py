@@ -18,7 +18,8 @@ class VideoMaskGenerationInput(BaseModel):
     """Input for mask generation.
 
     Attributes:
-        frames: Frames for mask generation.
+        video: Can be a path to the video or list of paths to the frames or a base64 encoded video or a list of base64
+            encoded frames.
         points: Points for the mask generation. The first fimension is the number of objects the second
             the number of points for each object and the third the coordinates of the points.
         labels: Labels for the mask generation. The first fimension is the number of objects, the second
@@ -30,7 +31,7 @@ class VideoMaskGenerationInput(BaseModel):
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    video: str | Path
+    video: str | Path | list[str] | list[Path]
     points: list[list[list[int]]] | None = None
     labels: list[list[int]] | None = None
     boxes: list[list[int]] | None = None
