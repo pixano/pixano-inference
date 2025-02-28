@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import gc
+from collections import OrderedDict
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -19,6 +20,10 @@ from pixano_inference.pydantic.nd_array import NDArrayFloat
 from pixano_inference.pydantic.tasks.image.mask_generation import ImageMaskGenerationOutput
 from pixano_inference.pydantic.tasks.image.utils import CompressedRLE
 from pixano_inference.pydantic.tasks.video.mask_generation import VideoMaskGenerationOutput
+from pixano_inference.utils.media import (
+    convert_image_pil_to_tensor,
+    convert_string_to_image,
+)
 from pixano_inference.utils.package import assert_sam2_installed, is_sam2_installed, is_torch_installed
 
 from .base import BaseInferenceModel
@@ -29,8 +34,10 @@ if is_torch_installed():
 
 if is_sam2_installed():
     from sam2.sam2_image_predictor import SAM2ImagePredictor
-    from sam2.sam2_video_predictor import SAM2VideoPredictor
+    from sam2.sam2_video_predictor import SAM2VideoPredictor, load_video_frames
     from torch import Tensor
+    from tqdm import tqdm
+
 
 if TYPE_CHECKING:
     from torch import Tensor
@@ -282,9 +289,124 @@ class Sam2Model(BaseInferenceModel):
                 )
                 return masks
 
+    def load_video_frames_from_images(
+        self,
+        frames: list[str] | list[Path],
+        image_size: int,
+        offload_video_to_cpu: bool,
+        compute_device: "torch.device",
+        images_mean: tuple[float, float, float] = (0.485, 0.456, 0.406),
+        images_std: tuple[float, float, float] = (0.229, 0.224, 0.225),
+    ) -> tuple[Tensor, int, int]:
+        """Load the video frames from a directory of JPEG files ("<frame_index>.jpg" format).
+
+        The frames are resized to image_size x image_size and are loaded to GPU if
+        `offload_video_to_cpu` is `False` and to CPU if `offload_video_to_cpu` is `True`.
+        """
+        #############################################################
+        ## Adapted from Sam2 Repository (Apache License, Version 2.0)
+        #############################################################
+        num_frames = len(frames)
+        if num_frames == 0:
+            raise RuntimeError(f"no images found in {frames}")
+        device = torch.device("cpu") if offload_video_to_cpu else compute_device
+
+        images_mean = torch.tensor(images_mean, dtype=torch.float32, device=device)[:, None, None]
+        images_std = torch.tensor(images_std, dtype=torch.float32, device=device)[:, None, None]
+
+        torch_images = torch.zeros(num_frames, 3, image_size, image_size, dtype=torch.float32, device=device)
+        for n, image in enumerate(tqdm(frames, desc="frame loading")):
+            pil_image = convert_string_to_image(image)
+            video_height = pil_image.height
+            video_width = pil_image.width
+            torch_images[n] = convert_image_pil_to_tensor(image=pil_image, size=image_size, device=device)
+
+        torch_images -= images_mean
+        torch_images /= images_std
+        return torch_images, video_height, video_width
+
+    def init_video_state(
+        self,
+        video: bytes | Path | list[str] | list[Path],
+        offload_video_to_cpu=False,
+        offload_state_to_cpu=False,
+    ):
+        """Initialize an inference state."""
+        with torch.inference_mode():
+            #############################################################
+            ## Adapted from Sam2 Repository (Apache License, Version 2.0)
+            #############################################################
+
+            compute_device = self.predictor.device  # device of the model
+
+            if isinstance(video, bytes) or isinstance(video, Path) and video.is_file():
+                images, video_height, video_width = load_video_frames(
+                    video_path=video,
+                    image_size=self.predictor.image_size,
+                    offload_video_to_cpu=offload_video_to_cpu,
+                    async_loading_frames=False,
+                    compute_device=compute_device,
+                )
+            elif isinstance(video, list) or isinstance(video, Path) and video.is_dir():
+                if isinstance(video, Path):
+                    frames: list[str] | list[Path] = sorted([f for f in video.glob("**/*.jpg") if f.is_file()])
+                else:
+                    frames = video
+                images, video_height, video_width = self.load_video_frames_from_images(
+                    frames=frames,
+                    image_size=self.predictor.image_size,
+                    offload_video_to_cpu=offload_video_to_cpu,
+                    compute_device=compute_device,
+                )
+            else:
+                raise ValueError("Unknown video type.")
+
+            inference_state = {}
+            inference_state["images"] = images
+            inference_state["num_frames"] = len(images)
+            # whether to offload the video frames to CPU memory
+            # turning on this option saves the GPU memory with only a very small overhead
+            inference_state["offload_video_to_cpu"] = offload_video_to_cpu
+            # whether to offload the inference state to CPU memory
+            # turning on this option saves the GPU memory at the cost of a lower tracking fps
+            # (e.g. in a test case of 768x768 model, fps dropped from 27 to 24 when tracking one object
+            # and from 24 to 21 when tracking two objects)
+            inference_state["offload_state_to_cpu"] = offload_state_to_cpu
+            # the original video height and width, used for resizing final output scores
+            inference_state["video_height"] = video_height
+            inference_state["video_width"] = video_width
+            inference_state["device"] = compute_device
+            if offload_state_to_cpu:
+                inference_state["storage_device"] = torch.device("cpu")
+            else:
+                inference_state["storage_device"] = compute_device
+            # inputs on each frame
+            inference_state["point_inputs_per_obj"] = {}
+            inference_state["mask_inputs_per_obj"] = {}
+            # visual features on a small number of recently visited frames for quick interactions
+            inference_state["cached_features"] = {}
+            # values that don't change across frames (so we only need to hold one copy of them)
+            inference_state["constants"] = {}
+            # mapping between client-side object id and model-side object index
+            inference_state["obj_id_to_idx"] = OrderedDict()
+            inference_state["obj_idx_to_id"] = OrderedDict()
+            inference_state["obj_ids"] = []
+            # Slice (view) of each object tracking results, sharing the same memory with "output_dict"
+            inference_state["output_dict_per_obj"] = {}
+            # A temporary storage to hold new outputs when user interact with a frame
+            # to add clicks or mask (it's merged into "output_dict" before propagation starts)
+            inference_state["temp_output_dict_per_obj"] = {}
+            # Frames that already holds consolidated outputs from click or mask inputs
+            # (we directly use their consolidated outputs during tracking)
+            # metadata for each tracking frame (e.g. which direction it's tracked)
+            inference_state["frames_tracked_per_obj"] = {}
+            # Warm up the visual backbone and cache the image feature on frame 0
+            self.predictor._get_image_feature(inference_state, frame_idx=0, batch_size=1)
+            return inference_state
+
     def video_mask_generation(
         self,
-        video_dir: Path,
+        video: bytes | Path | list[str] | list[Path],
         objects_ids: list[int],
         frame_indexes: list[int],
         points: list[list[list[int]]] | None = None,
@@ -296,7 +418,7 @@ class Sam2Model(BaseInferenceModel):
         """Generate masks from the video.
 
         Args:
-            video_dir: Directory of the video.
+            video: Video data as a video file or a list of frames files.
             objects_ids: IDs of the objects to generate masks for.
             frame_indexes: Indexes of the frames where the objects are located.
             points: Points for the mask generation. The first fimension is the number of objects, the
@@ -313,8 +435,6 @@ class Sam2Model(BaseInferenceModel):
         """
         # Check the input list types
         with torch.inference_mode():
-            if not isinstance(video_dir, (Path)) or not video_dir.exists():
-                raise ValueError("The video_dir should be a valid path.")
             if (
                 points is not None
                 and not isinstance(points, list)
@@ -379,7 +499,11 @@ class Sam2Model(BaseInferenceModel):
 
             video_segments: dict[int, dict[int, np.ndarray]] = {}
             with torch.autocast(self.predictor.device.type, dtype=self.torch_dtype):
-                inference_state = self.predictor.init_state(video_path=str(video_dir))
+                inference_state = self.init_video_state(
+                    video=video,
+                    offload_state_to_cpu=False,
+                    offload_video_to_cpu=False,
+                )
                 for object_id, object_frame_index, object_points, object_labels, object_boxes in zip(
                     objects_ids, frame_indexes, input_points, input_labels, input_boxes
                 ):
@@ -421,5 +545,5 @@ class Sam2Model(BaseInferenceModel):
             return VideoMaskGenerationOutput(
                 objects_ids=out_objects_ids,
                 frame_indexes=out_frame_indexes,
-                masks=[CompressedRLE.from_mask(mask.astype(np.uint8)) for mask in out_masks],
+                masks=[CompressedRLE.from_mask(mask[0].astype(np.uint8)) for mask in out_masks],
             )
