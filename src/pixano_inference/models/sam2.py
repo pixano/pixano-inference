@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 from PIL.Image import Image
-from tqdm import tqdm
 
 from pixano_inference.pydantic.nd_array import NDArrayFloat
 from pixano_inference.pydantic.tasks.image.mask_generation import ImageMaskGenerationOutput
@@ -37,6 +36,7 @@ if is_sam2_installed():
     from sam2.sam2_image_predictor import SAM2ImagePredictor
     from sam2.sam2_video_predictor import SAM2VideoPredictor, load_video_frames
     from torch import Tensor
+    from tqdm import tqdm
 
 
 if TYPE_CHECKING:
