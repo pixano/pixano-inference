@@ -2279,11 +2279,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../utils/image/" class="md-nav__link">
+      <a href="../../../../utils/media/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    image
+    media
     
   </span>
   
@@ -2462,12 +2462,14 @@
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code><span title="pixano_inference.pydantic.tasks.video.mask_generation.VideoMaskGenerationInput.frames">frames</span></code></td>
+            <td><code><span title="pixano_inference.pydantic.tasks.video.mask_generation.VideoMaskGenerationInput.video">video</span></code></td>
             <td>
+                  <code><a class="autorefs autorefs-external" href="https://docs.python.org/3.12/library/stdtypes.html#str">str</a> | <a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3.12/library/pathlib.html#pathlib.Path">Path</a> | <a class="autorefs autorefs-external" href="https://docs.python.org/3.12/library/stdtypes.html#list">list</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3.12/library/stdtypes.html#str">str</a>] | <a class="autorefs autorefs-external" href="https://docs.python.org/3.12/library/stdtypes.html#list">list</a>[<a class="autorefs autorefs-external" title="pathlib.Path" href="https://docs.python.org/3.12/library/pathlib.html#pathlib.Path">Path</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Frames for mask generation.</p>
+                <p>Can be a path to the video or list of paths to the frames or a base64 encoded video or a list of base64
+encoded frames.</p>
               </div>
             </td>
           </tr>
@@ -2700,11 +2702,11 @@ the coordinates of the boxes.</p>
 
             <details class="quote">
               <summary>Source code in <code>pixano_inference/pydantic/tasks/video/mask_generation.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-74">74</a></span>
-<span class="normal"><a href="#__codelineno-0-75">75</a></span>
-<span class="normal"><a href="#__codelineno-0-76">76</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_input</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VideoMaskGenerationInput</span><span class="p">:</span>
-</span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert the request to the input.&quot;&quot;&quot;</span>
-</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_base_model</span><span class="p">(</span><span class="n">VideoMaskGenerationInput</span><span class="p">)</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#__codelineno-0-77">77</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_input</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VideoMaskGenerationInput</span><span class="p">:</span>
+</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert the request to the input.&quot;&quot;&quot;</span>
+</span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_base_model</span><span class="p">(</span><span class="n">VideoMaskGenerationInput</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
