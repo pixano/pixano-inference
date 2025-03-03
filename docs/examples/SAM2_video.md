@@ -104,7 +104,7 @@ import os
 from PIL import Image
 
 
-video_dir = Path("/home/jdenize/Documents/sam2/notebooks/videos/bedroom/")
+video_dir = Path("./docs/assets/examples/sam2/bedroom/")
 
 # scan all the JPEG frame names in this directory
 frame_names = [p for p in os.listdir(video_dir) if os.path.splitext(p)[-1] in [".jpg", ".jpeg", ".JPG", ".JPEG"]]

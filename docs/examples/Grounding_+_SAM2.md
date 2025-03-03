@@ -99,7 +99,7 @@ grounding_dino = transformers_provider.load_model(
 ## Load frames and show the first one
 
 ```python
-frames = sorted([f for f in Path("/home/jdenize/Documents/sam2/notebooks/videos/bedroom").glob("**/*") if f.is_file()])
+frames = sorted([f for f in Path("./docs/assets/examples/sam2/bedroom").glob("**/*") if f.is_file()])
 first_frame = frames[0]
 show_image(first_frame)
 ```
