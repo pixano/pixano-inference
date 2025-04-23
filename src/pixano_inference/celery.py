@@ -100,7 +100,7 @@ def predict(request: dict[str, Any]) -> dict[str, Any]:
     match worker_task:
         case ImageTask.MASK_GENERATION:
             output = worker_provider.image_mask_generation(
-                request=ImageMaskGenerationRequest.model_construct(request), model=worker_model
+                request=ImageMaskGenerationRequest.model_construct(**request), model=worker_model
             )
         case MultimodalImageNLPTask.CONDITIONAL_GENERATION:
             output = worker_provider.text_image_conditional_generation(
