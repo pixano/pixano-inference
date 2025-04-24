@@ -24,6 +24,7 @@ class ImageMaskGenerationInput(BaseModel):
         image: Image for image mask generation.
         image_embedding: Image embedding for the image mask generation.
         high_resolution_features: High resolution features for the image mask generation.
+        reset_predictor: True (default) for a new image. If False, keep current predictor if available.
         points: Points for the image mask generation. The first fimension is the number of prompts the second
             the number of points per mask and the third the coordinates of the points.
         labels: Labels for the image mask generation. The first fimension is the number of prompts, the second
@@ -39,6 +40,7 @@ class ImageMaskGenerationInput(BaseModel):
     image: str | Path
     image_embedding: NDArrayFloat | LanceVector | None = None
     high_resolution_features: list[NDArrayFloat] | list[LanceVector] | None = None
+    reset_predictor: bool = True
     points: list[list[list[int]]] | None = None
     labels: list[list[int]] | None = None
     boxes: list[list[int]] | None = None
