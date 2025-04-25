@@ -31,7 +31,7 @@ regex_media_base64 = r"^(data:[a-zA-Z]/[a-zA-Z]+;base64,)"
 
 def match_base64_media(string: str, media: str | None = None) -> re.Match[str] | None:
     """Match a base64 media."""
-    regex_media_base64 = rf"^(data:{media if media is not None else '[a-zA-Z]'}/[a-zA-Z]+;base64,)"
+    regex_media_base64 = rf"^(data:{media if media is not None else '[a-zA-Z]+'}/[a-zA-Z]+;base64,)"
     return re.match(regex_media_base64, string)
 
 

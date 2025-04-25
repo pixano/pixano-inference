@@ -119,19 +119,19 @@ class Sam2Provider(ModelProvider):
         """
         request_input = request.to_input()
         image = convert_string_to_image(request_input.image)
-
-        if request_input.image_embedding is not None and request_input.high_resolution_features is not None:
-            image_embedding = vector_to_tensor(request_input.image_embedding)
-            high_resolution_features = [vector_to_tensor(v) for v in request_input.high_resolution_features]
-            model.set_image_embeddings(image, image_embedding, high_resolution_features)
-        elif request_input.image_embedding is not None or request_input.high_resolution_features is not None:
-            raise ValueError("Both image_embedding and high_resolution_features must be provided.")
+        if request_input.reset_predictor:
+            model.predictor.reset_predictor()
+            # if new predictor, we may use given embeddings
+            if request_input.image_embedding is not None and request_input.high_resolution_features is not None:
+                image_embedding = vector_to_tensor(request_input.image_embedding)
+                high_resolution_features = [vector_to_tensor(v) for v in request_input.high_resolution_features]
+                model.set_image_embeddings(image, image_embedding, high_resolution_features)
+            elif request_input.image_embedding is not None or request_input.high_resolution_features is not None:
+                raise ValueError("Both image_embedding and high_resolution_features must be provided.")
 
         model_input = request_input.model_dump(exclude=["image", "image_embedding", "high_resolution_features"])
         model_input["image"] = image
-        output = model.image_mask_generation(**model_input)
-        model.predictor.reset_predictor()
-        return output
+        return model.image_mask_generation(**model_input)
 
     def video_mask_generation(
         self,
