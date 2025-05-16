@@ -14,7 +14,7 @@ import sys
 import time
 from datetime import datetime
 from subprocess import Popen
-from typing import Any, cast
+from typing import Any, Tuple, cast
 
 from celery import Celery
 from celery.result import AsyncResult
@@ -38,13 +38,12 @@ from pixano_inference.utils.package import assert_torch_installed, is_torch_inst
 if is_torch_installed():
     import torch
 
+# Maps model_name -> (provider, model, task)
+model_registry: dict[str, Tuple[BaseProvider, BaseInferenceModel, Task]] = {}
+
 uvicorn_logger = logging.getLogger("uvicorn.error")
 
 queues_to_workers: dict[str, Popen] = {}
-worker_model: BaseInferenceModel
-worker_provider: BaseProvider
-worker_task: Task
-is_model_initialized: bool = False
 
 
 def create_celery_app() -> Celery:
@@ -66,60 +65,59 @@ celery_app = create_celery_app()
 @celery_app.task
 def instantiate_model(provider: str, model_config: dict[str, Any], gpu: int | None) -> None:
     """Instantiate a model."""
-    global worker_provider, worker_model, worker_task, is_model_initialized
-
-    if is_model_initialized:
-        raise ValueError("Do not initialize twice a model.")
-    is_model_initialized = True
-
     assert_torch_installed()
     device = torch.device(f"cuda:{gpu}") if gpu is not None else torch.device("cpu")
-    worker_provider = instantiate_provider(provider)
-    worker_provider = cast(ModelProvider, worker_provider)
-    worker_model = worker_provider.load_model(**model_config, device=device)
-    worker_task = str_to_task(model_config["task"])
+    provider_instance = instantiate_provider(provider)
+    provider_instance = cast(ModelProvider, provider_instance)
+
+    model_instance = provider_instance.load_model(**model_config, device=device)
+    task = str_to_task(model_config["task"])
+    model_registry[model_config["name"]] = (provider_instance, model_instance, task)
 
 
 @celery_app.task
-def delete_model() -> None:
+def delete_model(model_name: str) -> None:
     """Delete model."""
-    global worker_model
-
-    try:
-        worker_model.delete()
-    except NameError:
-        pass
+    provider, model, _ = model_registry.pop(model_name, (None, None, None))
+    if model is not None:
+        try:
+            model.delete()
+        except NameError:
+            pass
 
 
 @celery_app.task
-def predict(request: dict[str, Any]) -> dict[str, Any]:
+def predict(model_name: str, request: dict[str, Any]) -> dict[str, Any]:
     """Run a model inference from the request."""
-    global worker_provider, worker_model, worker_task
+    if model_name not in model_registry:
+        raise ValueError(f"Model '{model_name}' not found")
+
+    provider, model, task = model_registry[model_name]
 
     start_time = time.time()
-    match worker_task:
+    match task:
         case ImageTask.MASK_GENERATION:
-            output = worker_provider.image_mask_generation(
-                request=ImageMaskGenerationRequest.model_construct(**request), model=worker_model
+            output = provider.image_mask_generation(
+                request=ImageMaskGenerationRequest.model_construct(**request), model=model
             )
         case MultimodalImageNLPTask.CONDITIONAL_GENERATION:
-            output = worker_provider.text_image_conditional_generation(
-                request=TextImageConditionalGenerationRequest.model_construct(**request), model=worker_model
+            output = provider.text_image_conditional_generation(
+                request=TextImageConditionalGenerationRequest.model_construct(**request), model=model
             )
         case VideoTask.MASK_GENERATION:
-            output = worker_provider.video_mask_generation(
-                request=VideoMaskGenerationRequest.model_construct(**request), model=worker_model
+            output = provider.video_mask_generation(
+                request=VideoMaskGenerationRequest.model_construct(**request), model=model
             )
         case ImageTask.ZERO_SHOT_DETECTION:
-            output = worker_provider.image_zero_shot_detection(
-                request=ImageZeroShotDetectionRequest.model_construct(**request), model=worker_model
+            output = provider.image_zero_shot_detection(
+                request=ImageZeroShotDetectionRequest.model_construct(**request), model=model
             )
         case _:
-            raise ValueError(f"Unknown task: {worker_task}")
+            raise ValueError(f"Unknown task: {task}")
     response = {
         "timestamp": datetime.now(),
         "processing_time": time.time() - start_time,
-        "metadata": worker_model.metadata,
+        "metadata": model.metadata,
         "data": output.model_dump(),
     }
     return response
@@ -190,7 +188,7 @@ def delete_celery_worker_and_queue(model_name: str):
     except KeyError:  # Instantiation failed before storing the worker
         pass
     else:
-        delete_model.apply_async(queue=queue).get()
+        delete_model.apply_async((model_name,), queue=queue).get()
         os.killpg(os.getpgid(worker.pid), signal.SIGTERM)
         worker.wait()
         uvicorn_logger.info(f"Killed Celery worker {worker.pid} handling model {model_name}.")
