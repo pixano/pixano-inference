@@ -36,7 +36,13 @@ async def execute_task_request(request: BaseRequest, task: Task, settings: Setti
         raise HTTPException(400, detail=f"Model {model_name} does not support the {task.value} task.")
 
     queue = model_queue_name(model_name)
-    celery_task: AsyncResult = predict.apply_async((jsonable_encoder(request),), queue=queue)
+    celery_task: AsyncResult = predict.apply_async(
+        (
+            model_name,
+            jsonable_encoder(request),
+        ),
+        queue=queue,
+    )
     return CeleryTask(id=celery_task.id, status=states.PENDING)
 
 

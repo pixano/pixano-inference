@@ -421,11 +421,11 @@ class Sam2Model(BaseInferenceModel):
             video: Video data as a video file or a list of frames files.
             objects_ids: IDs of the objects to generate masks for.
             frame_indexes: Indexes of the frames where the objects are located.
-            points: Points for the mask generation. The first fimension is the number of objects, the
+            points: Points for the mask generation. The first dimension is the number of objects, the
                 second the number of points for each object and the third the coordinates of the points.
-            labels: Labels for the mask generation. The first fimension is the number of objects, the second
+            labels: Labels for the mask generation. The first dimension is the number of objects, the second
                 the number of labels for each object.
-            boxes: Boxes for the mask generation. The first fimension is the number of objects, the second
+            boxes: Boxes for the mask generation. The first dimension is the number of objects, the second
                 the coordinates of the boxes.
             propagate: Whether to propagate the masks in the video.
             kwargs: Additional keyword arguments.
