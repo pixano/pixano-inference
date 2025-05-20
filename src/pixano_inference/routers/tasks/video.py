@@ -22,7 +22,7 @@ from pixano_inference.tasks.video import VideoTask
 router = APIRouter(prefix="/video", tags=["Video"])
 
 
-@router.post("/mask_generation", response_model=CeleryTask)
+@router.post("/mask_generation/", response_model=CeleryTask)
 async def mask_generation(
     request: VideoMaskGenerationRequest,
     settings: Annotated[Settings, Depends(get_pixano_inference_settings)],
