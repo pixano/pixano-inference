@@ -14,7 +14,7 @@ from fastapi.encoders import jsonable_encoder
 from pixano_inference.celery import celery_app, model_queue_name, predict
 from pixano_inference.pydantic import BaseRequest, BaseResponse, CeleryTask
 from pixano_inference.settings import Settings
-from pixano_inference.tasks import Task
+from pixano_inference.tasks import ImageTask, Task, VideoTask
 
 
 async def execute_task_request(request: BaseRequest, task: Task, settings: Settings) -> CeleryTask:
@@ -33,7 +33,10 @@ async def execute_task_request(request: BaseRequest, task: Task, settings: Setti
         raise HTTPException(404, detail=f"Model {model_name} is not registered.")
     model_task = settings.models_to_task[model_name]
     if task.value != model_task:
-        raise HTTPException(400, detail=f"Model {model_name} does not support the {task.value} task.")
+        # exception for SAM2 -- same model for video and image segmentation
+        # SAM2 registered as ImageTask.MASK_GENERATION can be used for VideoTask.MASK_GENERATION
+        if not (task.value == VideoTask.MASK_GENERATION and model_task == ImageTask.MASK_GENERATION):
+            raise HTTPException(400, detail=f"Model {model_name} does not support the {task.value} task.")
 
     queue = model_queue_name(model_name)
     celery_task: AsyncResult = predict.apply_async(
