@@ -31,6 +31,8 @@ from .base import BaseInferenceModel
 
 if is_torch_installed():
     import torch
+    import torch._dynamo
+    torch._dynamo.config.suppress_errors = True
 
 if is_sam2_installed():
     from sam2.sam2_image_predictor import SAM2ImagePredictor
