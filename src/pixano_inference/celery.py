@@ -65,7 +65,6 @@ celery_app = create_celery_app()
 @celery_app.task
 def instantiate_model(provider: str, model_config: dict[str, Any], gpu: int | None) -> None:
     """Instantiate a model."""
-    uvicorn_logger.info(f"INST_MODEL0: {model_config}")
     assert_torch_installed()
     device = torch.device(f"cuda:{gpu}") if gpu is not None else torch.device("cpu")
     provider_instance = instantiate_provider(provider)
@@ -74,7 +73,7 @@ def instantiate_model(provider: str, model_config: dict[str, Any], gpu: int | No
     model_instance = provider_instance.load_model(**model_config, device=device)
     task = str_to_task(model_config["task"])
     model_registry[model_config["name"]] = (provider_instance, model_instance, task)
-    uvicorn_logger.info(f"INST_MODEL1: {model_registry.keys()}")
+
 
 @celery_app.task
 def delete_model(model_name: str) -> None:
@@ -90,6 +89,8 @@ def delete_model(model_name: str) -> None:
 @celery_app.task
 def predict(model_name: str, request: dict[str, Any]) -> dict[str, Any]:
     """Run a model inference from the request."""
+    uvicorn_logger.info(f"PREDICT: {model_registry.keys()}")
+
     if model_name not in model_registry:
         raise ValueError(f"Model '{model_name}' not found")
 
@@ -160,6 +161,7 @@ def add_celery_worker_and_queue(provider: str, model_config: ModelConfig, gpu: i
         (provider, jsonable_encoder(model_config.model_dump()), gpu), queue=queue
     )
     task_result, result = list(task.collect())[0]
+    uvicorn_logger.info(f"INST_MODEL: {model_registry.keys()}")
 
     return CeleryTask(id=task.id, status=task_result.status)
 
