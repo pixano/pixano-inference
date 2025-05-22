@@ -327,7 +327,7 @@ class Sam2Model(BaseInferenceModel):
 
     def init_video_state(
         self,
-        video: bytes | Path | list[str] | list[Path],
+        video: list[str] | list[Path] | bytes | Path,
         offload_video_to_cpu=False,
         offload_state_to_cpu=False,
     ):
@@ -406,7 +406,7 @@ class Sam2Model(BaseInferenceModel):
 
     def video_mask_generation(
         self,
-        video: bytes | Path | list[str] | list[Path],
+        video: list[str] | list[Path] | bytes | Path,
         objects_ids: list[int],
         frame_indexes: list[int],
         points: list[list[list[int]]] | None = None,

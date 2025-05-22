@@ -152,7 +152,7 @@ class Sam2Provider(ModelProvider):
             Response of the generation.
         """
         request_input = request.to_input().model_dump()
-        raise ValueError(f"DEBUGGG {type(request['video'])} --- {type(request_input['video'])}")
-        request_input["video"] = convert_string_video_to_bytes_or_path(request_input["video"])
+        # conversion is done later in models/sam2.py:load_video_frames_from_images
+        # request_input["video"] = convert_string_video_to_bytes_or_path(request_input["video"])
         output = model.video_mask_generation(**request_input)
         return output
