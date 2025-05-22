@@ -115,6 +115,8 @@ def convert_string_video_to_bytes_or_path(str_video: str | Path) -> bytes | Path
     Returns:
         The video.
     """
+    if isinstance(str_video, list):
+        return [convert_string_video_to_bytes_or_path(str_video_elem) for str_video_elem in str_video]
     if isinstance(str_video, str):
         if is_url(str_video):
             video_bytes = requests.get(str_video, stream=True).raw
