@@ -65,6 +65,7 @@ celery_app = create_celery_app()
 @celery_app.task
 def instantiate_model(provider: str, model_config: dict[str, Any], gpu: int | None) -> None:
     """Instantiate a model."""
+    uvicorn_logger.info(f"INST_MODEL0: {model_config}")
     assert_torch_installed()
     device = torch.device(f"cuda:{gpu}") if gpu is not None else torch.device("cpu")
     provider_instance = instantiate_provider(provider)
@@ -73,8 +74,7 @@ def instantiate_model(provider: str, model_config: dict[str, Any], gpu: int | No
     model_instance = provider_instance.load_model(**model_config, device=device)
     task = str_to_task(model_config["task"])
     model_registry[model_config["name"]] = (provider_instance, model_instance, task)
-    if model_config["name"] == "SAM2-video":
-        raise ValueError("DEBUG:", model_registry)
+    uvicorn_logger.info(f"INST_MODEL1: {model_registry.keys()}")
 
 @celery_app.task
 def delete_model(model_name: str) -> None:
