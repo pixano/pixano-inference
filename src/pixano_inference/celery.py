@@ -89,7 +89,7 @@ def delete_model(model_name: str) -> None:
 @celery_app.task
 def predict(model_name: str, request: dict[str, Any]) -> dict[str, Any]:
     """Run a model inference from the request."""
-    uvicorn_logger.info(f"PREDICT: {model_registry.keys()}")
+    uvicorn_logger.error(f"PREDICT: {model_registry.keys()}")
 
     if model_name not in model_registry:
         raise ValueError(f"Model '{model_name}' not found")
@@ -161,7 +161,7 @@ def add_celery_worker_and_queue(provider: str, model_config: ModelConfig, gpu: i
         (provider, jsonable_encoder(model_config.model_dump()), gpu), queue=queue
     )
     task_result, result = list(task.collect())[0]
-    uvicorn_logger.info(f"INST_MODEL: {model_registry.keys()}")
+    uvicorn_logger.info(f"INST_MODEL: {list(model_registry.keys())}")
 
     return CeleryTask(id=task.id, status=task_result.status)
 
