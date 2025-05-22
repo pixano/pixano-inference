@@ -73,7 +73,8 @@ def instantiate_model(provider: str, model_config: dict[str, Any], gpu: int | No
     model_instance = provider_instance.load_model(**model_config, device=device)
     task = str_to_task(model_config["task"])
     model_registry[model_config["name"]] = (provider_instance, model_instance, task)
-
+    if model_config["name"] == "SAM2-video":
+        raise ValueError("DEBUG:", model_registry)
 
 @celery_app.task
 def delete_model(model_name: str) -> None:
