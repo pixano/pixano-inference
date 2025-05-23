@@ -11,7 +11,7 @@ import uvicorn
 from fastapi import APIRouter, FastAPI
 from fastapi.responses import RedirectResponse
 
-from . import routers
+from . import PIXANO_INFERENCE_SETTINGS, routers
 
 
 router = APIRouter()
@@ -25,7 +25,11 @@ async def docs_redirect() -> RedirectResponse:
 
 def create_app() -> FastAPI:
     """Create the FastAPI application."""
-    app = FastAPI()
+    app = FastAPI(
+        name=PIXANO_INFERENCE_SETTINGS.app_name,
+        description=PIXANO_INFERENCE_SETTINGS.app_description,
+        version=PIXANO_INFERENCE_SETTINGS.app_version,
+    )
 
     app.include_router(routers.tasks.router)
     app.include_router(routers.providers.router)
