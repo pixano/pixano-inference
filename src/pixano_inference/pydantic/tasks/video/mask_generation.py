@@ -31,7 +31,7 @@ class VideoMaskGenerationInput(BaseModel):
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    video: str | Path | list[str] | list[Path]
+    video: list[str] | list[Path] | str | Path
     points: list[list[list[int]]] | None = None
     labels: list[list[int]] | None = None
     boxes: list[list[int]] | None = None

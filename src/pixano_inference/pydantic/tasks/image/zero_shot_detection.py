@@ -23,7 +23,7 @@ class ImageZeroShotDetectionInput(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
     image: str | Path
-    classes: str | list[str]
+    classes: list[str] | str
     box_threshold: float = 0.5
     text_threshold: float = 0.5
 

@@ -90,7 +90,7 @@ def delete_model(model_name: str) -> None:
 def predict(model_name: str, request: dict[str, Any]) -> dict[str, Any]:
     """Run a model inference from the request."""
     if model_name not in model_registry:
-        raise ValueError(f"Model '{model_name}' not found")
+        raise ValueError(f"Model '{model_name}' not found (reg: {list(model_registry.keys())})")
 
     provider, model, task = model_registry[model_name]
 

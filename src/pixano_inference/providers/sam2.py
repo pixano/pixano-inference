@@ -20,7 +20,6 @@ from pixano_inference.tasks import ImageTask, Task, VideoTask, str_to_task
 from pixano_inference.utils import (
     assert_sam2_installed,
     convert_string_to_image,
-    convert_string_video_to_bytes_or_path,
     is_sam2_installed,
     is_torch_installed,
     vector_to_tensor,
@@ -152,6 +151,6 @@ class Sam2Provider(ModelProvider):
             Response of the generation.
         """
         request_input = request.to_input().model_dump()
-        request_input["video"] = convert_string_video_to_bytes_or_path(request_input["video"])
-        output = model.video_mask_generation(**request_input)
-        return output
+        # conversion is done later in models/sam2.py:load_video_frames_from_images
+        # request_input["video"] = convert_string_video_to_bytes_or_path(request_input["video"])
+        return model.video_mask_generation(**request_input, propagate=True)

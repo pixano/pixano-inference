@@ -58,7 +58,7 @@ class VLLMModel(BaseInferenceModel):
         self.vllm_model = vllm_model
         self.model_config = model_config
         self.processor_config = processor_config
-        self.model = LLM(model=vllm_model, **model_config, **processor_config, device=device)
+        self.model = LLM(model=vllm_model, **model_config, **processor_config, device=device, tensor_parallel_size=1)
 
     @property
     def metadata(self) -> dict[str, Any]:

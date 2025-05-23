@@ -58,7 +58,7 @@ async def get_task_result(task_id: str, response_type: type[BaseResponse]) -> Ce
     """
     task_result = celery_app.AsyncResult(task_id)
     status, result = task_result.status, task_result.result
-    if status in [states.PENDING, states.REVOKED, states.STARTED, states.FAILURE, states.REVOKED]:
+    if status in [states.PENDING, states.REVOKED, states.STARTED, states.FAILURE]:
         return CeleryTask(id=task_id, status=status)
     elif status != states.SUCCESS:
         raise HTTPException(status_code=500, detail=f"Unknown task status {status}")
