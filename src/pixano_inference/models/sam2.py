@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 
 
 celery_logger = logging.getLogger("celery")
-handler = logging.StreamHandler()
+handler = logging.FileHandler("celery_logs.log")
 formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 handler.setFormatter(formatter)
 celery_logger.addHandler(handler)
