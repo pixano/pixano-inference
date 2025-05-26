@@ -30,7 +30,6 @@ def create_app() -> FastAPI:
         description=PIXANO_INFERENCE_SETTINGS.app_description,
         version=PIXANO_INFERENCE_SETTINGS.app_version,
     )
-
     app.include_router(routers.tasks.router)
     app.include_router(routers.providers.router)
     app.include_router(routers.app.router)
