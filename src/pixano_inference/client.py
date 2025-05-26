@@ -257,8 +257,8 @@ class PixanoInferenceClient(Settings):
         route: str,
         request: BaseRequest | None = None,
         response_type: type[BaseResponse] | None = None,
-        poll_interval: float = 0.1,
-        timeout: float = 60.0,
+        poll_interval: float = 0.5,
+        timeout: float = 90.0,
         task_id: str | None = None,
         asynchronous: bool = False,
     ) -> BaseResponse | CeleryTask:

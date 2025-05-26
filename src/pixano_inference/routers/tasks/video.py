@@ -24,7 +24,7 @@ router = APIRouter(prefix="/video", tags=["Video"])
 
 
 @router.post("/mask_generation/", response_model=CeleryTask)
-async def mask_generation(
+async def video_mask_generation(
     request: VideoMaskGenerationRequest,
     settings: Annotated[Settings, Depends(get_pixano_inference_settings)],
 ) -> CeleryTask:
@@ -41,7 +41,7 @@ async def mask_generation(
 
 
 @router.get("/mask_generation/{task_id}", response_model=VideoMaskGenerationResponse | CeleryTask)
-async def get_mask_generation(task_id: str) -> VideoMaskGenerationResponse | CeleryTask:
+async def get_video_mask_generation(task_id: str) -> VideoMaskGenerationResponse | CeleryTask:
     """Get the result of a mask generation task.
 
     Args:
@@ -55,6 +55,6 @@ async def get_mask_generation(task_id: str) -> VideoMaskGenerationResponse | Cel
 
 
 @router.delete("/mask_generation/{task_id}", response_model=None)
-async def delete_mask_generation(task_id: str) -> None:
+async def delete_video_mask_generation(task_id: str) -> None:
     """Delete a mask generation task."""
     return await delete_task(task_id=task_id)
