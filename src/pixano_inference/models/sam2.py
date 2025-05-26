@@ -433,6 +433,7 @@ class Sam2Model(BaseInferenceModel):
         Returns:
             Output of the generation.
         """
+        print('SAM2-0')
         # Check the input list types
         with torch.inference_mode():
             if (
