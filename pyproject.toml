@@ -40,6 +40,8 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
+  "accelerate",
+  "bitsandbytes",
   "click >= 8.0.0",
   "fastapi >= 0.100.0",
   "httpx",
