@@ -466,8 +466,8 @@ class PixanoInferenceClient(Settings):
     async def video_mask_generation(
         self,
         request: VideoMaskGenerationRequest | None = None,
-        poll_interval: float = 0.1,
-        timeout: float = 60,
+        poll_interval: float = 0.5,
+        timeout: float = 120,
         task_id: str | None = None,
         asynchronous: bool = False,
     ) -> VideoMaskGenerationResponse | CeleryTask:
