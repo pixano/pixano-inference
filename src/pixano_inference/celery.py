@@ -90,7 +90,7 @@ def delete_model(model_name: str) -> None:
 def predict(model_name: str, request: dict[str, Any]) -> dict[str, Any]:
     """Run a model inference from the request."""
     if model_name not in model_registry:
-        raise ValueError(f"Model '{model_name}' not found")
+        raise ValueError(f"Model '{model_name}' not found (reg: {list(model_registry.keys())})")
 
     provider, model, task = model_registry[model_name]
 
@@ -147,7 +147,7 @@ def add_celery_worker_and_queue(provider: str, model_config: ModelConfig, gpu: i
     ]
     worker = Popen(
         command,
-        stdout=subprocess.PIPE,
+        stdout=subprocess.PIPE,  # comment this 2 for more logs
         stderr=subprocess.PIPE,
         start_new_session=True,
     )

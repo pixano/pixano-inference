@@ -311,7 +311,7 @@ class PixanoInferenceClient(Settings):
             if response["status"] == states.SUCCESS:
                 return response_type.model_validate(response)
             elif response["status"] == states.FAILURE:
-                raise ValueError("The inference failed. Please check your inputs.")
+                raise ValueError("The inference failed. Please check your inputs.", response)
             time += poll_interval
             await asyncio.sleep(poll_interval)
         await self.delete(task_route)
@@ -466,8 +466,8 @@ class PixanoInferenceClient(Settings):
     async def video_mask_generation(
         self,
         request: VideoMaskGenerationRequest | None = None,
-        poll_interval: float = 0.1,
-        timeout: float = 60,
+        poll_interval: float = 0.5,
+        timeout: float = 120,
         task_id: str | None = None,
         asynchronous: bool = False,
     ) -> VideoMaskGenerationResponse | CeleryTask:
