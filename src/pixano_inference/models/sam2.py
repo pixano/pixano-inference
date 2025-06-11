@@ -50,6 +50,7 @@ handler.setFormatter(formatter)
 celery_logger.addHandler(handler)
 celery_logger.setLevel(logging.INFO)
 
+
 class Sam2Model(BaseInferenceModel):
     """Inference model for the SAM2 model."""
 
