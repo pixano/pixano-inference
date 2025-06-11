@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import gc
+import logging
 from collections import OrderedDict
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
@@ -41,6 +42,13 @@ if is_sam2_installed():
 
 if TYPE_CHECKING:
     from torch import Tensor
+
+celery_logger = logging.getLogger("celery")
+handler = logging.FileHandler("celery_logs.log")
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+celery_logger.addHandler(handler)
+celery_logger.setLevel(logging.INFO)
 
 
 class Sam2Model(BaseInferenceModel):
@@ -433,8 +441,10 @@ class Sam2Model(BaseInferenceModel):
         Returns:
             Output of the generation.
         """
+        celery_logger.info("SAM2-0")
         # Check the input list types
         with torch.inference_mode():
+            torch.compiler.cudagraph_mark_step_begin()
             if (
                 points is not None
                 and not isinstance(points, list)
