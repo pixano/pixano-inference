@@ -40,8 +40,6 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-  "accelerate",
-  "bitsandbytes",
   "click >= 8.0.0",
   "fastapi >= 0.100.0",
   "httpx",
@@ -76,6 +74,8 @@ torch=[
   "torch >= 2.3.0, < 3.0.0",
 ]
 transformers=[
+  "accelerate",
+  "bitsandbytes",
   "torch >= 2.3.0, < 3.0.0",
   "transformers >= 4.0.0, < 5.0.0",
 ]
