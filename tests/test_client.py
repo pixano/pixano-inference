@@ -39,7 +39,7 @@ class TestPixanoInferenceClient:
 
     @responses.activate
     def test_connect(self):
-        settings = Settings(num_cpus=1, num_gpus=0)
+        settings = Settings(num_cpus=1, num_gpus=0, gpus_used=0.0)
         response = responses.Response(method="GET", url=f"{URL}/app/settings/", json=settings.model_dump(), status=200)
         responses.add(response)
         expected_output = settings.model_dump()

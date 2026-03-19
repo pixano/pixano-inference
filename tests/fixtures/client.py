@@ -19,5 +19,5 @@ def simple_pixano_inference_client() -> PixanoInferenceClient:
         num_cpus=4,
         num_gpus=2,
         num_nodes=1,
-        gpus_used=[],
+        gpus_used=0.0,
     )
