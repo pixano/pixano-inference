@@ -25,12 +25,12 @@ it as a Ray Serve actor.
 
 ## Choose a base class
 
-| Base class | Capability | Input type | Output type |
-|---|---|---|---|
+| Base class          | Capability     | Input type          | Output type          |
+| ------------------- | -------------- | ------------------- | -------------------- |
 | `SegmentationModel` | `segmentation` | `SegmentationInput` | `SegmentationOutput` |
-| `DetectionModel` | `detection` | `DetectionInput` | `DetectionOutput` |
-| `TrackingModel` | `tracking` | `TrackingInput` | `TrackingOutput` |
-| `VLMModel` | `vlm` | `VLMInput` | `VLMOutput` |
+| `DetectionModel`    | `detection`    | `DetectionInput`    | `DetectionOutput`    |
+| `TrackingModel`     | `tracking`     | `TrackingInput`     | `TrackingOutput`     |
+| `VLMModel`          | `vlm`          | `VLMInput`          | `VLMOutput`          |
 
 These are the current HTTP-exposed model families in `pixano_inference.models`.
 

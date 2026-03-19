@@ -84,8 +84,8 @@ models = [
 ```
 
 !!! note "CPU-only testing"
-    Set `num_gpus: 0` and `torch_dtype: float32` to run on CPU.
-    This is useful for testing but not recommended for production.
+Set `num_gpus: 0` and `torch_dtype: float32` to run on CPU.
+This is useful for testing but not recommended for production.
 
 ## Start the server
 
@@ -185,13 +185,13 @@ asyncio.run(main())
 
 The following model classes are available out of the box:
 
-| Model class | Capability | Extra required | Example `model_params` |
-|---|---|---|---|
-| `Sam2ImageModel` | `segmentation` | `sam2` | `path: facebook/sam2-hiera-base-plus` |
-| `Sam2VideoModel` | `tracking` | `sam2` | `path: facebook/sam2-hiera-large` |
-| `GroundingDINOModel` | `detection` | `transformers` | `path: IDEA-Research/grounding-dino-base` |
-| `TransformersVLMModel` | `vlm` | `transformers` | `path: llava-hf/llava-1.5-7b-hf` |
-| `VLLMVLMModel` | `vlm` | `vllm` | `path: Qwen/Qwen2-VL-7B-Instruct` |
+| Model class            | Capability     | Extra required | Example `model_params`                    |
+| ---------------------- | -------------- | -------------- | ----------------------------------------- |
+| `Sam2ImageModel`       | `segmentation` | `sam2`         | `path: facebook/sam2-hiera-base-plus`     |
+| `Sam2VideoModel`       | `tracking`     | `sam2`         | `path: facebook/sam2-hiera-large`         |
+| `GroundingDINOModel`   | `detection`    | `transformers` | `path: IDEA-Research/grounding-dino-base` |
+| `TransformersVLMModel` | `vlm`          | `transformers` | `path: llava-hf/llava-1.5-7b-hf`          |
+| `VLLMVLMModel`         | `vlm`          | `vllm`         | `path: Qwen/Qwen2-VL-7B-Instruct`         |
 
 ## Multi-model config
 
@@ -231,9 +231,9 @@ models = [
 ```
 
 !!! tip
-    See [custom_models.md](custom_models.md) for external model modules via
-    `model_module`, and [`deploy/sam2_example.py`](https://github.com/pixano/pixano-inference/blob/main/deploy/sam2_example.py)
-    for a typed config example.
+See [custom_models.md](custom_models.md) for external model modules via
+`model_module`, and [`deploy/sam2_example.py`](https://github.com/pixano/pixano-inference/blob/main/deploy/sam2_example.py)
+for a typed config example.
 
 ## Deployment configuration reference
 
@@ -241,12 +241,12 @@ Each `ModelConfig(...)` entry supports the following fields:
 
 ### Model fields
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `name` | `str` | *required* | Unique model name |
-| `model_class` | `str \| type` | *required* | Registered model class name or class object |
-| `model_module` | `str` | `None` | Python module to import before resolving `model_class` (e.g. `my_package.models`). Used for [external custom models](custom_models.md). |
-| `model_params` | `dict \| BaseModelParams` | `{}` | Parameters passed to the model (e.g. `path`, `torch_dtype`) |
+| Field          | Type                      | Default    | Description                                                                                                                             |
+| -------------- | ------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`         | `str`                     | _required_ | Unique model name                                                                                                                       |
+| `model_class`  | `str \| type`             | _required_ | Registered model class name or class object                                                                                             |
+| `model_module` | `str`                     | `None`     | Python module to import before resolving `model_class` (e.g. `my_package.models`). Used for [external custom models](custom_models.md). |
+| `model_params` | `dict \| BaseModelParams` | `{}`       | Parameters passed to the model (e.g. `path`, `torch_dtype`)                                                                             |
 
 Capability is derived automatically from `model_class`. For example:
 `SegmentationModel` subclasses deploy behind `/inference/segmentation/`, while
@@ -254,27 +254,27 @@ Capability is derived automatically from `model_class`. For example:
 
 ### Deployment fields (under `deployment:`)
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `num_gpus` | `float` | `0.0` | GPUs per replica |
-| `num_cpus` | `float` | `1.0` | CPUs per replica |
-| `memory_mb` | `int` | `None` | Memory limit in MB (`None` = no limit) |
-| `min_replicas` | `int` | `0` | Minimum replicas (0 = scale to zero) |
-| `max_replicas` | `int` | `4` | Maximum replicas |
-| `target_num_ongoing_requests_per_replica` | `int` | `2` | Autoscaling target |
-| `downscale_delay_s` | `float` | `60.0` | Seconds to wait before scaling down |
-| `upscale_delay_s` | `float` | `5.0` | Seconds to wait before scaling up |
-| `max_batch_size` | `int` | `8` | Maximum batch size for inference |
-| `batch_wait_timeout_s` | `float` | `0.1` | Timeout for filling a batch (seconds) |
+| Field                                     | Type    | Default | Description                            |
+| ----------------------------------------- | ------- | ------- | -------------------------------------- |
+| `num_gpus`                                | `float` | `0.0`   | GPUs per replica                       |
+| `num_cpus`                                | `float` | `1.0`   | CPUs per replica                       |
+| `memory_mb`                               | `int`   | `None`  | Memory limit in MB (`None` = no limit) |
+| `min_replicas`                            | `int`   | `0`     | Minimum replicas (0 = scale to zero)   |
+| `max_replicas`                            | `int`   | `4`     | Maximum replicas                       |
+| `target_num_ongoing_requests_per_replica` | `int`   | `2`     | Autoscaling target                     |
+| `downscale_delay_s`                       | `float` | `60.0`  | Seconds to wait before scaling down    |
+| `upscale_delay_s`                         | `float` | `5.0`   | Seconds to wait before scaling up      |
+| `max_batch_size`                          | `int`   | `8`     | Maximum batch size for inference       |
+| `batch_wait_timeout_s`                    | `float` | `0.1`   | Timeout for filling a batch (seconds)  |
 
 ### Available capabilities
 
-| Capability | Description |
-|---|---|
-| `segmentation` | Generate masks from images (SAM2) |
-| `tracking` | Track prompted objects across video frames (SAM2) |
-| `detection` | Detect objects and optionally return masks when the model supports it |
-| `vlm` | Generate text from images and prompts (LLaVA, Qwen2-VL, etc.) |
+| Capability     | Description                                                           |
+| -------------- | --------------------------------------------------------------------- |
+| `segmentation` | Generate masks from images (SAM2)                                     |
+| `tracking`     | Track prompted objects across video frames (SAM2)                     |
+| `detection`    | Detect objects and optionally return masks when the model supports it |
+| `vlm`          | Generate text from images and prompts (LLaVA, Qwen2-VL, etc.)         |
 
 ## Next steps
 

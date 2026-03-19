@@ -29,13 +29,13 @@ pixano-inference --config models.py
 
 ## Service endpoints
 
-| Method | Path | Purpose |
-|---|---|---|
-| `GET` | `/` | Basic API metadata and docs link |
-| `GET` | `/health` | Liveness probe |
-| `GET` | `/ready` | Readiness summary |
-| `GET` | `/app/settings/` | Server settings and resource summary |
-| `GET` | `/app/models/` | List deployed models |
+| Method | Path             | Purpose                              |
+| ------ | ---------------- | ------------------------------------ |
+| `GET`  | `/`              | Basic API metadata and docs link     |
+| `GET`  | `/health`        | Liveness probe                       |
+| `GET`  | `/ready`         | Readiness summary                    |
+| `GET`  | `/app/settings/` | Server settings and resource summary |
+| `GET`  | `/app/models/`   | List deployed models                 |
 
 ### `GET /app/settings/`
 
@@ -75,12 +75,12 @@ Returns a list of `ModelInfo` objects:
 
 ## Inference endpoints
 
-| Method | Path | Request schema | Response schema | Python client helper |
-|---|---|---|---|---|
+| Method | Path                       | Request schema        | Response schema        | Python client helper    |
+| ------ | -------------------------- | --------------------- | ---------------------- | ----------------------- |
 | `POST` | `/inference/segmentation/` | `SegmentationRequest` | `SegmentationResponse` | `client.segmentation()` |
-| `POST` | `/inference/detection/` | `DetectionRequest` | `DetectionResponse` | `client.detection()` |
-| `POST` | `/inference/tracking/` | `TrackingRequest` | `TrackingResponse` | `client.tracking()` |
-| `POST` | `/inference/vlm/` | `VLMRequest` | `VLMResponse` | `client.vlm()` |
+| `POST` | `/inference/detection/`    | `DetectionRequest`    | `DetectionResponse`    | `client.detection()`    |
+| `POST` | `/inference/tracking/`     | `TrackingRequest`     | `TrackingResponse`     | `client.tracking()`     |
+| `POST` | `/inference/vlm/`          | `VLMRequest`          | `VLMResponse`          | `client.vlm()`          |
 
 If a model exists but does not support the endpoint capability, the server
 returns `400`.
@@ -129,14 +129,14 @@ All inference endpoints return the same top-level envelope:
 }
 ```
 
-| Field | Description |
-|---|---|
-| `id` | Server-generated request identifier |
-| `status` | Inference status, typically `SUCCESS` |
-| `timestamp` | Response timestamp |
-| `processing_time` | End-to-end inference time in seconds |
-| `metadata` | Deployment metadata for the model that handled the request |
-| `data` | Capability-specific payload |
+| Field             | Description                                                |
+| ----------------- | ---------------------------------------------------------- |
+| `id`              | Server-generated request identifier                        |
+| `status`          | Inference status, typically `SUCCESS`                      |
+| `timestamp`       | Response timestamp                                         |
+| `processing_time` | End-to-end inference time in seconds                       |
+| `metadata`        | Deployment metadata for the model that handled the request |
+| `data`            | Capability-specific payload                                |
 
 ## Python client
 
