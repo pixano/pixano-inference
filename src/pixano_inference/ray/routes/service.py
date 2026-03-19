@@ -69,7 +69,7 @@ def register_service_routes(app: FastAPI, deployment_manager: DeploymentManager)
             "gpus_used": used_gpus,
             "gpu_to_model": {},
             "models": [m.name for m in models],
-            "models_to_task": {m.name: m.task for m in models},
+            "models_to_capability": {m.name: m.capability for m in models},
         }
 
     @app.get("/app/models/")

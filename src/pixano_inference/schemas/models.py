@@ -14,12 +14,12 @@ class ModelInfo(BaseModel):
 
     Attributes:
         name: Name of the model.
-        task: Task of the model.
+        capability: Capability of the model.
         model_path: HuggingFace repo ID or local path.
         model_class: Model class name (e.g. "Sam2ImageModel").
     """
 
     name: str
-    task: str
+    capability: str
     model_path: str | None = None
     model_class: str | None = None

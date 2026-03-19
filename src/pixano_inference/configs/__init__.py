@@ -7,7 +7,7 @@
 """Typed configuration objects for model deployment.
 
 This module provides Pydantic-based config classes that validate model
-parameters, task strings, and deployment settings at creation time.
+parameters, model capabilities, and deployment settings at creation time.
 
 Example:
     .. code-block:: python
@@ -16,7 +16,6 @@ Example:
 
         config = ModelConfig(
             name="sam2-image",
-            task="image_mask_generation",
             model_class="Sam2ImageModel",
             model_params=Sam2ImageParams(path="facebook/sam2-hiera-base-plus"),
         )

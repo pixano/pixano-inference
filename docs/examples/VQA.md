@@ -19,7 +19,6 @@ from pixano_inference.configs import DeploymentConfig, ModelConfig, Transformers
 models = [
     ModelConfig(
         name="llava-qwen",
-        task="text_image_conditional_generation",
         model_class="TransformersVLMModel",
         model_params=TransformersVLMParams(
             path="llava-hf/llava-onevision-qwen2-0.5b-ov-hf",

@@ -68,7 +68,6 @@ from pixano_inference.configs import DeploymentConfig, ModelConfig, Sam2ImagePar
 models = [
     ModelConfig(
         name="sam2-image",
-        task="image_mask_generation",
         model_class="Sam2ImageModel",
         model_params=Sam2ImageParams(
             path="facebook/sam2-hiera-base-plus",
@@ -123,15 +122,13 @@ curl http://localhost:7463/app/models/
 You should see your model in the response:
 
 ```json
-{
-  "models": [
-    {
-      "name": "sam2-image",
-      "task": "image_mask_generation",
+[
+  {
+    "name": "sam2-image",
+    "capability": "segmentation",
     "model_class": "Sam2ImageModel"
-    }
-  ]
-}
+  }
+]
 ```
 
 ## Send inference requests
@@ -142,7 +139,7 @@ You should see your model in the response:
 # Encode an image to base64
 IMAGE_B64=$(base64 -i your_image.png)
 
-curl -X POST http://localhost:7463/tasks/image/mask_generation/ \
+curl -X POST http://localhost:7463/inference/segmentation/ \
   -H "Content-Type: application/json" \
   -d '{
     "model": "sam2-image",
@@ -188,13 +185,13 @@ asyncio.run(main())
 
 The following model classes are available out of the box:
 
-| Model class | Task | Extra required | Example `model_params` |
+| Model class | Capability | Extra required | Example `model_params` |
 |---|---|---|---|
-| `Sam2ImageModel` | `image_mask_generation` | `sam2` | `path: facebook/sam2-hiera-base-plus` |
-| `Sam2VideoModel` | `video_mask_generation` | `sam2` | `path: facebook/sam2-hiera-large` |
-| `GroundingDINOModel` | `image_zero_shot_detection` | `transformers` | `path: IDEA-Research/grounding-dino-base` |
-| `TransformersVLMModel` | `text_image_conditional_generation` | `transformers` | `path: llava-hf/llava-1.5-7b-hf` |
-| `VLLMVLMModel` | `text_image_conditional_generation` | `vllm` | `path: Qwen/Qwen2-VL-7B-Instruct` |
+| `Sam2ImageModel` | `segmentation` | `sam2` | `path: facebook/sam2-hiera-base-plus` |
+| `Sam2VideoModel` | `tracking` | `sam2` | `path: facebook/sam2-hiera-large` |
+| `GroundingDINOModel` | `detection` | `transformers` | `path: IDEA-Research/grounding-dino-base` |
+| `TransformersVLMModel` | `vlm` | `transformers` | `path: llava-hf/llava-1.5-7b-hf` |
+| `VLLMVLMModel` | `vlm` | `vllm` | `path: Qwen/Qwen2-VL-7B-Instruct` |
 
 ## Multi-model config
 
@@ -214,21 +211,18 @@ from pixano_inference.configs import (
 models = [
     ModelConfig(
         name="sam2-image",
-        task="image_mask_generation",
         model_class="Sam2ImageModel",
         model_params=Sam2ImageParams(path="facebook/sam2-hiera-base-plus"),
         deployment=DeploymentConfig(num_gpus=1, max_batch_size=8),
     ),
     ModelConfig(
         name="sam2-video",
-        task="video_mask_generation",
         model_class="Sam2VideoModel",
         model_params=Sam2VideoParams(path="facebook/sam2-hiera-large"),
         deployment=DeploymentConfig(num_gpus=1, max_batch_size=1),
     ),
     ModelConfig(
         name="grounding-dino",
-        task="image_zero_shot_detection",
         model_class="GroundingDINOModel",
         model_params=GroundingDINOParams(path="IDEA-Research/grounding-dino-base"),
         deployment=DeploymentConfig(num_gpus=1, max_batch_size=8),
@@ -250,10 +244,13 @@ Each `ModelConfig(...)` entry supports the following fields:
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `name` | `str` | *required* | Unique model name |
-| `task` | `str` | *required* | Task string (e.g. `image_mask_generation`) |
 | `model_class` | `str \| type` | *required* | Registered model class name or class object |
 | `model_module` | `str` | `None` | Python module to import before resolving `model_class` (e.g. `my_package.models`). Used for [external custom models](custom_models.md). |
 | `model_params` | `dict \| BaseModelParams` | `{}` | Parameters passed to the model (e.g. `path`, `torch_dtype`) |
+
+Capability is derived automatically from `model_class`. For example:
+`SegmentationModel` subclasses deploy behind `/inference/segmentation/`, while
+`DetectionModel` subclasses deploy behind `/inference/detection/`.
 
 ### Deployment fields (under `deployment:`)
 
@@ -270,15 +267,14 @@ Each `ModelConfig(...)` entry supports the following fields:
 | `max_batch_size` | `int` | `8` | Maximum batch size for inference |
 | `batch_wait_timeout_s` | `float` | `0.1` | Timeout for filling a batch (seconds) |
 
-### Available tasks
+### Available capabilities
 
-| Task string | Description |
+| Capability | Description |
 |---|---|
-| `image_mask_generation` | Generate masks from images (SAM2) |
-| `video_mask_generation` | Generate masks from video frames (SAM2) |
-| `text_image_conditional_generation` | Generate text from images and prompts (LLaVA) |
-| `image_zero_shot_detection` | Detect objects without class-specific training (Grounding DINO) |
-| `instance_segmentation` | Detect objects and return masks when the model supports it |
+| `segmentation` | Generate masks from images (SAM2) |
+| `tracking` | Track prompted objects across video frames (SAM2) |
+| `detection` | Detect objects and optionally return masks when the model supports it |
+| `vlm` | Generate text from images and prompts (LLaVA, Qwen2-VL, etc.) |
 
 ## Next steps
 

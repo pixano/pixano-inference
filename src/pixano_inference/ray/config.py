@@ -49,7 +49,7 @@ class ModelDeploymentConfig(BaseModel):
 
     Attributes:
         name: Unique model name. Optional for HuggingFace models (auto-derived from path).
-        task: Task string (e.g. "image_mask_generation").
+        capability: Capability string (e.g. "segmentation").
         model_class: Registered class name (e.g. "Sam2ImageModel").
         model_module: Python module path to import before resolving model_class
             (e.g. "my_package.models"). Used for external custom models.
@@ -61,7 +61,7 @@ class ModelDeploymentConfig(BaseModel):
     """
 
     name: str | None = None
-    task: str
+    capability: str
     model_class: str
     model_module: str | None = Field(
         default=None,

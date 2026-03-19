@@ -83,6 +83,28 @@ class ModelClassRegistry:
         """
         return name in cls._registry
 
+    @classmethod
+    def ensure_registered(cls, model_cls: type[InferenceModel], name: str | None = None) -> str:
+        """Register a model class if absent, or verify an existing registration.
+
+        Args:
+            model_cls: Model class to register.
+            name: Optional registered name. Defaults to ``model_cls.__name__``.
+
+        Returns:
+            The registered name.
+
+        Raises:
+            ValueError: If the name is already registered to a different class.
+        """
+        reg_name = name or model_cls.__name__
+        existing = cls._registry.get(reg_name)
+        if existing is None:
+            cls._registry[reg_name] = model_cls
+        elif existing is not model_cls:
+            raise ValueError(f"Model class '{reg_name}' already registered to a different class.")
+        return reg_name
+
 
 def register_model(name: str | None = None) -> Callable[[type[InferenceModel]], type[InferenceModel]]:
     """Convenience decorator for registering model classes.

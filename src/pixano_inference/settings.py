@@ -33,14 +33,14 @@ class Settings(BaseSettings):
 
     app_name: str = "Pixano Inference"
     app_version: str = __version__
-    app_description: str = "Pixano Inference API for multimodal tasks."
+    app_description: str = "Pixano Inference API for multimodal inference."
     num_cpus: int
     num_gpus: int
     num_nodes: int = 1
     gpus_used: float = 0.0
     gpu_to_model: dict[int, str] = {}
     models: list[str] = []
-    models_to_task: dict[str, str] = {}
+    models_to_capability: dict[str, str] = {}
 
     def __init__(self, **data: Any):
         """Initialize the settings."""

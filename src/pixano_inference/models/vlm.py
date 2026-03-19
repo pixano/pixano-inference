@@ -8,7 +8,7 @@
 
 from abc import abstractmethod
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from pydantic import BaseModel
 
@@ -74,6 +74,8 @@ class VLMModel(InferenceModel):
                 return VLMOutput(generated_text=text, usage=..., generation_config=...)
         ```
     """
+
+    capability_name: ClassVar[str] = "vlm"
 
     @abstractmethod
     def predict(self, input: VLMInput) -> VLMOutput:

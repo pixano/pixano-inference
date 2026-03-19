@@ -20,19 +20,19 @@ Custom deployment requires three pieces:
 3. A Python config file that declares a `ModelConfig` with `model_module`
 
 At startup, the server imports the module named by `model_module`, resolves the
-registered class, and deploys it as a Ray Serve actor.
+registered class, infers its capability from the base model class, and deploys
+it as a Ray Serve actor.
 
 ## Choose a base class
 
-| Base class | Task | Input type | Output type |
+| Base class | Capability | Input type | Output type |
 |---|---|---|---|
-| `SegmentationModel` | `image_mask_generation` | `SegmentationInput` | `SegmentationOutput` |
-| `TrackingModel` | `video_mask_generation` | `TrackingInput` | `TrackingOutput` |
-| `DetectionModel` | `image_zero_shot_detection` or `instance_segmentation` | `DetectionInput` | `DetectionOutput` |
-| `VLMModel` | `text_image_conditional_generation` | `VLMInput` | `VLMOutput` |
-| `InferenceModel` | custom task | task-specific `BaseModel` | task-specific `BaseModel` |
+| `SegmentationModel` | `segmentation` | `SegmentationInput` | `SegmentationOutput` |
+| `DetectionModel` | `detection` | `DetectionInput` | `DetectionOutput` |
+| `TrackingModel` | `tracking` | `TrackingInput` | `TrackingOutput` |
+| `VLMModel` | `vlm` | `VLMInput` | `VLMOutput` |
 
-All of these are part of the public API in `pixano_inference.models`.
+These are the current HTTP-exposed model families in `pixano_inference.models`.
 
 ## Project layout
 
@@ -88,7 +88,6 @@ from pixano_inference.configs import DeploymentConfig, ModelConfig
 models = [
     ModelConfig(
         name="my-segmenter",
-        task="image_mask_generation",
         model_class="MySegmenter",
         model_module="my_models.segmenter",
         model_params={"path": "my-org/my-segmentation-model", "threshold": 0.6},
@@ -114,7 +113,7 @@ curl http://localhost:7463/app/models/
 ```
 
 ```bash
-curl -X POST http://localhost:7463/tasks/image/mask_generation/ \
+curl -X POST http://localhost:7463/inference/segmentation/ \
   -H "Content-Type: application/json" \
   -d '{
     "model": "my-segmenter",
@@ -129,6 +128,7 @@ curl -X POST http://localhost:7463/tasks/image/mask_generation/ \
 - Return the typed output models from `pixano_inference.models`.
 - Use helper types from `pixano_inference.schemas` when the payload contains
   masks or array-like values.
+- Pick the correct base model class first; it determines the endpoint family and request contract.
 - Respect `self.config.resources.num_gpus` when selecting CPU vs GPU execution.
 
 ## Troubleshooting

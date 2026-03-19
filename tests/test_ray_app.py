@@ -4,31 +4,50 @@
 # License: CECILL-C
 # =================================
 
+from __future__ import annotations
 
-from pathlib import Path
 from types import SimpleNamespace
 
+import numpy as np
 import pytest
+import ray
 from fastapi.testclient import TestClient
 
-from pixano_inference.configs.base import ModelConfig
+from pixano_inference.models.detection import DetectionOutput
+from pixano_inference.models.segmentation import SegmentationOutput
+from pixano_inference.models.tracking import TrackingOutput
+from pixano_inference.models.vlm import UsageInfo, VLMOutput
 from pixano_inference.ray import app as ray_app_module
 from pixano_inference.ray.app import create_ray_serve_app
 from pixano_inference.ray.config import RayServeConfig
-from pixano_inference.ray.config_loader import ConfigLoader
+from pixano_inference.schemas import ModelInfo
+from pixano_inference.schemas.nd_array import NDArrayFloat
+from pixano_inference.schemas.rle import CompressedRLE
+
+
+class FakeRemoteMethod:
+    def __init__(self, result):
+        self._result = result
+        self.last_input = None
+
+    def remote(self, input_data):
+        self.last_input = input_data
+        return self._result
+
+
+class FakeHandle:
+    def __init__(self, result):
+        self.predict = FakeRemoteMethod(result)
 
 
 @pytest.fixture
 def ray_app_client():
-    """Create a test client from the Ray Serve FastAPI app."""
     config = RayServeConfig(num_gpus=0)
     app, _ = create_ray_serve_app(config)
     return TestClient(app)
 
 
 class TestManagementRoutesRemoved:
-    """Verify that model management endpoints are not exposed."""
-
     def test_instantiate_model_not_found(self, ray_app_client: TestClient):
         response = ray_app_client.post("/providers/instantiate")
         assert response.status_code in (404, 405)
@@ -42,20 +61,25 @@ class TestManagementRoutesRemoved:
         assert response.status_code in (404, 405)
 
 
-class TestServiceRoutesStillWork:
-    """Verify that service endpoints remain functional."""
-
+class TestServiceRoutes:
     def test_health(self, ray_app_client: TestClient):
         response = ray_app_client.get("/health")
         assert response.status_code == 200
         assert response.json()["status"] == "healthy"
 
-    def test_list_models(self, ray_app_client: TestClient):
+    def test_list_models(self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch):
+        manager = ray_app_client.app.state.deployment_manager
+        monkeypatch.setattr(
+            manager,
+            "list_models",
+            lambda: [ModelInfo(name="sam2-image", capability="segmentation", model_class="Sam2ImageModel")],
+        )
+
         response = ray_app_client.get("/app/models/")
         assert response.status_code == 200
-        assert response.json() == []
+        assert response.json()[0]["capability"] == "segmentation"
 
-    def test_settings_uses_ray_resource_api(self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    def test_settings_uses_capability_mapping(self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch):
         fake_ray = SimpleNamespace(
             is_initialized=lambda: True,
             cluster_resources=lambda: {"GPU": 4.0},
@@ -63,239 +87,154 @@ class TestServiceRoutesStillWork:
         )
         monkeypatch.setattr(ray_app_module, "ray", fake_ray)
 
+        manager = ray_app_client.app.state.deployment_manager
+        monkeypatch.setattr(
+            manager,
+            "list_models",
+            lambda: [
+                ModelInfo(name="sam2-image", capability="segmentation", model_class="Sam2ImageModel"),
+                ModelInfo(name="sam2-video", capability="tracking", model_class="Sam2VideoModel"),
+            ],
+        )
+
         response = ray_app_client.get("/app/settings/")
         assert response.status_code == 200
 
         payload = response.json()
         assert payload["num_gpus"] == 4
         assert payload["gpus_used"] == 2.5
-        assert payload["gpu_to_model"] == {}
+        assert payload["models_to_capability"] == {
+            "sam2-image": "segmentation",
+            "sam2-video": "tracking",
+        }
 
-    def test_settings_without_initialized_ray_reports_no_gpu(
-        self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch
-    ):
-        fake_ray = SimpleNamespace(is_initialized=lambda: False)
-        monkeypatch.setattr(ray_app_module, "ray", fake_ray)
 
-        response = ray_app_client.get("/app/settings/")
+class TestInferenceRoutes:
+    @staticmethod
+    def _install_manager_stubs(
+        client: TestClient,
+        monkeypatch: pytest.MonkeyPatch,
+        *,
+        handle: FakeHandle | None,
+        capability: str,
+        metadata: dict | None = None,
+    ) -> None:
+        manager = client.app.state.deployment_manager
+        monkeypatch.setattr(manager, "get_handle", lambda name: handle)
+        monkeypatch.setattr(manager, "get_model_capability", lambda name: capability if handle is not None else None)
+        monkeypatch.setattr(manager, "get_model_metadata", lambda name: metadata or {"capability": capability})
+        monkeypatch.setattr(ray, "get", lambda value: value)
+
+    def test_segmentation_route(self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch):
+        result = SegmentationOutput(
+            masks=[[CompressedRLE.from_mask(np.array([[1, 0], [0, 1]], dtype=np.uint8))]],
+            scores=NDArrayFloat(values=[0.95], shape=[1, 1]),
+        )
+        handle = FakeHandle(result)
+        self._install_manager_stubs(
+            ray_app_client,
+            monkeypatch,
+            handle=handle,
+            capability="segmentation",
+            metadata={"model_name": "sam2-image", "capability": "segmentation"},
+        )
+
+        response = ray_app_client.post(
+            "/inference/segmentation/",
+            json={"model": "sam2-image", "image": "https://example.com/image.jpg"},
+        )
+
         assert response.status_code == 200
+        assert response.json()["metadata"]["capability"] == "segmentation"
+        assert handle.predict.last_input.image == "https://example.com/image.jpg"
 
-        payload = response.json()
-        assert payload["num_gpus"] == 0
-        assert payload["gpus_used"] == 0
-        assert payload["gpu_to_model"] == {}
-
-
-class TestConfigLoader:
-    """Tests for ConfigLoader Python config parsing."""
-
-    def _write_python_config(self, tmp_path: Path, model_configs: str) -> Path:
-        """Write a Python config to a temp file and return its path."""
-        config_file = tmp_path / "config.py"
-        config_file.write_text(
-            "from pixano_inference.configs.base import ModelConfig\n"
-            "from pixano_inference.configs import DeploymentConfig\n"
-            "\n"
-            f"models = {model_configs}\n"
+    def test_tracking_route(self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch):
+        result = TrackingOutput(
+            objects_ids=[1],
+            frame_indexes=[0],
+            masks=[CompressedRLE.from_mask(np.array([[1, 1], [0, 0]], dtype=np.uint8))],
         )
-        return config_file
+        handle = FakeHandle(result)
+        self._install_manager_stubs(ray_app_client, monkeypatch, handle=handle, capability="tracking")
 
-    def test_parse_python_entry(self, tmp_path: Path):
-        """Python config with ModelConfig should be parsed correctly."""
-        config_file = tmp_path / "config.py"
-        config_file.write_text(
-            "from pixano_inference.configs.base import ModelConfig\n"
-            "from pixano_inference.configs import DeploymentConfig\n"
-            "\n"
-            "models = [\n"
-            "    ModelConfig(\n"
-            '        name="sam2-image",\n'
-            '        task="image_mask_generation",\n'
-            '        model_class="Sam2ImageModel",\n'
-            '        model_params={"path": "facebook/sam2-hiera-base-plus", "torch_dtype": "bfloat16"},\n'
-            "        deployment=DeploymentConfig(num_gpus=1, min_replicas=0, max_replicas=2, max_batch_size=8),\n"
-            "    ),\n"
-            "]\n"
+        response = ray_app_client.post(
+            "/inference/tracking/",
+            json={
+                "model": "sam2-video",
+                "video": ["frame-0001.png"],
+                "objects_ids": [1],
+                "frame_indexes": [0],
+            },
         )
-        configs = ConfigLoader(config_file).load()
-        assert len(configs) == 1
-        cfg = configs[0]
-        assert cfg.name == "sam2-image"
-        assert cfg.task == "image_mask_generation"
-        assert cfg.model_class == "Sam2ImageModel"
-        assert cfg.model_params["path"] == "facebook/sam2-hiera-base-plus"
 
-    def test_deployment_settings_parsed(self, tmp_path: Path):
-        """Deployment settings should map to resources and autoscaling configs."""
-        config_file = tmp_path / "config.py"
-        config_file.write_text(
-            "from pixano_inference.configs.base import ModelConfig\n"
-            "from pixano_inference.configs import DeploymentConfig\n"
-            "\n"
-            "models = [\n"
-            "    ModelConfig(\n"
-            '        name="test-model",\n'
-            '        task="image_mask_generation",\n'
-            '        model_class="Sam2ImageModel",\n'
-            '        model_params={"path": "test/model"},\n'
-            "        deployment=DeploymentConfig(\n"
-            "            num_gpus=2, num_cpus=4, min_replicas=1, max_replicas=8,\n"
-            "            max_batch_size=16, downscale_delay_s=120.0, upscale_delay_s=10.0,\n"
-            "        ),\n"
-            "    ),\n"
-            "]\n"
+        assert response.status_code == 200
+        assert response.json()["metadata"]["capability"] == "tracking"
+
+    def test_vlm_route(self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch):
+        result = VLMOutput(
+            generated_text="hello world",
+            usage=UsageInfo(prompt_tokens=1, completion_tokens=2, total_tokens=3),
+            generation_config={"temperature": 0.0},
         )
-        configs = ConfigLoader(config_file).load()
-        cfg = configs[0]
-        assert cfg.resources.num_gpus == 2
-        assert cfg.resources.num_cpus == 4
-        assert cfg.autoscaling.min_replicas == 1
-        assert cfg.autoscaling.max_replicas == 8
-        assert cfg.max_batch_size == 16
-        assert cfg.autoscaling.downscale_delay_s == 120.0
-        assert cfg.autoscaling.upscale_delay_s == 10.0
+        handle = FakeHandle(result)
+        self._install_manager_stubs(ray_app_client, monkeypatch, handle=handle, capability="vlm")
 
-    def test_empty_config_returns_empty_list(self, tmp_path: Path):
-        """A Python config with an empty models list should return an empty list."""
-        config_file = tmp_path / "empty.py"
-        config_file.write_text("models = []\n")
-        configs = ConfigLoader(config_file).load()
-        assert configs == []
-
-    def test_missing_file_raises(self, tmp_path: Path):
-        """A missing config file should raise FileNotFoundError."""
-        with pytest.raises(FileNotFoundError):
-            ConfigLoader(tmp_path / "nonexistent.py").load()
-
-    def test_no_config_path_returns_empty(self):
-        """ConfigLoader with no path should return empty list."""
-        configs = ConfigLoader(None).load()
-        assert configs == []
-
-
-class TestPythonConfigLoader:
-    """Tests for ConfigLoader Python file parsing."""
-
-    def test_load_python_models_list(self, tmp_path: Path):
-        """Happy path: load a Python config with a list of ModelConfig."""
-        config_file = tmp_path / "models.py"
-        config_file.write_text(
-            "from pixano_inference.configs.base import ModelConfig\n"
-            "\n"
-            "models = [\n"
-            "    ModelConfig(\n"
-            '        name="test-model",\n'
-            '        task="image_mask_generation",\n'
-            '        model_class="Sam2ImageModel",\n'
-            '        model_params={"path": "facebook/sam2-hiera-base-plus"},\n'
-            "    ),\n"
-            "]\n"
+        response = ray_app_client.post(
+            "/inference/vlm/",
+            json={
+                "model": "qwen-vl",
+                "prompt": "describe this image",
+                "images": ["https://example.com/image.jpg"],
+                "max_new_tokens": 32,
+            },
         )
-        configs = ConfigLoader(config_file).load()
-        assert len(configs) == 1
-        assert configs[0].name == "test-model"
-        assert configs[0].task == "image_mask_generation"
-        assert configs[0].model_class == "Sam2ImageModel"
 
-    def test_load_python_missing_models_raises(self, tmp_path: Path):
-        """Python config without a 'models' variable should raise ValueError."""
-        config_file = tmp_path / "no_models.py"
-        config_file.write_text("x = 42\n")
-        with pytest.raises(ValueError, match="must define a 'models' variable"):
-            ConfigLoader(config_file).load()
+        assert response.status_code == 200
+        assert response.json()["data"]["generated_text"] == "hello world"
 
-    def test_load_python_wrong_models_type_raises(self, tmp_path: Path):
-        """Python config where 'models' is not a list should raise TypeError."""
-        config_file = tmp_path / "wrong_type.py"
-        config_file.write_text('models = "not a list"\n')
-        with pytest.raises(TypeError, match="Expected 'models' to be a list"):
-            ConfigLoader(config_file).load()
-
-    def test_load_python_wrong_item_type_raises(self, tmp_path: Path):
-        """Python config where 'models' contains non-ModelConfig items should raise TypeError."""
-        config_file = tmp_path / "wrong_items.py"
-        config_file.write_text('models = [{"name": "x"}]\n')
-        with pytest.raises(TypeError, match="Expected ModelConfig instance"):
-            ConfigLoader(config_file).load()
-
-    def test_load_python_syntax_error_raises(self, tmp_path: Path):
-        """Python config with syntax errors should raise ValueError."""
-        config_file = tmp_path / "broken.py"
-        config_file.write_text("models = [\n")
-        with pytest.raises(ValueError, match="Syntax error"):
-            ConfigLoader(config_file).load()
-
-    def test_load_python_duplicate_names_raises(self, tmp_path: Path):
-        """Python config with duplicate model names should raise ValueError."""
-        config_file = tmp_path / "dupes.py"
-        config_file.write_text(
-            "from pixano_inference.configs.base import ModelConfig\n"
-            "\n"
-            "models = [\n"
-            "    ModelConfig(\n"
-            '        name="same-name",\n'
-            '        task="image_mask_generation",\n'
-            '        model_class="Sam2ImageModel",\n'
-            '        model_params={"path": "facebook/sam2-hiera-base-plus"},\n'
-            "    ),\n"
-            "    ModelConfig(\n"
-            '        name="same-name",\n'
-            '        task="video_mask_generation",\n'
-            '        model_class="Sam2VideoModel",\n'
-            '        model_params={"path": "facebook/sam2-hiera-large"},\n'
-            "    ),\n"
-            "]\n"
+    def test_detection_route(self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch):
+        result = DetectionOutput(
+            boxes=[[1, 2, 3, 4]],
+            scores=[0.9],
+            classes=["truck"],
+            masks=None,
         )
-        with pytest.raises(ValueError, match="Duplicate model name"):
-            ConfigLoader(config_file).load()
+        handle = FakeHandle(result)
+        self._install_manager_stubs(ray_app_client, monkeypatch, handle=handle, capability="detection")
 
-    def test_load_python_with_typed_enums_and_classes(self, tmp_path: Path):
-        """Python config using Task enums and model class types loads correctly."""
-        config_file = tmp_path / "typed_config.py"
-        config_file.write_text(
-            "from pixano_inference.configs.base import ModelConfig\n"
-            "from pixano_inference.tasks import ImageTask, VideoTask\n"
-            "\n"
-            "class FakeImageModel:\n"
-            "    pass\n"
-            "\n"
-            "class FakeVideoModel:\n"
-            "    pass\n"
-            "\n"
-            "models = [\n"
-            "    ModelConfig(\n"
-            '        name="typed-image",\n'
-            "        task=ImageTask.MASK_GENERATION,\n"
-            "        model_class=FakeImageModel,\n"
-            '        model_params={"path": "facebook/sam2-hiera-base-plus"},\n'
-            "    ),\n"
-            "    ModelConfig(\n"
-            '        name="typed-video",\n'
-            "        task=VideoTask.MASK_GENERATION,\n"
-            "        model_class=FakeVideoModel,\n"
-            '        model_params={"path": "facebook/sam2-hiera-large"},\n'
-            "    ),\n"
-            "]\n"
+        response = ray_app_client.post(
+            "/inference/detection/",
+            json={"model": "grounding-dino", "image": "https://example.com/image.jpg", "classes": ["truck"]},
         )
-        configs = ConfigLoader(config_file).load()
-        assert len(configs) == 2
-        assert configs[0].name == "typed-image"
-        assert configs[0].task == "image_mask_generation"
-        assert configs[0].model_class == "FakeImageModel"
-        assert configs[1].name == "typed-video"
-        assert configs[1].task == "video_mask_generation"
-        assert configs[1].model_class == "FakeVideoModel"
 
-    def test_unsupported_extension_raises(self, tmp_path: Path):
-        """Unsupported file extension should raise ValueError."""
-        config_file = tmp_path / "config.toml"
-        config_file.write_text("[models]\n")
-        with pytest.raises(ValueError, match="Unsupported config file extension"):
-            ConfigLoader(config_file).load()
+        assert response.status_code == 200
+        assert response.json()["data"]["classes"] == ["truck"]
 
-    def test_yaml_extension_unsupported(self, tmp_path: Path):
-        """YAML files are no longer supported and should raise ValueError."""
-        config_file = tmp_path / "config.yaml"
-        config_file.write_text("models: []\n")
-        with pytest.raises(ValueError, match="Unsupported config file extension"):
-            ConfigLoader(config_file).load()
+    def test_capability_mismatch_returns_400(self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch):
+        handle = FakeHandle(
+            DetectionOutput(
+                boxes=[[1, 2, 3, 4]],
+                scores=[0.9],
+                classes=["truck"],
+                masks=None,
+            )
+        )
+        self._install_manager_stubs(ray_app_client, monkeypatch, handle=handle, capability="detection")
+
+        response = ray_app_client.post(
+            "/inference/segmentation/",
+            json={"model": "grounding-dino", "image": "https://example.com/image.jpg"},
+        )
+
+        assert response.status_code == 400
+        assert "does not support 'segmentation'" in response.json()["detail"]
+
+    def test_missing_model_returns_404(self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch):
+        self._install_manager_stubs(ray_app_client, monkeypatch, handle=None, capability="segmentation")
+
+        response = ray_app_client.post(
+            "/inference/segmentation/",
+            json={"model": "missing-model", "image": "https://example.com/image.jpg"},
+        )
+
+        assert response.status_code == 404

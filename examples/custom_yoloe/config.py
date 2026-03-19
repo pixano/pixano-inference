@@ -19,7 +19,6 @@ from pixano_inference.configs import DeploymentConfig, ModelConfig
 models = [
     ModelConfig(
         name="yoloe",
-        task="instance_segmentation",
         model_class="YOLOEModel",
         model_module="custom_yoloe.model",
         model_params={"path": "yoloe-11s-seg.pt"},

@@ -87,7 +87,9 @@ class DeploymentManager:
 
         self._handles[config.name] = handle
         self._configs[config.name] = config
-        logger.info(f"Deployed model '{config.name}' (class={config.model_class}, task={config.task})")
+        logger.info(
+            f"Deployed model '{config.name}' (class={config.model_class}, capability={config.capability})"
+        )
 
     def undeploy_model(self, name: str) -> None:
         """Undeploy a model.
@@ -143,7 +145,7 @@ class DeploymentManager:
 
         metadata = {
             "model_name": config.name,
-            "task": config.task,
+            "capability": config.capability,
             "model_class": config.model_class,
         }
 
@@ -159,12 +161,19 @@ class DeploymentManager:
         return [
             ModelInfo(
                 name=config.name,
-                task=config.task,
+                capability=config.capability,
                 model_path=config.model_params.get("path"),
                 model_class=config.model_class,
             )
             for config in self._configs.values()
         ]
+
+    def get_model_capability(self, name: str) -> str | None:
+        """Get the deployed capability for a model."""
+        config = self._configs.get(name)
+        if config is None:
+            return None
+        return config.capability
 
     def get_gpu_info(self) -> dict[str, Any]:
         """Get GPU resource information from Ray.

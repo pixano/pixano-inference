@@ -9,11 +9,12 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import importlib
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
-from pixano_inference.tasks import Task, get_tasks, is_task
+from pixano_inference.models import ModelClassRegistry, infer_http_capability
 
 from ..ray.config import AutoscalingConfig, ModelDeploymentConfig, RayServeConfig, ResourceConfig
 
@@ -141,33 +142,30 @@ class DeploymentConfig(BaseModel):
 class ModelConfig(BaseModel):
     """Full model configuration with typed validation.
 
-    This class validates ``task`` against known tasks and resolves ``model_params``
-    through the ``ModelParamsRegistry`` when a schema is registered for the given
-    ``model_class``. Unknown model classes fall back to raw dict params.
+    This class resolves the model capability from the configured model class and
+    resolves ``model_params`` through the ``ModelParamsRegistry`` when a schema is
+    registered for the given ``model_class``.
 
     Accepts both strings and typed Python objects so config files can keep IDE
-    support while still allowing concise string-based declarations. ``Task``
-    enums and model class types are converted to strings internally by validators.
+    support while still allowing concise string-based declarations.
 
     Attributes:
         name: Unique model name. Optional for HuggingFace models (auto-derived from path).
-        task: Task string or ``Task`` enum (e.g. ``"image_mask_generation"`` or
-            ``ImageTask.MASK_GENERATION``). Stored as string.
         model_class: Registered model class name or class type (e.g. ``"Sam2ImageModel"``
-            or ``Sam2ImageModel``). Stored as string.
+            or ``Sam2ImageModel``).
         model_module: Python module path to import before resolving model_class.
         model_params: Typed params or raw dict, auto-resolved via registry.
         deployment: Deployment settings.
     """
 
     name: str | None = None
-    task: str | Task
     model_class: str | type
     model_module: str | None = None
     model_params: dict[str, Any] | BaseModelParams = Field(default_factory=dict)
     deployment: DeploymentConfig = Field(default_factory=DeploymentConfig)
 
     model_config = {"arbitrary_types_allowed": True}
+    _resolved_model_class: type | None = PrivateAttr(default=None)
 
     @model_validator(mode="before")
     @classmethod
@@ -185,24 +183,61 @@ class ModelConfig(BaseModel):
                 data["model_params"] = params_cls(**raw_params)
         return data
 
-    @field_validator("task", mode="before")
-    @classmethod
-    def _validate_task(cls, v: str | Task) -> str:
-        """Validate that the task is a known task. Accepts Task enums or strings."""
-        if isinstance(v, Task):
-            return v.value
-        if not is_task(v):
-            valid = sorted(get_tasks())
-            raise ValueError(f"Unknown task '{v}'. Valid tasks: {valid}")
-        return v
+    def model_post_init(self, __context: Any) -> None:
+        """Resolve and validate the configured model class."""
+        self._resolved_model_class = self._resolve_model_class()
+        infer_http_capability(self._resolved_model_class)
 
-    @field_validator("model_class", mode="before")
-    @classmethod
-    def _validate_model_class(cls, v: str | type) -> str:
-        """Accept a model class type or string. Types are converted to their __name__."""
-        if isinstance(v, type):
-            return v.__name__
-        return v
+    @property
+    def capability(self) -> str:
+        """Capability derived from the configured model class."""
+        if self._resolved_model_class is None:
+            self._resolved_model_class = self._resolve_model_class()
+        return infer_http_capability(self._resolved_model_class)
+
+    @property
+    def model_class_name(self) -> str:
+        """Registered name of the configured model class."""
+        if isinstance(self.model_class, type):
+            return self.model_class.__name__
+        return self.model_class
+
+    def _resolve_model_class(self) -> type:
+        """Resolve ``model_class`` to a Python type and validate support."""
+        import pixano_inference.impls  # noqa: F401
+        from pixano_inference.models.base import InferenceModel
+
+        imported_module = None
+        if self.model_module is not None:
+            try:
+                imported_module = importlib.import_module(self.model_module)
+            except ImportError as exc:
+                raise ValueError(
+                    f"Failed to import model_module '{self.model_module}' for model "
+                    f"'{self.model_class_name}': {exc}"
+                ) from exc
+
+        if isinstance(self.model_class, type):
+            if not issubclass(self.model_class, InferenceModel):
+                raise ValueError(
+                    f"Configured model_class '{self.model_class.__name__}' must inherit from InferenceModel."
+                )
+            ModelClassRegistry.ensure_registered(self.model_class)
+            return self.model_class
+
+        try:
+            return ModelClassRegistry.get(self.model_class)
+        except KeyError:
+            if imported_module is not None:
+                maybe_class = getattr(imported_module, self.model_class, None)
+                if isinstance(maybe_class, type) and issubclass(maybe_class, InferenceModel):
+                    ModelClassRegistry.ensure_registered(maybe_class, self.model_class)
+                    return maybe_class
+
+        raise ValueError(
+            f"Unknown model_class '{self.model_class}'. Register the class with @register_model, "
+            "pass the class type directly, or set model_module so it can be imported first."
+        )
 
     def to_deployment_config(self) -> ModelDeploymentConfig:
         """Convert to the internal ``ModelDeploymentConfig`` used by Ray Serve.
@@ -217,8 +252,8 @@ class ModelConfig(BaseModel):
             model_params = self.model_params
         return ModelDeploymentConfig(
             name=self.name,
-            task=self.task,
-            model_class=self.model_class,
+            capability=self.capability,
+            model_class=self.model_class_name,
             model_module=self.model_module,
             model_params=model_params,
             resources=ResourceConfig(

@@ -180,7 +180,7 @@ class PixanoInferenceClient(Settings):
     ) -> SegmentationResponse:
         """Perform an inference to perform image segmentation."""
         return await self.inference(
-            route="tasks/image/mask_generation/",
+            route="inference/segmentation/",
             request=request,
             response_type=SegmentationResponse,
         )
@@ -191,7 +191,7 @@ class PixanoInferenceClient(Settings):
     ) -> TrackingResponse:
         """Perform an inference to perform video tracking."""
         return await self.inference(
-            route="tasks/video/mask_generation/",
+            route="inference/tracking/",
             request=request,
             response_type=TrackingResponse,
         )
@@ -202,7 +202,7 @@ class PixanoInferenceClient(Settings):
     ) -> VLMResponse:
         """Perform an inference for vision-language model generation."""
         return await self.inference(
-            route="tasks/multimodal/text-image/conditional_generation/",
+            route="inference/vlm/",
             request=request,
             response_type=VLMResponse,
         )
@@ -213,18 +213,7 @@ class PixanoInferenceClient(Settings):
     ) -> DetectionResponse:
         """Perform an inference to perform zero-shot detection."""
         return await self.inference(
-            route="tasks/image/zero_shot_detection/",
-            request=request,
-            response_type=DetectionResponse,
-        )
-
-    async def instance_segmentation(
-        self,
-        request: DetectionRequest,
-    ) -> DetectionResponse:
-        """Perform an inference to perform instance segmentation."""
-        return await self.inference(
-            route="tasks/image/instance_segmentation/",
+            route="inference/detection/",
             request=request,
             response_type=DetectionResponse,
         )

@@ -23,15 +23,18 @@ from pixano_inference.configs import (
     TransformersVLMParams,
     VLLMVLMParams,
 )
+from pixano_inference.impls.sam2.image import Sam2ImageModel
+from pixano_inference.impls.sam2.video import Sam2VideoModel
+from pixano_inference.impls.transformers.grounding_dino import GroundingDINOModel
+from pixano_inference.impls.transformers.vlm import TransformersVLMModel
+from pixano_inference.models import InferenceModel
 from pixano_inference.ray.config import ModelDeploymentConfig
-from pixano_inference.tasks import ImageTask, MultimodalImageNLPTask, NLPTask, VideoTask
 
 
 class TestModelParamsRegistry:
     """Tests for ModelParamsRegistry."""
 
     def test_registered_schemas(self):
-        """All built-in model params schemas are registered."""
         assert ModelParamsRegistry.has("Sam2ImageModel")
         assert ModelParamsRegistry.has("Sam2VideoModel")
         assert ModelParamsRegistry.has("TransformersVLMModel")
@@ -58,8 +61,6 @@ class TestModelParamsRegistry:
 
 
 class TestBaseModelParams:
-    """Tests for BaseModelParams."""
-
     def test_valid(self):
         params = BaseModelParams(path="facebook/sam2-hiera-base-plus")
         assert params.path == "facebook/sam2-hiera-base-plus"
@@ -70,8 +71,6 @@ class TestBaseModelParams:
 
 
 class TestSam2Params:
-    """Tests for SAM2 params schemas."""
-
     def test_sam2_image_defaults(self):
         params = Sam2ImageParams()
         assert params.path == "facebook/sam2-hiera-base-plus"
@@ -101,8 +100,6 @@ class TestSam2Params:
 
 
 class TestTransformersParams:
-    """Tests for Transformers params schemas."""
-
     def test_vlm_minimal(self):
         params = TransformersVLMParams(path="llava-hf/llava-1.5-7b-hf")
         assert params.path == "llava-hf/llava-1.5-7b-hf"
@@ -133,8 +130,6 @@ class TestTransformersParams:
 
 
 class TestVLLMParams:
-    """Tests for vLLM params schemas."""
-
     def test_minimal(self):
         params = VLLMVLMParams(path="my/vllm-model")
         assert params.path == "my/vllm-model"
@@ -147,70 +142,106 @@ class TestVLLMParams:
 
 
 class TestModelConfig:
-    """Tests for ModelConfig."""
-
     def test_valid_with_typed_params(self):
         config = ModelConfig(
             name="sam2-image",
-            task="image_mask_generation",
             model_class="Sam2ImageModel",
             model_params=Sam2ImageParams(),
         )
         assert config.name == "sam2-image"
+        assert config.capability == "segmentation"
         assert isinstance(config.model_params, Sam2ImageParams)
 
     def test_valid_from_dict_auto_resolves(self):
-        """model_params dict is auto-resolved to typed schema via registry."""
         config = ModelConfig(
             name="sam2-image",
-            task="image_mask_generation",
             model_class="Sam2ImageModel",
             model_params={"path": "facebook/sam2-hiera-base-plus", "torch_dtype": "float32"},
         )
         assert isinstance(config.model_params, Sam2ImageParams)
         assert config.model_params.torch_dtype == "float32"
+        assert config.capability == "segmentation"
 
-    def test_invalid_task_raises(self):
-        with pytest.raises(ValidationError, match="Unknown task"):
-            ModelConfig(
-                name="test",
-                task="invalid_task",
-                model_class="Sam2ImageModel",
-            )
+    def test_unknown_model_class_raises(self):
+        with pytest.raises(ValidationError, match="Unknown model_class"):
+            ModelConfig(name="test", model_class="UnknownModel")
 
     def test_invalid_model_params_key_raises(self):
-        """Typo in model_params field name raises ValidationError."""
         with pytest.raises(ValidationError):
             ModelConfig(
                 name="test",
-                task="image_mask_generation",
                 model_class="Sam2ImageModel",
                 model_params={"path": "my/model", "typo_field": True},
             )
 
-    def test_unknown_model_class_falls_back_to_dict(self):
-        """Unknown model_class keeps model_params as raw dict."""
+    def test_type_input_derives_capability(self):
         config = ModelConfig(
-            name="custom",
-            task="image_mask_generation",
-            model_class="MyCustomModel",
-            model_params={"path": "some/model", "custom_key": 42},
+            name="grounding-dino",
+            model_class=GroundingDINOModel,
+            model_params=GroundingDINOParams(path="IDEA-Research/grounding-dino-base"),
         )
-        assert isinstance(config.model_params, dict)
-        assert config.model_params["custom_key"] == 42
+        assert config.model_class is GroundingDINOModel
+        assert config.model_class_name == "GroundingDINOModel"
+        assert config.capability == "detection"
+
+    def test_model_module_import_resolves_capability(self, tmp_path: pytest.TempPathFactory, monkeypatch):
+        module_path = tmp_path / "external_models.py"
+        module_path.write_text(
+            "from pydantic import BaseModel\n"
+            "from pixano_inference.models import SegmentationModel\n"
+            "from pixano_inference.models.segmentation import SegmentationInput, SegmentationOutput\n"
+            "\n"
+            "class ExternalSegmentationModel(SegmentationModel):\n"
+            "    def load_model(self):\n"
+            "        pass\n"
+            "\n"
+            "    def predict(self, input: SegmentationInput) -> SegmentationOutput:\n"
+            "        raise NotImplementedError\n"
+        )
+        monkeypatch.syspath_prepend(str(tmp_path))
+
+        config = ModelConfig(
+            name="external-seg",
+            model_class="ExternalSegmentationModel",
+            model_module="external_models",
+            model_params={"path": "some/model"},
+        )
+
+        assert config.capability == "segmentation"
+        dc = config.to_deployment_config()
+        assert dc.capability == "segmentation"
+        assert dc.model_class == "ExternalSegmentationModel"
+        assert dc.model_module == "external_models"
+
+    def test_non_inference_model_class_raises(self):
+        class PlainPythonClass:
+            pass
+
+        with pytest.raises(ValidationError, match="must inherit from InferenceModel"):
+            ModelConfig(name="plain", model_class=PlainPythonClass)
+
+    def test_unsupported_http_base_raises(self):
+        class UnsupportedModel(InferenceModel):
+            def load_model(self) -> None:
+                pass
+
+            def predict(self, input):  # pragma: no cover - test only
+                return input
+
+        with pytest.raises(ValidationError, match="not supported by the HTTP inference API"):
+            ModelConfig(name="unsupported", model_class=UnsupportedModel)
 
     def test_to_deployment_config_with_typed_params(self):
         config = ModelConfig(
             name="sam2-image",
-            task="image_mask_generation",
-            model_class="Sam2ImageModel",
+            model_class=Sam2ImageModel,
             model_params=Sam2ImageParams(path="facebook/sam2-hiera-base-plus", torch_dtype="float32"),
             deployment=DeploymentConfig(num_gpus=1, max_batch_size=4),
         )
         dc = config.to_deployment_config()
         assert isinstance(dc, ModelDeploymentConfig)
         assert dc.name == "sam2-image"
-        assert dc.task == "image_mask_generation"
+        assert dc.capability == "segmentation"
         assert dc.model_class == "Sam2ImageModel"
         assert dc.model_params == {
             "path": "facebook/sam2-hiera-base-plus",
@@ -221,21 +252,26 @@ class TestModelConfig:
         assert dc.max_batch_size == 4
 
     def test_to_deployment_config_with_dict_params(self):
+        from pixano_inference.models.segmentation import SegmentationInput, SegmentationModel, SegmentationOutput
+
+        class CustomSegmentationModel(SegmentationModel):
+            def load_model(self) -> None:
+                pass
+
+            def predict(self, input: SegmentationInput) -> SegmentationOutput:  # pragma: no cover - test only
+                raise NotImplementedError
+
         config = ModelConfig(
             name="custom",
-            task="image_mask_generation",
-            model_class="MyCustomModel",
+            model_class=CustomSegmentationModel,
             model_params={"path": "my/model", "custom": True},
         )
         dc = config.to_deployment_config()
+        assert dc.capability == "segmentation"
         assert dc.model_params == {"path": "my/model", "custom": True}
 
     def test_deployment_defaults(self):
-        config = ModelConfig(
-            name="test",
-            task="image_mask_generation",
-            model_class="Sam2ImageModel",
-        )
+        config = ModelConfig(name="test", model_class="Sam2ImageModel")
         dc = config.to_deployment_config()
         assert dc.resources.num_gpus == 0.0
         assert dc.resources.num_cpus == 1.0
@@ -243,101 +279,8 @@ class TestModelConfig:
         assert dc.autoscaling.max_replicas == 4
         assert dc.max_batch_size == 8
 
-    def test_model_module_passed_through(self):
-        config = ModelConfig(
-            name="custom",
-            task="image_mask_generation",
-            model_class="MyCustomModel",
-            model_module="my_package.models",
-            model_params={"path": "some/model"},
-        )
-        dc = config.to_deployment_config()
-        assert dc.model_module == "my_package.models"
-
-    def test_task_accepts_enum(self):
-        """Task enum is converted to its string value."""
-        config = ModelConfig(
-            name="test",
-            task=ImageTask.MASK_GENERATION,
-            model_class="Sam2ImageModel",
-        )
-        assert config.task == "image_mask_generation"
-
-    def test_task_accepts_all_enum_types(self):
-        """All Task enum subclasses are accepted."""
-        for task_enum, expected in [
-            (VideoTask.MASK_GENERATION, "video_mask_generation"),
-            (NLPTask.CAUSAL_LM, "causal_lm"),
-            (MultimodalImageNLPTask.CAPTIONING, "image_captioning"),
-        ]:
-            config = ModelConfig(
-                name="test",
-                task=task_enum,
-                model_class="MyCustomModel",
-                model_params={"path": "some/model"},
-            )
-            assert config.task == expected
-
-    def test_model_class_accepts_type(self):
-        """A class type is converted to its __name__ string."""
-
-        class MockModel:
-            pass
-
-        config = ModelConfig(
-            name="test",
-            task="image_mask_generation",
-            model_class=MockModel,
-            model_params={"path": "some/model"},
-        )
-        assert config.model_class == "MockModel"
-
-    def test_enum_task_to_deployment_config(self):
-        """to_deployment_config produces string task from enum input."""
-        config = ModelConfig(
-            name="test",
-            task=ImageTask.MASK_GENERATION,
-            model_class="Sam2ImageModel",
-        )
-        dc = config.to_deployment_config()
-        assert dc.task == "image_mask_generation"
-        assert isinstance(dc.task, str)
-
-    def test_class_model_class_to_deployment_config(self):
-        """to_deployment_config produces string model_class from type input."""
-
-        class MockModel:
-            pass
-
-        config = ModelConfig(
-            name="test",
-            task="image_mask_generation",
-            model_class=MockModel,
-            model_params={"path": "some/model"},
-        )
-        dc = config.to_deployment_config()
-        assert dc.model_class == "MockModel"
-        assert isinstance(dc.model_class, str)
-
-    def test_class_model_class_auto_resolves_params(self):
-        """Passing a class for model_class still triggers params registry resolution."""
-
-        class Sam2ImageModel:
-            pass
-
-        config = ModelConfig(
-            name="test",
-            task="image_mask_generation",
-            model_class=Sam2ImageModel,
-            model_params={"path": "facebook/sam2-hiera-base-plus", "torch_dtype": "float32"},
-        )
-        assert isinstance(config.model_params, Sam2ImageParams)
-        assert config.model_params.torch_dtype == "float32"
-
 
 class TestDeploymentConfig:
-    """Tests for DeploymentConfig."""
-
     def test_defaults(self):
         dep = DeploymentConfig()
         assert dep.num_gpus == 0.0
@@ -362,8 +305,6 @@ class TestDeploymentConfig:
 
 
 class TestServerConfig:
-    """Tests for ServerConfig."""
-
     def test_defaults(self):
         sc = ServerConfig()
         assert sc.host == "0.0.0.0"
@@ -377,7 +318,6 @@ class TestServerConfig:
             models=[
                 ModelConfig(
                     name="sam2-image",
-                    task="image_mask_generation",
                     model_class="Sam2ImageModel",
                     model_params=Sam2ImageParams(),
                 )
@@ -388,13 +328,11 @@ class TestServerConfig:
         assert rsc.port == 8000
         assert len(rsc.models) == 1
         assert rsc.models[0].name == "sam2-image"
+        assert rsc.models[0].capability == "segmentation"
 
 
 class TestConfigLoaderIntegration:
-    """Integration test: loading Python configs through the ConfigLoader."""
-
     def test_load_sam2_python(self, tmp_path):
-        """A Python config with known model classes triggers typed validation."""
         config_file = tmp_path / "test_config.py"
         config_file.write_text(
             "from pixano_inference.configs.base import ModelConfig\n"
@@ -403,7 +341,6 @@ class TestConfigLoaderIntegration:
             "models = [\n"
             "    ModelConfig(\n"
             '        name="sam2-image",\n'
-            '        task="image_mask_generation",\n'
             '        model_class="Sam2ImageModel",\n'
             '        model_params={"path": "facebook/sam2-hiera-base-plus", "torch_dtype": "float32"},\n'
             "        deployment=DeploymentConfig(num_gpus=0, min_replicas=0, max_replicas=2, max_batch_size=8),\n"
@@ -413,16 +350,13 @@ class TestConfigLoaderIntegration:
 
         from pixano_inference.ray.config_loader import ConfigLoader
 
-        loader = ConfigLoader(config_file)
-        configs = loader.load()
-
+        configs = ConfigLoader(config_file).load()
         assert len(configs) == 1
         assert configs[0].name == "sam2-image"
-        assert configs[0].task == "image_mask_generation"
+        assert configs[0].capability == "segmentation"
         assert configs[0].model_params["torch_dtype"] == "float32"
 
-    def test_load_python_invalid_task_raises(self, tmp_path):
-        """A Python config with an invalid task string raises."""
+    def test_load_python_invalid_model_class_raises(self, tmp_path):
         config_file = tmp_path / "bad_config.py"
         config_file.write_text(
             "from pixano_inference.configs.base import ModelConfig\n"
@@ -430,8 +364,7 @@ class TestConfigLoaderIntegration:
             "models = [\n"
             "    ModelConfig(\n"
             '        name="test",\n'
-            '        task="bogus_task",\n'
-            '        model_class="Sam2ImageModel",\n'
+            '        model_class="bogus_model",\n'
             '        model_params={"path": "facebook/sam2-hiera-base-plus"},\n'
             "    ),\n"
             "]\n"
@@ -439,12 +372,10 @@ class TestConfigLoaderIntegration:
 
         from pixano_inference.ray.config_loader import ConfigLoader
 
-        loader = ConfigLoader(config_file)
-        with pytest.raises(ValidationError, match="Unknown task"):
-            loader.load()
+        with pytest.raises(ValidationError, match="Unknown model_class"):
+            ConfigLoader(config_file).load()
 
     def test_load_python_invalid_model_params_raises(self, tmp_path):
-        """A Python config with invalid model_params for a known model_class raises."""
         config_file = tmp_path / "bad_params.py"
         config_file.write_text(
             "from pixano_inference.configs.base import ModelConfig\n"
@@ -452,7 +383,6 @@ class TestConfigLoaderIntegration:
             "models = [\n"
             "    ModelConfig(\n"
             '        name="test",\n'
-            '        task="image_mask_generation",\n'
             '        model_class="Sam2ImageModel",\n'
             '        model_params={"path": "facebook/sam2-hiera-base-plus", "unknown_param": True},\n'
             "    ),\n"
@@ -461,6 +391,5 @@ class TestConfigLoaderIntegration:
 
         from pixano_inference.ray.config_loader import ConfigLoader
 
-        loader = ConfigLoader(config_file)
         with pytest.raises(ValidationError):
-            loader.load()
+            ConfigLoader(config_file).load()

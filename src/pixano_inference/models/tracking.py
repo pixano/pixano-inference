@@ -8,6 +8,7 @@
 
 from abc import abstractmethod
 from pathlib import Path
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -94,6 +95,8 @@ class TrackingModel(InferenceModel):
                 return TrackingOutput(objects_ids=..., frame_indexes=..., masks=...)
         ```
     """
+
+    capability_name: ClassVar[str] = "tracking"
 
     @abstractmethod
     def predict(self, input: TrackingInput) -> TrackingOutput:

@@ -32,7 +32,7 @@ class MockModel(InferenceModel):
 def model():
     config = MagicMock()
     config.name = "test_model"
-    config.task = "image_mask_generation"
+    config.capability = "mock"
     config.model_class = "MockModel"
     return MockModel(config)
 
@@ -41,13 +41,13 @@ class TestInferenceModel:
     def test_model_name(self, model: MockModel):
         assert model.model_name == "test_model"
 
-    def test_task(self, model: MockModel):
-        assert model.task == "image_mask_generation"
+    def test_capability(self, model: MockModel):
+        assert model.capability == "mock"
 
     def test_metadata(self, model: MockModel):
         meta = model.metadata
         assert meta["model_name"] == "test_model"
-        assert meta["task"] == "image_mask_generation"
+        assert meta["capability"] == "mock"
         assert meta["model_class"] == "MockModel"
 
     def test_predict(self, model: MockModel):

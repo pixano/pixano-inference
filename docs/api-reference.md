@@ -17,6 +17,7 @@ pixano-inference --config models.py
 - All inference routes are synchronous `POST` endpoints.
 - There are no runtime HTTP endpoints for deploying or undeploying models.
 - Every inference request includes a `model` field that must match a deployed model name.
+- Endpoint families are capability-based: segmentation, detection, tracking, and VLM.
 
 ## Service endpoints
 
@@ -35,7 +36,7 @@ Example response:
 ```json
 {
   "app_name": "Pixano Inference",
-  "app_version": "0.5.6",
+  "app_version": "0.6.0",
   "app_description": "Pixano Inference API powered by Ray Serve",
   "num_cpus": 8,
   "num_gpus": 2,
@@ -43,8 +44,8 @@ Example response:
   "gpus_used": 1.0,
   "gpu_to_model": {},
   "models": ["sam2-image"],
-  "models_to_task": {
-    "sam2-image": "image_mask_generation"
+  "models_to_capability": {
+    "sam2-image": "segmentation"
   }
 }
 ```
@@ -57,7 +58,7 @@ Returns a list of `ModelInfo` objects:
 [
   {
     "name": "sam2-image",
-    "task": "image_mask_generation",
+    "capability": "segmentation",
     "model_path": "facebook/sam2-hiera-base-plus",
     "model_class": "Sam2ImageModel"
   }
@@ -68,15 +69,17 @@ Returns a list of `ModelInfo` objects:
 
 | Method | Path | Request schema | Response schema | Python client helper |
 |---|---|---|---|---|
-| `POST` | `/tasks/image/mask_generation/` | `SegmentationRequest` | `SegmentationResponse` | `client.segmentation()` |
-| `POST` | `/tasks/video/mask_generation/` | `TrackingRequest` | `TrackingResponse` | `client.tracking()` |
-| `POST` | `/tasks/multimodal/text-image/conditional_generation/` | `VLMRequest` | `VLMResponse` | `client.vlm()` |
-| `POST` | `/tasks/image/zero_shot_detection/` | `DetectionRequest` | `DetectionResponse` | `client.detection()` |
-| `POST` | `/tasks/image/instance_segmentation/` | `DetectionRequest` | `DetectionResponse` | `client.instance_segmentation()` |
+| `POST` | `/inference/segmentation/` | `SegmentationRequest` | `SegmentationResponse` | `client.segmentation()` |
+| `POST` | `/inference/detection/` | `DetectionRequest` | `DetectionResponse` | `client.detection()` |
+| `POST` | `/inference/tracking/` | `TrackingRequest` | `TrackingResponse` | `client.tracking()` |
+| `POST` | `/inference/vlm/` | `VLMRequest` | `VLMResponse` | `client.vlm()` |
+
+If a model exists but does not support the endpoint capability, the server
+returns `400`.
 
 The request and response models are available from `pixano_inference.schemas`.
 
-### Example: image segmentation
+### Example: segmentation
 
 ```json
 {
@@ -87,7 +90,7 @@ The request and response models are available from `pixano_inference.schemas`.
 }
 ```
 
-### Example: zero-shot detection
+### Example: detection
 
 ```json
 {
@@ -111,7 +114,7 @@ All inference endpoints return the same top-level envelope:
   "processing_time": 0.234,
   "metadata": {
     "model_name": "sam2-image",
-    "task": "image_mask_generation",
+    "capability": "segmentation",
     "model_class": "Sam2ImageModel"
   },
   "data": {}
@@ -125,7 +128,7 @@ All inference endpoints return the same top-level envelope:
 | `timestamp` | Response timestamp |
 | `processing_time` | End-to-end inference time in seconds |
 | `metadata` | Deployment metadata for the model that handled the request |
-| `data` | Task-specific payload |
+| `data` | Capability-specific payload |
 
 ## Python client
 
@@ -154,6 +157,7 @@ asyncio.run(main())
 
 ## Error responses
 
+- `400` when the model exists but does not support the requested capability.
 - `404` when the requested model name is not deployed.
 - `422` when the request body fails schema validation.
 - `500` when inference fails inside the model deployment.

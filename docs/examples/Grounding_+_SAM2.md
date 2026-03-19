@@ -69,14 +69,12 @@ from pixano_inference.configs import (
 models = [
     ModelConfig(
         name="grounding-dino",
-        task="image_zero_shot_detection",
         model_class="GroundingDINOModel",
         model_params=GroundingDINOParams(path="IDEA-Research/grounding-dino-tiny"),
         deployment=DeploymentConfig(num_gpus=1),
     ),
     ModelConfig(
         name="sam2-video",
-        task="video_mask_generation",
         model_class="Sam2VideoModel",
         model_params=Sam2VideoParams(path="facebook/sam2-hiera-tiny", torch_dtype="bfloat16", propagate=True),
         deployment=DeploymentConfig(num_gpus=1),

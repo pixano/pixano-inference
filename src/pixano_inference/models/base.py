@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from pydantic import BaseModel
 
@@ -40,6 +40,8 @@ class InferenceModel(ABC):
         ```
     """
 
+    capability_name: ClassVar[str | None] = None
+
     def __init__(self, config: ModelDeploymentConfig) -> None:
         """Initialize the model with deployment config.
 
@@ -59,16 +61,16 @@ class InferenceModel(ABC):
         return self._config.name
 
     @property
-    def task(self) -> str:
-        """Task string this model handles."""
-        return self._config.task
+    def capability(self) -> str:
+        """Capability handled by this model."""
+        return self._config.capability
 
     @property
     def metadata(self) -> dict[str, Any]:
         """Model metadata. Override for custom metadata."""
         return {
             "model_name": self.model_name,
-            "task": self.task,
+            "capability": self.capability,
             "model_class": self._config.model_class,
         }
 

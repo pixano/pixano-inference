@@ -102,7 +102,7 @@ def create_model_deployment(
             """
             return {
                 "model_name": _config.name,
-                "task": _config.task,
+                "capability": _config.capability,
                 "model_class": _config.model_class,
                 "request_count": self._request_count,
                 "total_processing_time": self._total_processing_time,

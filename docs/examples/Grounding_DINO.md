@@ -19,7 +19,6 @@ from pixano_inference.configs import DeploymentConfig, GroundingDINOParams, Mode
 models = [
     ModelConfig(
         name="grounding-dino",
-        task="image_zero_shot_detection",
         model_class="GroundingDINOModel",
         model_params=GroundingDINOParams(path="IDEA-Research/grounding-dino-tiny"),
         deployment=DeploymentConfig(num_gpus=1),

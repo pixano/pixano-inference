@@ -4,13 +4,7 @@
 # License: CECILL-C
 # =================================
 
-"""HTTP-layer Request/Response wrappers for each task.
-
-These combine ``BaseRequest`` with the task-specific ``Input`` types from
-``pixano_inference.models`` so that the HTTP layer can deserialise incoming
-JSON into a single object that carries both the ``model`` field and the
-task-specific parameters.
-"""
+"""HTTP-layer request/response wrappers for inference capabilities."""
 
 from pydantic import ConfigDict
 
@@ -22,13 +16,8 @@ from pixano_inference.models.vlm import VLMInput, VLMOutput
 from .base import BaseRequest, BaseResponse
 
 
-# ---------------------------------------------------------------------------
-# Segmentation
-# ---------------------------------------------------------------------------
-
-
 class SegmentationRequest(BaseRequest, SegmentationInput):
-    """Request for image segmentation."""
+    """Request for segmentation inference."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -38,22 +27,13 @@ class SegmentationRequest(BaseRequest, SegmentationInput):
 
 
 class SegmentationResponse(BaseResponse):
-    """Response for image segmentation.
-
-    Attributes:
-        data: Output of the segmentation.
-    """
+    """Response for segmentation inference."""
 
     data: SegmentationOutput
 
 
-# ---------------------------------------------------------------------------
-# Detection
-# ---------------------------------------------------------------------------
-
-
 class DetectionRequest(BaseRequest, DetectionInput):
-    """Request for zero-shot detection."""
+    """Request for detection inference."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -63,22 +43,13 @@ class DetectionRequest(BaseRequest, DetectionInput):
 
 
 class DetectionResponse(BaseResponse):
-    """Response for zero-shot detection.
-
-    Attributes:
-        data: Output of the detection.
-    """
+    """Response for detection inference."""
 
     data: DetectionOutput
 
 
-# ---------------------------------------------------------------------------
-# Tracking
-# ---------------------------------------------------------------------------
-
-
 class TrackingRequest(BaseRequest, TrackingInput):
-    """Request for video mask generation / tracking."""
+    """Request for tracking inference."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -88,22 +59,13 @@ class TrackingRequest(BaseRequest, TrackingInput):
 
 
 class TrackingResponse(BaseResponse):
-    """Response for video mask generation / tracking.
-
-    Attributes:
-        data: Output of the tracking.
-    """
+    """Response for tracking inference."""
 
     data: TrackingOutput
 
 
-# ---------------------------------------------------------------------------
-# VLM
-# ---------------------------------------------------------------------------
-
-
 class VLMRequest(BaseRequest, VLMInput):
-    """Request for vision-language model generation."""
+    """Request for VLM inference."""
 
     def to_input(self) -> VLMInput:
         """Convert the request to the input."""
@@ -111,10 +73,6 @@ class VLMRequest(BaseRequest, VLMInput):
 
 
 class VLMResponse(BaseResponse):
-    """Response for vision-language model generation.
-
-    Attributes:
-        data: Output of the generation.
-    """
+    """Response for VLM inference."""
 
     data: VLMOutput

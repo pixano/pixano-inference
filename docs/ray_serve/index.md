@@ -42,11 +42,10 @@ InferenceServer
             │
             ├── /health
             ├── /app/models/
-            ├── /tasks/image/mask_generation/
-            ├── /tasks/video/mask_generation/
-            ├── /tasks/multimodal/text-image/conditional_generation/
-            ├── /tasks/image/zero_shot_detection/
-            └── /tasks/image/instance_segmentation/
+            ├── /inference/segmentation/
+            ├── /inference/detection/
+            ├── /inference/tracking/
+            └── /inference/vlm/
 ```
 
 The `InferenceServer` reads a Python config file, initializes Ray, and deploys

@@ -14,7 +14,7 @@ from .rle import CompressedRLE
 
 
 def __getattr__(name: str):
-    """Lazy imports for task schemas to avoid circular imports with models/."""
+    """Lazy imports for inference schemas to avoid circular imports with models/."""
     _task_names = {
         "DetectionRequest",
         "DetectionResponse",
@@ -26,7 +26,7 @@ def __getattr__(name: str):
         "VLMResponse",
     }
     if name in _task_names:
-        from . import tasks as _tasks
+        from . import inference as _inference
 
-        return getattr(_tasks, name)
+        return getattr(_inference, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

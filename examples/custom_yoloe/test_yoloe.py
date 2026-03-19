@@ -133,7 +133,7 @@ async def main() -> None:
     models = await client.list_models()
     if models:
         for model in models:
-            print(f"  - {model.name} (task={model.task})")
+            print(f"  - {model.name} (capability={model.capability})")
     else:
         print("  No models deployed.")
         sys.exit(1)
@@ -167,7 +167,7 @@ async def main() -> None:
             classes=None,
             box_threshold=args.threshold,
         )
-        result = await client.instance_segmentation(request)
+        result = await client.detection(request)
         print(f"Status: {result.status}")
         print(f"Processing time: {result.processing_time:.3f}s")
         print(f"Detections: {len(result.data.boxes)}")
@@ -194,7 +194,7 @@ async def main() -> None:
             classes=classes,
             box_threshold=args.threshold,
         )
-        result = await client.instance_segmentation(request)
+        result = await client.detection(request)
         print(f"Status: {result.status}")
         print(f"Processing time: {result.processing_time:.3f}s")
         print(f"Detections: {len(result.data.boxes)}")

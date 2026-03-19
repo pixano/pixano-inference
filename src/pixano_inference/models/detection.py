@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from pathlib import Path
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict
 
@@ -78,6 +79,8 @@ class DetectionModel(InferenceModel):
                 return DetectionOutput(boxes=boxes, scores=scores, classes=cls)
         ```
     """
+
+    capability_name: ClassVar[str] = "detection"
 
     @abstractmethod
     def predict(self, input: DetectionInput) -> DetectionOutput:

@@ -58,7 +58,6 @@ from pixano_inference.configs import DeploymentConfig, ModelConfig, Sam2VideoPar
 models = [
     ModelConfig(
         name="sam2-video",
-        task="video_mask_generation",
         model_class="Sam2VideoModel",
         model_params=Sam2VideoParams(path="facebook/sam2-hiera-tiny", torch_dtype="bfloat16", propagate=True),
         deployment=DeploymentConfig(num_gpus=1),

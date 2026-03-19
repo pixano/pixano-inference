@@ -8,6 +8,7 @@
 
 from abc import abstractmethod
 from pathlib import Path
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -96,6 +97,8 @@ class SegmentationModel(InferenceModel):
                 return SegmentationOutput(masks=masks, scores=scores)
         ```
     """
+
+    capability_name: ClassVar[str] = "segmentation"
 
     @abstractmethod
     def predict(self, input: SegmentationInput) -> SegmentationOutput:

@@ -79,7 +79,6 @@ from pixano_inference.configs import DeploymentConfig, ModelConfig, Sam2ImagePar
 models = [
     ModelConfig(
         name="sam2-image",
-        task="image_mask_generation",
         model_class="Sam2ImageModel",
         model_params=Sam2ImageParams(path="facebook/sam2-hiera-tiny", torch_dtype="bfloat16"),
         deployment=DeploymentConfig(num_gpus=1),

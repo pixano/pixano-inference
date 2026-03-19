@@ -107,8 +107,8 @@ class TestPixanoInferenceClient:
     @pytest.mark.asyncio
     async def test_list_models(self, httpx_mock: HTTPXMock, simple_pixano_inference_client: PixanoInferenceClient):
         models_info = [
-            ModelInfo(**{"name": "sam", "task": "image_mask_generation"}),
-            ModelInfo(**{"name": "sam2", "task": "video_mask_generation"}),
+            ModelInfo(**{"name": "sam", "capability": "segmentation"}),
+            ModelInfo(**{"name": "sam2", "capability": "tracking"}),
         ]
         httpx_mock.add_response(json=[m.model_dump() for m in models_info])
 
@@ -132,7 +132,7 @@ class TestPixanoInferenceClient:
 
         request = SegmentationRequest(model="facebook/sam-vit-base", image="https://example.com/image.jpg")
         result = await simple_pixano_inference_client.inference(
-            route="tasks/image/mask_generation/",
+            route="inference/segmentation/",
             request=request,
             response_type=SegmentationResponse,
         )
@@ -160,3 +160,6 @@ class TestPixanoInferenceClient:
         result = await simple_pixano_inference_client.segmentation(request=request)
         assert isinstance(result, SegmentationResponse)
         assert result.id == "mask-gen-id"
+
+    def test_instance_segmentation_helper_removed(self, simple_pixano_inference_client: PixanoInferenceClient):
+        assert not hasattr(simple_pixano_inference_client, "instance_segmentation")

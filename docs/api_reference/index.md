@@ -25,7 +25,6 @@ Pixano-Inference API.
   HTTP-layer request/response schemas and shared helper types.
 - `pixano_inference.settings`
   Runtime settings exposed by the server.
-- `pixano_inference.tasks`
   Task enums and task-string helpers.
 - `pixano_inference.utils`
   Shared helper utilities.

@@ -4,7 +4,7 @@
 # License: CECILL-C
 # =================================
 
-"""Task inference routes with schema bridging."""
+"""Capability-based inference routes with schema bridging."""
 
 from __future__ import annotations
 
@@ -17,11 +17,7 @@ from typing import TYPE_CHECKING, Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from pixano_inference.models.detection import DetectionInput
-from pixano_inference.models.segmentation import SegmentationInput
-from pixano_inference.models.tracking import TrackingInput
-from pixano_inference.models.vlm import VLMInput
-from pixano_inference.schemas.tasks import (
+from pixano_inference.schemas.inference import (
     DetectionRequest,
     SegmentationRequest,
     TrackingRequest,
@@ -39,7 +35,7 @@ async def _run_inference(
     deployment_manager: DeploymentManager,
     model_name: str,
     input_data: BaseModel,
-    task_name: str,
+    expected_capability: str,
 ) -> dict[str, Any]:
     """Run inference on a deployed model.
 
@@ -47,7 +43,7 @@ async def _run_inference(
         deployment_manager: The deployment manager instance.
         model_name: Name of the model to run inference on.
         input_data: Typed Input object to pass to the model.
-        task_name: Task name for error messages.
+        expected_capability: Capability expected by the endpoint.
 
     Returns:
         Response dictionary.
@@ -55,6 +51,16 @@ async def _run_inference(
     handle = deployment_manager.get_handle(model_name)
     if handle is None:
         raise HTTPException(status_code=404, detail=f"Model '{model_name}' not found")
+
+    actual_capability = deployment_manager.get_model_capability(model_name)
+    if actual_capability != expected_capability:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Model '{model_name}' does not support '{expected_capability}' inference. "
+                f"It is deployed as '{actual_capability}'."
+            ),
+        )
 
     start_time = time.time()
 
@@ -65,7 +71,7 @@ async def _run_inference(
             None, lambda: ray.get(handle.predict.remote(input_data))
         )
     except Exception as e:
-        logger.exception(f"Inference error for model '{model_name}' on task '{task_name}': {e}")
+        logger.exception(f"Inference error for model '{model_name}' on capability '{expected_capability}': {e}")
         raise HTTPException(status_code=500, detail=f"Inference error: {e}")
 
     processing_time = time.time() - start_time
@@ -81,41 +87,33 @@ async def _run_inference(
 
 
 def register_inference_routes(app: FastAPI, deployment_manager: DeploymentManager) -> None:
-    """Register task inference endpoints.
+    """Register capability-based inference endpoints.
 
     Args:
         app: FastAPI application.
         deployment_manager: The deployment manager instance.
     """
 
-    @app.post("/tasks/image/mask_generation/")
-    async def image_mask_generation(request: SegmentationRequest) -> dict[str, Any]:
-        """Run image mask generation inference."""
-        input_obj = request.to_base_model(SegmentationInput)
-        return await _run_inference(deployment_manager, request.model, input_obj, "image_mask_generation")
+    @app.post("/inference/segmentation/")
+    async def segmentation(request: SegmentationRequest) -> dict[str, Any]:
+        """Run segmentation inference."""
+        input_obj = request.to_input()
+        return await _run_inference(deployment_manager, request.model, input_obj, "segmentation")
 
-    @app.post("/tasks/video/mask_generation/")
-    async def video_mask_generation(request: TrackingRequest) -> dict[str, Any]:
-        """Run video mask generation inference."""
-        input_obj = request.to_base_model(TrackingInput)
-        return await _run_inference(deployment_manager, request.model, input_obj, "video_mask_generation")
+    @app.post("/inference/tracking/")
+    async def tracking(request: TrackingRequest) -> dict[str, Any]:
+        """Run tracking inference."""
+        input_obj = request.to_input()
+        return await _run_inference(deployment_manager, request.model, input_obj, "tracking")
 
-    @app.post("/tasks/multimodal/text-image/conditional_generation/")
-    async def text_image_conditional_generation(
-        request: VLMRequest,
-    ) -> dict[str, Any]:
-        """Run text-image conditional generation inference."""
-        input_obj = request.to_base_model(VLMInput)
-        return await _run_inference(deployment_manager, request.model, input_obj, "text_image_conditional_generation")
+    @app.post("/inference/vlm/")
+    async def vlm(request: VLMRequest) -> dict[str, Any]:
+        """Run VLM inference."""
+        input_obj = request.to_input()
+        return await _run_inference(deployment_manager, request.model, input_obj, "vlm")
 
-    @app.post("/tasks/image/zero_shot_detection/")
-    async def image_zero_shot_detection(request: DetectionRequest) -> dict[str, Any]:
-        """Run image zero-shot detection inference."""
-        input_obj = request.to_base_model(DetectionInput)
-        return await _run_inference(deployment_manager, request.model, input_obj, "image_zero_shot_detection")
-
-    @app.post("/tasks/image/instance_segmentation/")
-    async def image_instance_segmentation(request: DetectionRequest) -> dict[str, Any]:
-        """Run image instance segmentation inference."""
-        input_obj = request.to_base_model(DetectionInput)
-        return await _run_inference(deployment_manager, request.model, input_obj, "image_instance_segmentation")
+    @app.post("/inference/detection/")
+    async def detection(request: DetectionRequest) -> dict[str, Any]:
+        """Run detection inference."""
+        input_obj = request.to_input()
+        return await _run_inference(deployment_manager, request.model, input_obj, "detection")
