@@ -30,7 +30,7 @@ class TrackingInput(BaseModel):
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    video: list[str] | list[Path] | str | Path
+    video: list[str | Path] | str | Path
     points: list[list[list[int]]] | None = None
     labels: list[list[int]] | None = None
     boxes: list[list[int]] | None = None

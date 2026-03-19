@@ -1,3 +1,11 @@
+<!---
+# =================================
+# Copyright: CEA-LIST/DIASI/SIALV
+# Author : pixano@cea.fr
+# License: CECILL-C
+# =================================
+--->
+
 # Pixano Inference HTTP API
 
 This document describes the HTTP API exposed by the Ray Serve-based Pixano

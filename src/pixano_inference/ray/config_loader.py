@@ -60,20 +60,21 @@ class ConfigLoader:
             FileNotFoundError: If the config file does not exist.
             ValueError: If the config is invalid or has an unsupported extension.
         """
-        if self._config_path is None:
+        config_path = self._config_path
+        if config_path is None:
             return []
 
-        if not self._config_path.exists():
-            raise FileNotFoundError(f"Config file not found: {self._config_path}")
+        if not config_path.exists():
+            raise FileNotFoundError(f"Config file not found: {config_path}")
 
-        suffix = self._config_path.suffix.lower()
+        suffix = config_path.suffix.lower()
         if suffix not in _PYTHON_EXTENSIONS:
             raise ValueError(
                 f"Unsupported config file extension '{suffix}'. Only Python (.py) config files are supported."
             )
-        return self._load_python()
+        return self._load_python(config_path)
 
-    def _load_python(self) -> list[ModelDeploymentConfig]:
+    def _load_python(self, config_path: Path) -> list[ModelDeploymentConfig]:
         """Load model deployment configurations from a Python file.
 
         The Python file must define a ``models`` variable that is a list of
@@ -89,24 +90,23 @@ class ConfigLoader:
         """
         from pixano_inference.configs.base import ModelConfig
 
-        module = self._import_python_config(self._config_path)
+        module = self._import_python_config(config_path)
 
         if not hasattr(module, "models"):
             raise ValueError(
-                f"Python config '{self._config_path}' must define a 'models' variable. "
-                f"Example: models = [ModelConfig(...)]"
+                f"Python config '{config_path}' must define a 'models' variable. Example: models = [ModelConfig(...)]"
             )
 
         models = module.models
         if not isinstance(models, list):
-            raise TypeError(f"Expected 'models' to be a list, got {type(models).__name__} in '{self._config_path}'")
+            raise TypeError(f"Expected 'models' to be a list, got {type(models).__name__} in '{config_path}'")
 
         configs: list[ModelDeploymentConfig] = []
         seen_names: set[str] = set()
         for i, item in enumerate(models):
             if not isinstance(item, ModelConfig):
                 raise TypeError(
-                    f"Expected ModelConfig instance at models[{i}], got {type(item).__name__} in '{self._config_path}'"
+                    f"Expected ModelConfig instance at models[{i}], got {type(item).__name__} in '{config_path}'"
                 )
             config = item.to_deployment_config()
             if config.name in seen_names:
@@ -117,7 +117,7 @@ class ConfigLoader:
             seen_names.add(config.name)
             configs.append(config)
 
-        logger.info(f"Loaded {len(configs)} model configurations from {self._config_path}")
+        logger.info(f"Loaded {len(configs)} model configurations from {config_path}")
         return configs
 
     @staticmethod

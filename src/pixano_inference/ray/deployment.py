@@ -125,6 +125,6 @@ def create_model_deployment(
             return True
 
     # Create the actor and wait for it to be ready (model loaded)
-    handle = ModelActor.remote()
+    handle = ModelActor.remote()  # type: ignore[attr-defined]
     ray.get(handle.ready.remote())
     return handle

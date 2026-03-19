@@ -87,9 +87,7 @@ class DeploymentManager:
 
         self._handles[config.name] = handle
         self._configs[config.name] = config
-        logger.info(
-            f"Deployed model '{config.name}' (class={config.model_class}, capability={config.capability})"
-        )
+        logger.info(f"Deployed model '{config.name}' (class={config.model_class}, capability={config.capability})")
 
     def undeploy_model(self, name: str) -> None:
         """Undeploy a model.
@@ -162,7 +160,9 @@ class DeploymentManager:
             ModelInfo(
                 name=config.name,
                 capability=config.capability,
-                model_path=config.model_params.get("path"),
+                model_path=config.model_params.get("path")
+                if isinstance(config.model_params.get("path"), str)
+                else None,
                 model_class=config.model_class,
             )
             for config in self._configs.values()

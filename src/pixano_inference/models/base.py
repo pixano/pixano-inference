@@ -4,6 +4,8 @@
 # License: CECILL-C
 # =================================
 
+"""Shared base class for deployed inference models."""
+
 from __future__ import annotations
 
 import logging

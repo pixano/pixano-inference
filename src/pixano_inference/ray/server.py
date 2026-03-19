@@ -26,6 +26,8 @@ from .utils import build_runtime_env
 if TYPE_CHECKING:
     from pixano_inference.configs.base import ModelConfig
 
+    from .app import DeploymentManager
+
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +65,7 @@ class InferenceServer:
         """
         self._config = config or RayServeConfig()
         self._running = False
-        self._deployment_manager = None
+        self._deployment_manager: DeploymentManager | None = None
 
     @property
     def config(self) -> RayServeConfig:
@@ -144,12 +146,13 @@ class InferenceServer:
             logger.info(f"Ray initialized with runtime_env: {runtime_env}")
 
         # Create FastAPI app and deployment manager
-        fastapi_app, self._deployment_manager = create_ray_serve_app(self._config)
+        fastapi_app, deployment_manager = create_ray_serve_app(self._config)
+        self._deployment_manager = deployment_manager
 
         # Deploy startup models
         for model_config in self._config.models:
             try:
-                self._deployment_manager.deploy_model(model_config)
+                deployment_manager.deploy_model(model_config)
                 logger.info(f"Startup model '{model_config.name}' deployed")
             except Exception as e:
                 logger.error(f"Failed to deploy startup model '{model_config.name}': {e}")

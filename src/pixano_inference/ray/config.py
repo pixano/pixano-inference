@@ -60,7 +60,7 @@ class ModelDeploymentConfig(BaseModel):
         batch_wait_timeout_s: Timeout for waiting to fill batch.
     """
 
-    name: str | None = None
+    name: str
     capability: str
     model_class: str
     model_module: str | None = Field(

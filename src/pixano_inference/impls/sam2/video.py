@@ -11,6 +11,7 @@ from __future__ import annotations
 import gc
 import logging
 from collections import OrderedDict
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -254,7 +255,7 @@ class Sam2VideoModel(TrackingModel):
 
     def _load_video_frames_from_images(
         self,
-        frames: list[str] | list[Path],
+        frames: Sequence[str | Path],
         image_size: int,
         compute_device: Any,
         images_mean: tuple[float, float, float] = (0.485, 0.456, 0.406),

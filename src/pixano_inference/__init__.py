@@ -4,4 +4,9 @@
 # License: CECILL-C
 # =================================
 
-from .__version__ import __version__
+"""Top-level package for pixano-inference."""
+
+from .__version__ import __version__ as __version__
+
+
+__all__ = ["__version__"]

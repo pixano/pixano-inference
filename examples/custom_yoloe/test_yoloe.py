@@ -34,7 +34,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
-import requests
+import requests  # type: ignore[import-untyped]
 from fastapi import HTTPException
 
 from pixano_inference.client import PixanoInferenceClient
@@ -117,10 +117,7 @@ async def main() -> None:
     except requests.ConnectionError:
         print("\nERROR: Server is not running!")
         print("Start the server with:")
-        print(
-            "  pixano-inference "
-            "--module-path examples --config examples/custom_yoloe/config.py"
-        )
+        print("  pixano-inference --module-path examples --config examples/custom_yoloe/config.py")
         sys.exit(1)
     except Exception as e:
         print(f"\nERROR: Failed to connect: {type(e).__name__}: {e}")

@@ -8,8 +8,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import importlib
+from collections.abc import Callable
 from typing import Any
 
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
@@ -196,6 +196,25 @@ class ModelConfig(BaseModel):
         return infer_http_capability(self._resolved_model_class)
 
     @property
+    def resolved_name(self) -> str:
+        """Resolved deployment name for the configured model."""
+        if self.name is not None:
+            return self.name
+
+        raw_path: Any | None = None
+        if isinstance(self.model_params, BaseModelParams):
+            raw_path = self.model_params.path
+        elif isinstance(self.model_params, dict):
+            raw_path = self.model_params.get("path")
+
+        if isinstance(raw_path, str):
+            normalized_path = raw_path.rstrip("/")
+            if normalized_path:
+                return normalized_path.split("/")[-1]
+
+        return self.model_class_name
+
+    @property
     def model_class_name(self) -> str:
         """Registered name of the configured model class."""
         if isinstance(self.model_class, type):
@@ -213,8 +232,7 @@ class ModelConfig(BaseModel):
                 imported_module = importlib.import_module(self.model_module)
             except ImportError as exc:
                 raise ValueError(
-                    f"Failed to import model_module '{self.model_module}' for model "
-                    f"'{self.model_class_name}': {exc}"
+                    f"Failed to import model_module '{self.model_module}' for model '{self.model_class_name}': {exc}"
                 ) from exc
 
         if isinstance(self.model_class, type):
@@ -251,7 +269,7 @@ class ModelConfig(BaseModel):
         else:
             model_params = self.model_params
         return ModelDeploymentConfig(
-            name=self.name,
+            name=self.resolved_name,
             capability=self.capability,
             model_class=self.model_class_name,
             model_module=self.model_module,
