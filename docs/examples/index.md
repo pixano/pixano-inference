@@ -8,7 +8,9 @@
 
 # Examples
 
-In this section, we cover the following use cases that can be done using Pixano-Inference:
+All examples below assume you have a running Pixano-Inference server started
+from a Python config file.
+See the [Quickstart](../ray_serve/quickstart.md) for setup instructions.
 
 - [Visual Question Answering](./VQA.md)
 - [Image Mask Generation (SAM2)](./SAM2_image.md)

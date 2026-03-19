@@ -32,7 +32,11 @@
 
 ## Context
 
-This library aims to provide a common ecosystem to launch inference for various Artificial Intelligence tasks from different providers (Open-AI, transformers, sam2, ...). It has first been implemented to work in par with the [Pixano](https://pixano.github.io/pixano/latest/) AI-powered annotation tool.
+This library provides a Ray Serve-based inference server for multimodal AI
+tasks. It was first built to support the
+[Pixano](https://pixano.github.io/pixano/latest/) AI-powered annotation tool
+and exposes typed deployment configs, a Python client, and a REST API for
+running deployed models.
 
 ## Installation
 

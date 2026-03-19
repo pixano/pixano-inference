@@ -6,9 +6,9 @@
 # =================================
 --->
 
-# Grounding DINO
+# SAM2 Image Segmentation
 
-## Define the visualization utilities (from SAM2)
+## Define visualization utilities
 
 ```python
 import matplotlib.pyplot as plt
@@ -30,7 +30,6 @@ def show_mask(mask, ax, random_color=False, borders=True):
         import cv2
 
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        # Try to smooth contours
         contours = [cv2.approxPolyDP(contour, epsilon=0.01, closed=True) for contour in contours]
         mask_image = cv2.drawContours(mask_image, contours, -1, (1, 1, 1, 0.5), thickness=2)
     ax.imshow(mask_image)
@@ -62,7 +61,6 @@ def show_masks(image, masks, scores, point_coords=None, box_coords=None, input_l
             assert input_labels is not None
             show_points(point_coords, input_labels, plt.gca())
         if box_coords is not None:
-            # boxes
             show_box(box_coords, plt.gca())
         if len(scores) > 1:
             plt.title(f"Mask {i+1}, Score: {score:.3f}", fontsize=18)
@@ -70,43 +68,78 @@ def show_masks(image, masks, scores, point_coords=None, box_coords=None, input_l
         plt.show()
 ```
 
-## Instantiate the model
+## Python config
+
+Deploy SAM2 for image segmentation:
 
 ```python
-from pixano_inference.providers.sam2 import Sam2Provider
+from pixano_inference.configs import DeploymentConfig, ModelConfig, Sam2ImageParams
 
 
-provider = Sam2Provider()
-model = provider.load_model(
-    "sam",
-    "video_mask_generation",
-    torch.device("cuda") if torch.cuda.is_available() else "cpu",
-    "facebook/sam2-hiera-tiny",
-)
+models = [
+    ModelConfig(
+        name="sam2-image",
+        task="image_mask_generation",
+        model_class="Sam2ImageModel",
+        model_params=Sam2ImageParams(path="facebook/sam2-hiera-tiny", torch_dtype="bfloat16"),
+        deployment=DeploymentConfig(num_gpus=1),
+    )
+]
 ```
 
-## Call the model
+## Start the server
+
+```bash
+pixano-inference --config models.py
+```
+
+## Connect the client and run inference
 
 ```python
-from pathlib import Path
+import asyncio
+import base64
 
-from pixano_inference.utils import convert_string_to_image
+from pixano_inference.client import PixanoInferenceClient
+from pixano_inference.schemas import SegmentationRequest
 
 
-image = convert_string_to_image(Path("./docs/assets/examples/sam2/truck.jpg"))
-points = [[[300, 375]], [[500, 375], [3, 3]]]
-labels = [[1], [1, 0]]
-generation_output = model.image_mask_generation(
-    image=image, points=points, labels=labels, boxes=None, multimask_output=True
-)
+async def main():
+    client = PixanoInferenceClient.connect(url="http://localhost:7463")
+
+    # Encode the image as base64
+    with open("./docs/assets/examples/sam2/truck.jpg", "rb") as f:
+        image_b64 = "data:image/jpeg;base64," + base64.b64encode(f.read()).decode()
+
+    points = [[[300, 375]], [[500, 375], [3, 3]]]
+    labels = [[1], [1, 0]]
+
+    request = SegmentationRequest(
+        model="sam2-image",
+        image=image_b64,
+        points=points,
+        labels=labels,
+        multimask_output=True,
+    )
+    response = await client.segmentation(request)
+
+    print(f"Processing time: {response.processing_time:.3f}s")
+    print(f"Scores: {response.data.scores.to_numpy()}")
+
+    return response
+
+
+response = asyncio.run(main())
 ```
 
 ## Display the result
 
 ```python
-plt.figure(figsize=(10, 10))
-masks = generation_output.masks
-scores = generation_output.scores.to_numpy()
+from PIL import Image
+
+image = Image.open("./docs/assets/examples/sam2/truck.jpg")
+masks = response.data.masks
+scores = response.data.scores.to_numpy()
+
 for pred_points, pred_labels, pred_masks, score in zip(points, labels, masks, scores):
     np_points = np.array(pred_points)
     np_labels = np.array(pred_labels)
