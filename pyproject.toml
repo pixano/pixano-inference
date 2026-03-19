@@ -53,10 +53,6 @@ dependencies = [
 readme = "README.md"
 
 [project.optional-dependencies]
-data = [
-  "polars < 2.0.0",
-  "pylance >= 0.18.0, < 0.21.0",
-]
 docs=[
   "mike >= 2.1.0, < 3.0.0",
   "mkdocs >= 1.6.0, < 2.0.0",

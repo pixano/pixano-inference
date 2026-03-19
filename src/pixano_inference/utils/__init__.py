@@ -17,14 +17,12 @@ from .media import (
     is_base64_video,
 )
 from .package import (
-    assert_lance_installed,
     assert_package_installed,
     assert_sam2_installed,
     assert_sam3_installed,
     assert_torch_installed,
     assert_transformers_installed,
     assert_vllm_installed,
-    is_lance_installed,
     is_package_installed,
     is_sam2_installed,
     is_sam3_installed,

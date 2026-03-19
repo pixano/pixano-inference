@@ -22,15 +22,6 @@ def is_package_installed(package_name: str) -> bool:
     return package_spec is not None
 
 
-def is_lance_installed() -> bool:
-    """Check if the lance package is installed.
-
-    Returns:
-        True if the lance package is installed, False otherwise
-    """
-    return is_package_installed("lance")
-
-
 def is_sam2_installed() -> bool:
     """Check if the sam2 package is installed.
 
@@ -89,13 +80,6 @@ def assert_package_installed(package_name: str, error_message: str | None = None
     if not is_package_installed(package_name):
         message = error_message or f"Package '{package_name}' is not installed."
         raise ImportError(message)
-
-
-def assert_lance_installed() -> None:
-    """Assert that the lance package is installed."""
-    assert_package_installed(
-        "lance", "lance is not installed. Please install it using 'pip install pixano-inference[data]'."
-    )
 
 
 def assert_sam2_installed() -> None:

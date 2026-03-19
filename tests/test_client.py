@@ -5,7 +5,9 @@
 # =================================
 
 
+import base64
 import re
+from datetime import datetime
 
 import pytest
 import responses
@@ -13,7 +15,11 @@ from fastapi import HTTPException
 from pytest_httpx import HTTPXMock
 
 from pixano_inference.client import PixanoInferenceClient
-from pixano_inference.pydantic import ModelInfo
+from pixano_inference.schemas import (
+    ModelInfo,
+    SegmentationRequest,
+    SegmentationResponse,
+)
 from pixano_inference.settings import Settings
 
 
@@ -101,14 +107,56 @@ class TestPixanoInferenceClient:
     @pytest.mark.asyncio
     async def test_list_models(self, httpx_mock: HTTPXMock, simple_pixano_inference_client: PixanoInferenceClient):
         models_info = [
-            ModelInfo(**{"name": "sam", "provider": "transformers", "task": "image_mask_generation"}),
-            ModelInfo(**{"name": "sam2", "provider": "sam2", "task": "video_mask_generation"}),
+            ModelInfo(**{"name": "sam", "task": "image_mask_generation"}),
+            ModelInfo(**{"name": "sam2", "task": "video_mask_generation"}),
         ]
         httpx_mock.add_response(json=[m.model_dump() for m in models_info])
 
         assert (await simple_pixano_inference_client.list_models()) == models_info
 
     @pytest.mark.asyncio
-    async def test_delete_model(self, httpx_mock: HTTPXMock, simple_pixano_inference_client: PixanoInferenceClient):
-        httpx_mock.add_response()
-        assert await simple_pixano_inference_client.delete_model("model_name") is None
+    async def test_inference(self, httpx_mock: HTTPXMock, simple_pixano_inference_client: PixanoInferenceClient):
+        counts_b64 = base64.b64encode(b"\x01\x02\x03").decode()
+        mock_response = {
+            "id": "test-task-id",
+            "status": "SUCCESS",
+            "timestamp": datetime.now().isoformat(),
+            "processing_time": 0.5,
+            "metadata": {"model": "facebook/sam-vit-base"},
+            "data": {
+                "masks": [[{"size": [100, 100], "counts": counts_b64}]],
+                "scores": {"values": [0.99], "shape": [1]},
+            },
+        }
+        httpx_mock.add_response(json=mock_response)
+
+        request = SegmentationRequest(model="facebook/sam-vit-base", image="https://example.com/image.jpg")
+        result = await simple_pixano_inference_client.inference(
+            route="tasks/image/mask_generation/",
+            request=request,
+            response_type=SegmentationResponse,
+        )
+        assert isinstance(result, SegmentationResponse)
+        assert result.id == "test-task-id"
+        assert result.status == "SUCCESS"
+
+    @pytest.mark.asyncio
+    async def test_segmentation(self, httpx_mock: HTTPXMock, simple_pixano_inference_client: PixanoInferenceClient):
+        counts_b64 = base64.b64encode(b"\x01\x02\x03").decode()
+        mock_response = {
+            "id": "mask-gen-id",
+            "status": "SUCCESS",
+            "timestamp": datetime.now().isoformat(),
+            "processing_time": 1.2,
+            "metadata": {"model": "facebook/sam-vit-base"},
+            "data": {
+                "masks": [[{"size": [100, 100], "counts": counts_b64}]],
+                "scores": {"values": [0.95], "shape": [1]},
+            },
+        }
+        httpx_mock.add_response(json=mock_response)
+
+        request = SegmentationRequest(model="facebook/sam-vit-base", image="https://example.com/image.jpg")
+        result = await simple_pixano_inference_client.segmentation(request=request)
+        assert isinstance(result, SegmentationResponse)
+        assert result.id == "mask-gen-id"

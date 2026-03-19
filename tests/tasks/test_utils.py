@@ -6,8 +6,15 @@
 
 import pytest
 
-from pixano_inference.tasks import ImageTask, MultimodalImageNLPTask, NLPTask, VideoTask
-from pixano_inference.tasks.utils import get_tasks, is_task, str_to_task
+from pixano_inference.tasks import (
+    ImageTask,
+    MultimodalImageNLPTask,
+    NLPTask,
+    VideoTask,
+    get_tasks,
+    is_task,
+    str_to_task,
+)
 
 
 def test_is_task():
