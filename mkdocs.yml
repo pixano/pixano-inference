@@ -114,6 +114,10 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
 
 nav:
   - "Home": https://pixano.github.io/
@@ -122,5 +126,10 @@ nav:
   - "Pixano-Inference":
       - "Home": home/
       - "Getting Started": getting_started/
+      - "Server Deployment":
+          - "Overview": ray_serve/index.md
+          - "Quickstart": ray_serve/quickstart.md
+          - "Custom Models Guide": ray_serve/custom_models.md
       - "Examples": examples/
+      - "HTTP API Reference": api-reference.md
       - "API reference": api_reference/
