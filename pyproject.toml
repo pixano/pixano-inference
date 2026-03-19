@@ -1,7 +1,3 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [project]
 name = "pixano-inference"
 description = "Deploy inference models served for Artificial Intelligence solutions including but not limited to Pixano."
@@ -40,25 +36,25 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-  "click >= 8.0.0",
+  "typer >= 0.9.0",
   "fastapi >= 0.100.0",
   "httpx",
   "numpy < 2.0.0",
   "pydantic >= 2.0.0, < 3.0.0",
   "pydantic_settings",
   "Pillow >= 9.0.0",
-  "polars < 2.0.0",
   "pycocotools",
   "python-dotenv~=1.0.1",
   "requests",
   "uvicorn >= 0.31.0",
-  "celery[redis]==5.5.0rc4",
-  "redis[hiredis]~=5.2.1"
+  "ray[serve] >= 2.0.0, < 3.0.0",
+  "pyyaml >= 6.0.0",
 ]
 readme = "README.md"
 
 [project.optional-dependencies]
 data = [
+  "polars < 2.0.0",
   "pylance >= 0.18.0, < 0.21.0",
 ]
 docs=[
@@ -70,6 +66,12 @@ docs=[
   "mkdocs-literate-nav >= 0.6.0",
   "mkdocs-redirects >= 1.2.1",
 ]
+sam2 = [
+  "sam-2 @ git+https://github.com/facebookresearch/sam2.git",
+  "torch >= 2.3.0, < 3.0.0",
+]
+# Placeholder for future SAM3 integration
+sam3 = []
 torch=[
   "torch >= 2.3.0, < 3.0.0",
 ]
@@ -77,6 +79,7 @@ transformers=[
   "accelerate",
   "bitsandbytes",
   "torch >= 2.3.0, < 3.0.0",
+  "torchvision",
   "transformers >= 4.0.0, < 5.0.0",
 ]
 test=[
@@ -89,17 +92,21 @@ test=[
   "responses",
 ]
 vllm=[
-  "vllm",
+  "vllm >= 0.6.0; sys_platform == 'linux'",
 ]
 
 [project.scripts]
-pixano-inference = "pixano_inference.main:serve"
+pixano-inference = "pixano_inference.main:app"
 
 [project.urls]
 "Bug Tracker" = "http://is154588.intra.cea.fr/pixano/pixano-inference/issues"
 "Download" = "http://is154588.intra.cea.fr/pixano/pixano-inference"
 "Homepage" = "http://is154588.intra.cea.fr/pixano/pixano-inference"
 "Source Code" = "http://is154588.intra.cea.fr/pixano/pixano-inference"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.ruff]
 line-length = 119
@@ -131,3 +138,16 @@ path = "src/pixano_inference/__version__.py"
 
 [tool.hatch.metadata]
 allow-direct-references = true
+
+[tool.uv]
+default-groups = ["dev"]
+
+environments = [
+  "sys_platform == 'linux'",
+  "sys_platform == 'darwin'",
+]
+
+[dependency-groups]
+dev = [
+  "pixano-inference[test,docs,transformers,sam2]",
+]

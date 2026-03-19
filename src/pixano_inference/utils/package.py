@@ -40,6 +40,15 @@ def is_sam2_installed() -> bool:
     return is_package_installed("sam2")
 
 
+def is_sam3_installed() -> bool:
+    """Check if the sam3 package is installed.
+
+    Returns:
+        True if the sam3 package is installed, False otherwise
+    """
+    return is_package_installed("sam3")
+
+
 def is_torch_installed() -> bool:
     """Check if the torch package is installed.
 
@@ -94,6 +103,14 @@ def assert_sam2_installed() -> None:
     assert_package_installed(
         "sam2",
         "sam2 is not installed. Please install it using 'pip install git+https://github.com/facebookresearch/sam2.git'.",
+    )
+
+
+def assert_sam3_installed() -> None:
+    """Assert that the sam3 package is installed."""
+    assert_package_installed(
+        "sam3",
+        "sam3 is not installed. Please install it using 'pip install pixano-inference[sam3]'.",
     )
 
 

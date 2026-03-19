@@ -4,60 +4,54 @@
 # License: CECILL-C
 # =================================
 
-"""Main application entry point."""
+"""CLI entrypoint for starting the Pixano Inference server."""
 
-import click
-import uvicorn
-from fastapi import APIRouter, FastAPI
-from fastapi.responses import RedirectResponse
+import sys
+from pathlib import Path
+from typing import Annotated, Optional
 
-from . import PIXANO_INFERENCE_SETTINGS, routers
-
-
-router = APIRouter()
+import typer
 
 
-@router.get("/", include_in_schema=False)
-async def docs_redirect() -> RedirectResponse:
-    """Redirect homepage to docs."""
-    return RedirectResponse(url="/docs")
+app = typer.Typer(add_completion=False)
 
 
-def create_app() -> FastAPI:
-    """Create the FastAPI application."""
-    app = FastAPI(
-        name=PIXANO_INFERENCE_SETTINGS.app_name,
-        description=PIXANO_INFERENCE_SETTINGS.app_description,
-        version=PIXANO_INFERENCE_SETTINGS.app_version,
-    )
-    app.include_router(routers.tasks.router)
-    app.include_router(routers.providers.router)
-    app.include_router(routers.app.router)
+@app.command()
+def serve(
+    host: Annotated[str, typer.Option(help="Pixano Inference app URL host")] = "127.0.0.1",
+    port: Annotated[int, typer.Option(help="Pixano Inference app URL port")] = 7463,
+    config: Annotated[
+        Optional[Path], typer.Option(exists=True, help="Path to Python config file (.py) for model deployments")
+    ] = None,
+    module_path: Annotated[
+        Optional[list[Path]],
+        typer.Option(help="Directory to add to Python path for custom model modules. Can be repeated."),
+    ] = None,
+):
+    """Start the Pixano Inference server.
 
-    app.include_router(router)
-    return app
+    Examples:
+        # Start the server
+        pixano-inference --host 0.0.0.0 --port 7463
 
+        # Start with Python config
+        pixano-inference --host 0.0.0.0 --port 7463 --config models.py
 
-fast_api_app = create_app()
+        # Start with custom model modules
+        pixano-inference --module-path /path/to/my-models --config my_config.py
+    """
+    if module_path:
+        for p in module_path:
+            resolved = str(p.resolve())
+            if resolved not in sys.path:
+                sys.path.insert(0, resolved)
 
+    from .ray import InferenceServer, RayServeConfig
 
-@click.command(context_settings={"auto_envvar_prefix": "UVICORN"})
-@click.option(
-    "--host",
-    type=str,
-    default="127.0.0.1",
-    help="Pixano Inference app URL host",
-    show_default=True,
-)
-@click.option(
-    "--port",
-    type=int,
-    default=80,
-    help="Pixano Inference app URL port",
-    show_default=True,
-)
-def serve(host: str, port: int):
-    """Main application entry point."""
-    config = uvicorn.Config(fast_api_app, host=host, port=port)
-    server = uvicorn.Server(config)
-    server.run()
+    ray_config = RayServeConfig(host=host, port=port)
+    server = InferenceServer(config=ray_config)
+
+    if config is not None:
+        server.register_from_config(config)
+
+    server.start(host=host, port=port, blocking=True)
