@@ -60,7 +60,7 @@ def extract_media_from_base64(string: str) -> str:
     return string[len(match.group(1)) :]
 
 
-def convert_string_to_image(str_image: str | Path) -> Image.Image:
+def convert_string_to_image(str_image: str | Path | bytes) -> Image.Image:
     """Convert a string or path to an image.
 
     Args:
@@ -85,6 +85,8 @@ def convert_string_to_image(str_image: str | Path) -> Image.Image:
                     image_pil = Image.open(str_image)
                 else:
                     raise ValueError("The image is not a valid path, URL or base64 string.")
+    elif isinstance(str_image, bytes):
+        image_pil = Image.open(BytesIO(str_image))
     elif isinstance(str_image, Path):
         image_pil = Image.open(str_image)
     else:
@@ -93,7 +95,9 @@ def convert_string_to_image(str_image: str | Path) -> Image.Image:
     return image_converted
 
 
-def convert_string_video_to_bytes_or_path(str_video: str | Path) -> bytes | Path:
+def convert_string_video_to_bytes_or_path(
+    str_video: list[str | Path | bytes] | str | Path | bytes,
+) -> list[bytes | Path] | bytes | Path:
     """Convert a string to a video or video path.
 
     Args:
@@ -104,6 +108,8 @@ def convert_string_video_to_bytes_or_path(str_video: str | Path) -> bytes | Path
     """
     if isinstance(str_video, list):
         return [convert_string_video_to_bytes_or_path(str_video_elem) for str_video_elem in str_video]
+    if isinstance(str_video, bytes):
+        return str_video
     if isinstance(str_video, str):
         if is_url(str_video):
             video_bytes = requests.get(str_video, stream=True).raw

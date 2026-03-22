@@ -4,7 +4,7 @@
 # License: CECILL-C
 # =================================
 
-"""Pydantic models for compressed RLE masks."""
+"""Pydantic models for compressed and numeric RLE masks."""
 
 from typing import Any
 
@@ -40,21 +40,25 @@ def rle_to_mask(rle: dict[str, list[int] | bytes]) -> np.ndarray:
 
 
 class CompressedRLE(BaseModel):
-    """Compressed RLE mask type.
+    """Compressed or numeric RLE mask type.
 
     Attributes:
         size: Mask size.
-        counts: Mask RLE encoding.
+        counts: Mask RLE encoding as compressed bytes/string or a numeric array.
     """
 
     size: list[int]
-    counts: bytes
+    counts: bytes | list[int]
 
     @field_validator("counts", mode="before")
     @classmethod
-    def _validate_counts(cls, value: bytes | str) -> bytes:
+    def _validate_counts(cls, value: bytes | str | list[int]) -> bytes | list[int]:
         if isinstance(value, str):
-            value = bytes(value, "utf-8")
+            return bytes(value, "utf-8")
+        if isinstance(value, list):
+            if not all(isinstance(count, int) and count >= 0 for count in value):
+                raise ValueError("Mask counts arrays must contain non-negative integers.")
+            return value
         return value
 
     @model_validator(mode="after")
@@ -65,11 +69,20 @@ class CompressedRLE(BaseModel):
             and not (self.size == [0, 0] and self.counts == b"")
         ):
             raise ValueError("Mask size must have 2 elements and be positive integers or [0, 0] for empty mask.")
+        if isinstance(self.counts, list):
+            compressed_rle = mask_api.frPyObjects(
+                {"size": self.size, "counts": self.counts},
+                self.size[0],
+                self.size[1],
+            )
+            object.__setattr__(self, "counts", compressed_rle["counts"])
         return self
 
     @field_serializer("counts")
-    def _serialize_counts(self, value: bytes) -> str:
-        return str(value, "utf-8")
+    def _serialize_counts(self, value: bytes | list[int]) -> str | list[int]:
+        if isinstance(value, bytes):
+            return str(value, "utf-8")
+        return value
 
     @staticmethod
     def from_mask(mask: Image | np.ndarray, **kwargs: Any) -> "CompressedRLE":

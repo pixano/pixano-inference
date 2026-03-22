@@ -18,7 +18,7 @@ from typing import Any
 import numpy as np
 
 from pixano_inference.models.registry import register_model
-from pixano_inference.models.tracking import TrackingInput, TrackingModel, TrackingOutput
+from pixano_inference.models.tracking import TrackingInput, TrackingKeyframe, TrackingModel, TrackingOutput
 from pixano_inference.ray.config import ModelDeploymentConfig
 
 from .._helpers import resolve_device, resolve_torch_dtype, validate_prompts
@@ -114,6 +114,7 @@ class Sam2VideoModel(TrackingModel):
         from pixano_inference.schemas.rle import CompressedRLE
 
         objects_ids = input.objects_ids
+        request_propagate = self._propagate if input.propagate is None else input.propagate
         frame_indexes = input.frame_indexes
 
         if len(objects_ids) != len(frame_indexes):
@@ -121,7 +122,6 @@ class Sam2VideoModel(TrackingModel):
 
         validate_prompts(input.points, input.labels, input.boxes)
 
-        # Build per-object input arrays
         num_objects = len(objects_ids)
         if input.points is not None:
             input_points = [np.array(p, dtype=np.int32) for p in input.points]
@@ -143,35 +143,44 @@ class Sam2VideoModel(TrackingModel):
             with torch.autocast(self._predictor.device.type, dtype=self._torch_dtype):
                 inference_state = self._init_video_state(input.video)
 
-                for obj_id, frame_idx, obj_points, obj_labels, obj_box in zip(
-                    objects_ids, frame_indexes, input_points, input_labels, input_boxes
-                ):
-                    _, out_obj_ids, out_mask_logits = self._predictor.add_new_points_or_box(
-                        inference_state=inference_state,
-                        frame_idx=frame_idx,
-                        obj_id=obj_id,
-                        points=obj_points,
-                        labels=obj_labels,
-                        box=obj_box,
-                    )
-
-                    if not self._propagate:
-                        video_segments[frame_idx] = {
-                            out_obj_id: (out_mask_logits[i] > 0.0).cpu().numpy()
-                            for i, out_obj_id in enumerate(out_obj_ids)
-                        }
-
-                if self._propagate:
-                    video_segments = {}
-                    for out_frame_idx, out_obj_ids, out_mask_logits in self._predictor.propagate_in_video(
-                        inference_state
+                if input.keyframes is not None:
+                    for obj_id, keyframe in zip(objects_ids, input.keyframes, strict=False):
+                        out_frame_idx, out_obj_ids, out_mask_logits = self._apply_keyframe_prompt(
+                            inference_state,
+                            obj_id,
+                            keyframe,
+                        )
+                        if not request_propagate:
+                            self._merge_video_segments(video_segments, out_frame_idx, out_obj_ids, out_mask_logits)
+                else:
+                    for obj_id, frame_idx, obj_points, obj_labels, obj_box in zip(
+                        objects_ids,
+                        frame_indexes,
+                        input_points,
+                        input_labels,
+                        input_boxes,
+                        strict=False,
                     ):
-                        video_segments[out_frame_idx] = {
-                            out_obj_id: (out_mask_logits[i] > 0.0).cpu().numpy()
-                            for i, out_obj_id in enumerate(out_obj_ids)
-                        }
+                        _, out_obj_ids, out_mask_logits = self._apply_legacy_prompt(
+                            inference_state,
+                            obj_id,
+                            frame_idx,
+                            obj_points,
+                            obj_labels,
+                            obj_box,
+                        )
+                        if not request_propagate:
+                            self._merge_video_segments(video_segments, frame_idx, out_obj_ids, out_mask_logits)
 
-        # Flatten to output lists
+                if request_propagate:
+                    video_segments = {}
+                    propagation_kwargs = self._build_propagation_kwargs(input)
+                    for out_frame_idx, out_obj_ids, out_mask_logits in self._predictor.propagate_in_video(
+                        inference_state,
+                        **propagation_kwargs,
+                    ):
+                        self._merge_video_segments(video_segments, out_frame_idx, out_obj_ids, out_mask_logits)
+
         out_objects_ids: list[int] = []
         out_frame_indexes: list[int] = []
         out_masks: list[CompressedRLE] = []
@@ -187,6 +196,89 @@ class Sam2VideoModel(TrackingModel):
             frame_indexes=out_frame_indexes,
             masks=out_masks,
         )
+
+    def _apply_legacy_prompt(
+        self,
+        inference_state: dict[str, Any],
+        obj_id: int,
+        frame_idx: int,
+        obj_points: np.ndarray | None,
+        obj_labels: np.ndarray | None,
+        obj_box: np.ndarray | None,
+    ) -> tuple[int, list[int], Any]:
+        return self._predictor.add_new_points_or_box(
+            inference_state=inference_state,
+            frame_idx=frame_idx,
+            obj_id=obj_id,
+            points=obj_points,
+            labels=obj_labels,
+            box=obj_box,
+        )
+
+    def _apply_keyframe_prompt(
+        self,
+        inference_state: dict[str, Any],
+        obj_id: int,
+        keyframe: TrackingKeyframe,
+    ) -> tuple[int, list[int], Any]:
+        if keyframe.mask is not None:
+            return self._predictor.add_new_mask(
+                inference_state=inference_state,
+                frame_idx=keyframe.frame_index,
+                obj_id=obj_id,
+                mask=keyframe.mask.to_mask().astype(bool),
+            )
+
+        points = None
+        labels = None
+        if keyframe.points:
+            points = np.array([[point.x, point.y] for point in keyframe.points], dtype=np.int32)
+            labels = np.array([point.label for point in keyframe.points], dtype=np.int32)
+
+        box = None
+        if keyframe.box is not None:
+            box = np.array(
+                [
+                    keyframe.box.x,
+                    keyframe.box.y,
+                    keyframe.box.x + keyframe.box.width,
+                    keyframe.box.y + keyframe.box.height,
+                ],
+                dtype=np.int32,
+            )
+
+        return self._predictor.add_new_points_or_box(
+            inference_state=inference_state,
+            frame_idx=keyframe.frame_index,
+            obj_id=obj_id,
+            points=points,
+            labels=labels,
+            box=box,
+        )
+
+    @staticmethod
+    def _merge_video_segments(
+        video_segments: dict[int, dict[int, np.ndarray]],
+        frame_idx: int,
+        out_obj_ids: list[int],
+        out_mask_logits: Any,
+    ) -> None:
+        video_segments.setdefault(frame_idx, {}).update(
+            {
+                out_obj_id: (out_mask_logits[index] > 0.0).cpu().numpy()
+                for index, out_obj_id in enumerate(out_obj_ids)
+            }
+        )
+
+    @staticmethod
+    def _build_propagation_kwargs(input: TrackingInput) -> dict[str, Any]:
+        if input.interval is None:
+            return {}
+        return {
+            "start_frame_idx": input.interval.start_frame,
+            "max_frame_num_to_track": abs(input.interval.end_frame - input.interval.start_frame),
+            "reverse": input.interval.direction == "backward",
+        }
 
     def _init_video_state(self, video: Any) -> dict[str, Any]:
         """Initialize a SAM2 video inference state.

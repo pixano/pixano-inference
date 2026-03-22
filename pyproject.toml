@@ -45,6 +45,7 @@ dependencies = [
   "Pillow >= 9.0.0",
   "pycocotools",
   "python-dotenv~=1.0.1",
+  "python-multipart",
   "requests",
   "uvicorn >= 0.31.0",
   "ray[serve] >= 2.0.0, < 3.0.0",

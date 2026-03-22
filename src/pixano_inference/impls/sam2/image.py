@@ -121,23 +121,29 @@ class Sam2ImageModel(SegmentationModel):
         input_points: np.ndarray | None = None
         input_labels: np.ndarray | None = None
         input_boxes: np.ndarray | None = None
+        input_mask: np.ndarray | None = None
 
         if input.points is not None:
             input_points, input_labels = pad_points_and_labels(input.points, input.labels)
         if input.boxes is not None:
             input_boxes = np.array(input.boxes, dtype=np.int32)
+        if input.mask_input is not None:
+            input_mask = input.mask_input.to_numpy()
 
         with torch.inference_mode():
             with torch.autocast(self._predictor.device.type, dtype=self._torch_dtype):
                 if not self._predictor._is_image_set:
                     self._predictor.set_image(pil_image)
 
-                masks, scores, _ = self._predictor.predict(
+                masks, scores, low_res_masks = self._predictor.predict(
                     point_coords=input_points,
                     point_labels=input_labels,
                     box=input_boxes,
-                    mask_input=None,
+                    mask_input=input_mask,
                     multimask_output=input.multimask_output,
+                    # Keep full-resolution masks binary for rendering/saving.
+                    # The third SAM2 output already contains the low-res logits
+                    # needed for iterative refinement.
                     return_logits=False,
                 )
 
@@ -145,6 +151,9 @@ class Sam2ImageModel(SegmentationModel):
         if len(masks.shape) == 3:
             masks = np.expand_dims(masks, 0)
             scores = np.expand_dims(scores, 0)
+        elif len(masks.shape) == 2:
+            masks = np.expand_dims(masks, (0, 1))
+            scores = np.expand_dims(scores, (0, 1))
 
         # Build output
         out_masks = [
@@ -154,6 +163,7 @@ class Sam2ImageModel(SegmentationModel):
 
         out_image_embedding: NDArrayFloat | None = None
         out_high_resolution_features: list[NDArrayFloat] | None = None
+        out_mask_logits: NDArrayFloat | None = None
 
         if input.return_image_embedding:
             embed = self._predictor._features["image_embed"]
@@ -169,11 +179,17 @@ class Sam2ImageModel(SegmentationModel):
                 for feat in hr_feats
             ]
 
+        if input.return_logits:
+            if len(low_res_masks.shape) == 2:
+                low_res_masks = np.expand_dims(low_res_masks, 0)
+            out_mask_logits = NDArrayFloat.from_numpy(low_res_masks)
+
         return SegmentationOutput(
             masks=out_masks,
             scores=out_scores,
             image_embedding=out_image_embedding,
             high_resolution_features=out_high_resolution_features,
+            mask_logits=out_mask_logits,
         )
 
     def _set_image_embeddings(
