@@ -17,8 +17,8 @@ from json import JSONDecodeError
 from typing import TYPE_CHECKING, Any
 
 from fastapi import FastAPI, HTTPException, Request, UploadFile
-from starlette.datastructures import UploadFile as StarletteUploadFile
 from pydantic import BaseModel, ValidationError
+from starlette.datastructures import UploadFile as StarletteUploadFile
 
 from pixano_inference.schemas.inference import (
     DetectionRequest,

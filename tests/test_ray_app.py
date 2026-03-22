@@ -434,7 +434,6 @@ class TestInferenceRoutes:
         assert response.status_code == 200
         assert handle.predict.last_input.video == [b"frame-0"]
 
-
     def test_tracking_job_route_polls_until_completed(
         self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch
     ):

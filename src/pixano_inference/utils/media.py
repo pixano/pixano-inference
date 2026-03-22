@@ -108,8 +108,7 @@ def convert_string_video_to_bytes_or_path(
     """
     if isinstance(str_video, list):
         return [
-            cast(bytes | Path, convert_string_video_to_bytes_or_path(str_video_elem))
-            for str_video_elem in str_video
+            cast(bytes | Path, convert_string_video_to_bytes_or_path(str_video_elem)) for str_video_elem in str_video
         ]
     if isinstance(str_video, bytes):
         return str_video

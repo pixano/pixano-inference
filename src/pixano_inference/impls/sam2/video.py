@@ -264,10 +264,7 @@ class Sam2VideoModel(TrackingModel):
         out_mask_logits: Any,
     ) -> None:
         video_segments.setdefault(frame_idx, {}).update(
-            {
-                out_obj_id: (out_mask_logits[index] > 0.0).cpu().numpy()
-                for index, out_obj_id in enumerate(out_obj_ids)
-            }
+            {out_obj_id: (out_mask_logits[index] > 0.0).cpu().numpy() for index, out_obj_id in enumerate(out_obj_ids)}
         )
 
     @staticmethod
