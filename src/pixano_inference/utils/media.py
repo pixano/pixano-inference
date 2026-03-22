@@ -10,7 +10,7 @@ import base64
 import re
 from io import BytesIO
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import requests  # type: ignore[import-untyped]
@@ -107,7 +107,10 @@ def convert_string_video_to_bytes_or_path(
         The video.
     """
     if isinstance(str_video, list):
-        return [convert_string_video_to_bytes_or_path(str_video_elem) for str_video_elem in str_video]
+        return [
+            cast(bytes | Path, convert_string_video_to_bytes_or_path(str_video_elem))
+            for str_video_elem in str_video
+        ]
     if isinstance(str_video, bytes):
         return str_video
     if isinstance(str_video, str):

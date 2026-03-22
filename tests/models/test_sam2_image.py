@@ -46,7 +46,7 @@ class FakePredictor:
 
 @pytest.fixture
 def sam2_model(monkeypatch: pytest.MonkeyPatch) -> tuple[Sam2ImageModel, FakePredictor]:
-    import torch
+    torch = pytest.importorskip("torch")
 
     config = ModelDeploymentConfig(
         name="sam2-image",

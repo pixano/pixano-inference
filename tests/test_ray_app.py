@@ -435,7 +435,9 @@ class TestInferenceRoutes:
         assert handle.predict.last_input.video == [b"frame-0"]
 
 
-    def test_tracking_job_route_polls_until_completed(self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    def test_tracking_job_route_polls_until_completed(
+        self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ):
         result = TrackingOutput(
             objects_ids=[1],
             frame_indexes=[0],
