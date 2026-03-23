@@ -4,84 +4,96 @@
 # License: CECILL-C
 # =================================
 
-"""Base class for inference models."""
+"""Shared base class for deployed inference models."""
 
+from __future__ import annotations
+
+import logging
 from abc import ABC, abstractmethod
-from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
-from pixano_inference.pydantic import (
-    ImageMaskGenerationOutput,
-    ImageZeroShotDetectionOutput,
-    TextImageConditionalGenerationOutput,
-    VideoMaskGenerationOutput,
-)
+from pydantic import BaseModel
 
 
-class ModelStatus(Enum):
-    """Current status of the model.
+if TYPE_CHECKING:
+    from pixano_inference.ray.config import ModelDeploymentConfig
 
-    Attributes:
-    - IDLE: waiting for an input.
-    - RUNNING: computing.
+
+logger = logging.getLogger(__name__)
+
+
+class InferenceModel(ABC):
+    """Abstract base class for all inference models deployed on Ray Serve.
+
+    Subclass this to implement custom inference models that can be deployed
+    on Ray Serve.
+
+    Example:
+        ```python
+        from pixano_inference.models import InferenceModel, register_model
+
+        @register_model("my_model")
+        class MyModel(InferenceModel):
+            def load_model(self) -> None:
+                self._model = ...  # Load your model
+
+            def predict(self, input: MyInput) -> MyOutput:
+                return MyOutput(result=self._model(input))
+        ```
     """
 
-    IDLE = 0
-    RUNNING = 1
+    capability_name: ClassVar[str | None] = None
 
-
-class BaseInferenceModel(ABC):
-    """Base class for inference models."""
-
-    def __init__(self, name: str, provider: str):
-        """Initialize the model.
+    def __init__(self, config: ModelDeploymentConfig) -> None:
+        """Initialize the model with deployment config.
 
         Args:
-            name: Name of the model.
-            provider: Provider of the model.
+            config: Model deployment configuration.
         """
-        self.name = name
-        self.provider = provider
-        self._status = ModelStatus.IDLE
+        self._config = config
 
     @property
-    def status(self) -> ModelStatus:
-        """Get the status of the model."""
-        return self._status
-
-    @status.setter
-    def status(self, new_status: ModelStatus):
-        """Set the status of the model.
-
-        It should be handled outside of the Inference Model by a controller to handle requests sequentially.
-        """
-        if not isinstance(new_status, ModelStatus):
-            raise ValueError(f"Status should be a ModelStatus, got {new_status}.")
-        self._status = new_status
+    def config(self) -> ModelDeploymentConfig:
+        """Model deployment configuration."""
+        return self._config
 
     @property
-    @abstractmethod
+    def model_name(self) -> str:
+        """Unique model name."""
+        return self._config.name
+
+    @property
+    def capability(self) -> str:
+        """Capability handled by this model."""
+        return self._config.capability
+
+    @property
     def metadata(self) -> dict[str, Any]:
-        """Return the metadata of the model."""
-        ...
+        """Model metadata. Override for custom metadata."""
+        return {
+            "model_name": self.model_name,
+            "capability": self.capability,
+            "model_class": self._config.model_class,
+        }
 
     @abstractmethod
-    def delete(self):
-        """Delete the model."""
-        ...
+    def load_model(self) -> None:
+        """Load model artifacts.
 
-    def image_mask_generation(self, *args: Any, **kwargs) -> ImageMaskGenerationOutput:
-        """Generate a mask from the image."""
-        raise NotImplementedError("This model does not support image mask generation.")
+        Called once in the Ray actor ``__init__``. Implement this to load
+        weights, initialize processors, etc.
+        """
 
-    def text_image_conditional_generation(self, *args: Any, **kwargs) -> TextImageConditionalGenerationOutput:
-        """Generate text from an image and a prompt."""
-        raise NotImplementedError("This model does not support text-image conditional generation.")
+    @abstractmethod
+    def predict(self, input: BaseModel) -> BaseModel:
+        """Run inference.
 
-    def video_mask_generation(self, *args: Any, **kwargs) -> VideoMaskGenerationOutput:
-        """Generate a mask from the video."""
-        raise NotImplementedError("This model does not support video mask generation.")
+        Args:
+            input: Task-specific Input object (subclasses narrow this type).
 
-    def image_zero_shot_detection(self, *args: Any, **kwargs) -> ImageZeroShotDetectionOutput:
-        """Perform zero shot detection on an image."""
-        raise NotImplementedError("This model does not support image zero shot detection.")
+        Returns:
+            Task-specific Output object (subclasses narrow this type).
+        """
+
+    def unload(self) -> None:
+        """Free resources. Override for custom cleanup."""

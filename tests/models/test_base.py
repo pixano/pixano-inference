@@ -4,53 +4,52 @@
 # License: CECILL-C
 # =================================
 
-from typing import TYPE_CHECKING, Any
+from unittest.mock import MagicMock
 
 import pytest
+from pydantic import BaseModel
 
-from pixano_inference.models import BaseInferenceModel
-from pixano_inference.pydantic.tasks.multimodal.conditional_generation import (
-    TextImageConditionalGenerationOutput,
-)
+from pixano_inference.models import InferenceModel
 
 
-if TYPE_CHECKING:
-    from torch import Tensor
+class MockInput(BaseModel):
+    value: str = "test"
 
 
-class MockModel(BaseInferenceModel):
-    def __init__(self, name: str, provider: str):
-        super().__init__(name, provider)
+class MockOutput(BaseModel):
+    result: str
 
-    @property
-    def metadata(self) -> dict[str, Any]:
-        return {
-            "name": self.name,
-            "provider": self.provider,
-        }
 
-    def delete(self):
+class MockModel(InferenceModel):
+    def load_model(self) -> None:
         pass
 
-    def image_mask_generation(
-        self, image: "Tensor", points: list[list[int]], boxes: list[list[int]], **kwargs: Any
-    ) -> "Tensor":
-        return ...
-
-    def text_image_conditional_generation(
-        self, prompt: str, image: "Tensor", **kwargs: Any
-    ) -> TextImageConditionalGenerationOutput:
-        pass
+    def predict(self, input: MockInput) -> MockOutput:
+        return MockOutput(result="ok")
 
 
 @pytest.fixture(scope="module")
 def model():
-    return MockModel("test_model", "test_provider")
+    config = MagicMock()
+    config.name = "test_model"
+    config.capability = "mock"
+    config.model_class = "MockModel"
+    return MockModel(config)
 
 
-class TestBaseInferenceModel:
+class TestInferenceModel:
+    def test_model_name(self, model: MockModel):
+        assert model.model_name == "test_model"
+
+    def test_capability(self, model: MockModel):
+        assert model.capability == "mock"
+
     def test_metadata(self, model: MockModel):
-        assert model.metadata == {
-            "name": "test_model",
-            "provider": "test_provider",
-        }
+        meta = model.metadata
+        assert meta["model_name"] == "test_model"
+        assert meta["capability"] == "mock"
+        assert meta["model_class"] == "MockModel"
+
+    def test_predict(self, model: MockModel):
+        result = model.predict(MockInput())
+        assert result == MockOutput(result="ok")

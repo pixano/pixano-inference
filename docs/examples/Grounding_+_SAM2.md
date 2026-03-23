@@ -8,12 +8,11 @@
 
 # Grounding DINO + SAM2 Video
 
-## Define the visualization utilities (from SAM2)
+## Define visualization utilities
 
 ```python
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
 from PIL import Image
 
 
@@ -22,7 +21,8 @@ np.random.seed(3)
 
 def show_image(path):
     fig = plt.figure(figsize=(9, 6))
-    fig.imshow(Image.open(path)) # OpenCV imread uses BGR by default but matplotlib uses RGB so we need to change it manually for correct visualization of the image
+    plt.imshow(Image.open(path))
+
 
 def show_mask(mask, ax, obj_id=None, random_color=False):
     if random_color:
@@ -51,55 +51,58 @@ def show_box(box, ax):
     x0, y0 = box[0], box[1]
     w, h = box[2] - box[0], box[3] - box[1]
     ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor="green", facecolor=(0, 0, 0, 0), lw=2))
-
-
-# select the device for computation
-if torch.cuda.is_available():
-    device = torch.device("cuda")
-elif torch.backends.mps.is_available():
-    device = torch.device("mps")
-else:
-    device = torch.device("cpu")
-print(f"using device: {device}")
-
-if device.type == "cuda":
-    # use bfloat16 for the entire notebook
-    torch.autocast("cuda", dtype=torch.bfloat16).__enter__()
-    # turn on tfloat32 for Ampere GPUs (https://pytorch.org/docs/stable/notes/cuda.html#tensorfloat-32-tf32-on-ampere-devices)
-    if torch.cuda.get_device_properties(0).major >= 8:
-        torch.backends.cuda.matmul.allow_tf32 = True
-        torch.backends.cudnn.allow_tf32 = True
-
 ```
 
-## Instantiate the models
+## Python config
+
+Deploy both Grounding DINO and SAM2 Video in a single config:
 
 ```python
-from pathlib import Path
-
-from pixano_inference.providers import Sam2Provider, TransformersProvider
-
-
-sam2_provider = Sam2Provider()
-sam2 = sam2_provider.load_model(
-    "sam2",
-    "video_mask_generation",
-    torch.device("cuda") if torch.cuda.is_available() else "cpu",
-    "facebook/sam2-hiera-tiny",
+from pixano_inference.configs import (
+    DeploymentConfig,
+    GroundingDINOParams,
+    ModelConfig,
+    Sam2VideoParams,
 )
-transformers_provider = TransformersProvider()
-grounding_dino = transformers_provider.load_model(
-    "grounding_dino",
-    "image_zero_shot_detection",
-    torch.device("cuda") if torch.cuda.is_available() else "cpu",
-    "IDEA-Research/grounding-dino-tiny",
-)
+
+
+models = [
+    ModelConfig(
+        name="grounding-dino",
+        model_class="GroundingDINOModel",
+        model_params=GroundingDINOParams(path="IDEA-Research/grounding-dino-tiny"),
+        deployment=DeploymentConfig(num_gpus=1),
+    ),
+    ModelConfig(
+        name="sam2-video",
+        model_class="Sam2VideoModel",
+        model_params=Sam2VideoParams(path="facebook/sam2-hiera-tiny", torch_dtype="bfloat16", propagate=True),
+        deployment=DeploymentConfig(num_gpus=1),
+    ),
+]
+```
+
+## Start the server
+
+```bash
+pixano-inference --config models.py
+```
+
+## Connect the client
+
+```python
+from pixano_inference.client import PixanoInferenceClient
+
+
+client = PixanoInferenceClient.connect(url="http://localhost:7463")
 ```
 
 ## Load frames and show the first one
 
 ```python
-frames = sorted([f for f in Path("./docs/assets/examples/sam2/bedroom").glob("**/*") if f.is_file()])
+from pathlib import Path
+
+frames = sorted([str(f) for f in Path("./docs/assets/examples/sam2/bedroom").glob("**/*") if f.is_file()])
 first_frame = frames[0]
 show_image(first_frame)
 ```
@@ -107,34 +110,55 @@ show_image(first_frame)
 ## Call Grounding DINO on the first frame
 
 ```python
-from pixano_inference.pydantic import ImageZeroShotDetectionOutput
-from pixano_inference.utils.media import convert_string_to_image
+import asyncio
+
+from pixano_inference.schemas import DetectionRequest
 
 
-image_zero_shot_detection_out: ImageZeroShotDetectionOutput = grounding_dino.image_zero_shot_detection(
-    image=convert_string_to_image(first_frame), classes=["bed", "kid"], box_threshold=0.3, text_threshold=0.2
-)
-boxes = image_zero_shot_detection_out.boxes
-scores = image_zero_shot_detection_out.scores
-classes = image_zero_shot_detection_out.classes
+async def run_detection():
+    request = DetectionRequest(
+        model="grounding-dino",
+        image=first_frame,
+        classes=["bed", "kid"],
+        box_threshold=0.3,
+        text_threshold=0.2,
+    )
+    response = await client.detection(request)
+    return response
+
+
+detection_response = asyncio.run(run_detection())
+boxes = detection_response.data.boxes
+scores = detection_response.data.scores
+classes = detection_response.data.classes
 
 show_image(first_frame)
 for box in boxes:
     show_box(box, plt.gca())
 ```
 
-## Call SAM2
+## Call SAM2 Video with detected boxes
 
 ```python
-obj_ids = list(range(len(boxes)))
-frame_indexes = [0] * len(boxes)
-masks_output = sam2.video_mask_generation(
-    video=frames,
-    frame_indexes=frame_indexes,
-    objects_ids=obj_ids,
-    boxes=boxes,
-    propagate=True,
-)
+from pixano_inference.schemas import TrackingRequest
+
+
+async def run_video_segmentation():
+    obj_ids = list(range(len(boxes)))
+    frame_indexes = [0] * len(boxes)
+
+    request = TrackingRequest(
+        model="sam2-video",
+        video=frames,
+        frame_indexes=frame_indexes,
+        objects_ids=obj_ids,
+        boxes=boxes,
+    )
+    response = await client.tracking(request)
+    return response
+
+
+masks_response = asyncio.run(run_video_segmentation())
 ```
 
 ## Display the result
@@ -146,7 +170,9 @@ for out_frame_idx in range(0, len(frames), vis_frame_stride):
     plt.figure(figsize=(6, 4))
     plt.title(f"frame {out_frame_idx}")
     plt.imshow(Image.open(frames[out_frame_idx]))
-    for out_obj_id, out_mask, frame_indx in zip(masks_output.objects_ids, masks_output.masks, masks_output.frame_indexes):
+    for out_obj_id, out_mask, frame_indx in zip(
+        masks_response.data.objects_ids, masks_response.data.masks, masks_response.data.frame_indexes
+    ):
         if frame_indx != out_frame_idx:
             continue
         out_mask = out_mask.to_mask()

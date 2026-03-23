@@ -22,15 +22,6 @@ def is_package_installed(package_name: str) -> bool:
     return package_spec is not None
 
 
-def is_lance_installed() -> bool:
-    """Check if the lance package is installed.
-
-    Returns:
-        True if the lance package is installed, False otherwise
-    """
-    return is_package_installed("lance")
-
-
 def is_sam2_installed() -> bool:
     """Check if the sam2 package is installed.
 
@@ -38,6 +29,15 @@ def is_sam2_installed() -> bool:
         True if the sam2 package is installed, False otherwise
     """
     return is_package_installed("sam2")
+
+
+def is_sam3_installed() -> bool:
+    """Check if the sam3 package is installed.
+
+    Returns:
+        True if the sam3 package is installed, False otherwise
+    """
+    return is_package_installed("sam3")
 
 
 def is_torch_installed() -> bool:
@@ -82,18 +82,19 @@ def assert_package_installed(package_name: str, error_message: str | None = None
         raise ImportError(message)
 
 
-def assert_lance_installed() -> None:
-    """Assert that the lance package is installed."""
-    assert_package_installed(
-        "lance", "lance is not installed. Please install it using 'pip install pixano-inference[data]'."
-    )
-
-
 def assert_sam2_installed() -> None:
     """Assert that the sam2 package is installed."""
     assert_package_installed(
         "sam2",
         "sam2 is not installed. Please install it using 'pip install git+https://github.com/facebookresearch/sam2.git'.",
+    )
+
+
+def assert_sam3_installed() -> None:
+    """Assert that the sam3 package is installed."""
+    assert_package_installed(
+        "sam3",
+        "sam3 is not installed. Please install it using 'pip install pixano-inference[sam3]'.",
     )
 
 

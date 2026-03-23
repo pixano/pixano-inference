@@ -4,7 +4,20 @@
 # License: CECILL-C
 # =================================
 
-# ruff: noqa: F401
-# ruff: noqa: D104
+"""Public API for inference models.
 
-from .base import BaseInferenceModel
+This module re-exports all base classes, I/O types, and the model registry.
+ML engineers should import from here when creating custom models.
+"""
+
+# ruff: noqa: F401
+
+from .base import InferenceModel
+from .capabilities import HTTP_CAPABILITY_BASES, infer_http_capability
+from .detection import DetectionInput, DetectionModel, DetectionOutput
+from .llm import LLMInput, LLMModel, LLMOutput
+from .ner import NERInput, NERModel, NEROutput
+from .registry import ModelClassRegistry, register_model
+from .segmentation import SegmentationInput, SegmentationModel, SegmentationOutput
+from .tracking import TrackingInput, TrackingModel, TrackingOutput
+from .vlm import UsageInfo, VLMInput, VLMModel, VLMOutput

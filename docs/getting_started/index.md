@@ -10,160 +10,129 @@
 
 ## Installation
 
-To install the library, simply execute the following command
+=== "uv (recommended)"
 
-```bash
-pip install pixano-inference
-```
+    ```bash
+    uv add pixano-inference
+    ```
 
-If you want to dynamically make changes to the library to develop and test, make a dev install by cloning the repo and executing the following commands
+    For a development install, clone the repo and sync:
 
-```bash
-cd pixano-inference
-pip install -e .
-```
+    ```bash
+    cd pixano-inference
+    uv sync
+    ```
 
-To have access to the providers available in Pixano-Inference, make sure to install the relevant dependencies. For example to use the vLLM provider run:
+=== "pip"
 
-```bash
-pip install pixano-inference[vllm]
-```
+    ```bash
+    pip install pixano-inference
+    ```
+
+    For a development install:
+
+    ```bash
+    cd pixano-inference
+    pip install -e .
+    ```
+
+Install the extras for the model backends you need:
+
+=== "uv"
+
+    ```bash
+    uv sync --extra sam2 --extra transformers --extra vllm
+    ```
+
+=== "pip"
+
+    ```bash
+    pip install pixano-inference[sam2,transformers,vllm]
+    ```
 
 ## Usage
 
-Pixano-Inference can be used as:
+Pixano-Inference serves models with GPU-aware deployment, autoscaling, and request
+batching. Models are declared in a Python config file, the server deploys them, and you
+interact via the Python client or HTTP API.
 
-- a Python library to instantiate models from providers and call inference
-- a server with the same features as the Library that can run **asynchronously**
+The workflow is:
 
-See the [examples](../examples/index.md) sections that covers several use cases.
+1. Write a Python config
+2. Start the server
+3. Connect the client
+4. Run inference
 
-### Run in a python script
+See the [examples](../examples/index.md) section for detailed use cases.
 
-#### Instantiate a model
+### Step 1: Write a Python config
 
-To instantiate a model, you first need to instantiate its provider and then call its `load_model` method.
-
-```python
-from pixano_inference.providers import VLLMProvider
-from pixano_inference.tasks import MultimodalImageNLPTask
-
-vllm_provider = VLLMProvider()
-llava_qwen = vllm_provider.load_model(
-    name="llava-qwen",
-    task=MultimodalImageNLPTask.CONDITIONAL_GENERATION,
-    device=torch.device("cuda"),
-    path="llava-hf/llava-onevision-qwen2-0.5b-ov-hf",
-    config={
-        "dtype": "bfloat16",
-    }
-)
-```
-
-#### Call the model for inference
-
-For the inference, call the method associated to the task you wish to perform. For VQA, it is the `text_image_conditional_generation` method.
+Create a file called `models.py` that declares which models to deploy.
+Here is an example deploying Grounding DINO for zero-shot detection:
 
 ```python
-from pixano_inference.pydantic import TextImageConditionalGenerationOutput
+from pixano_inference.configs import DeploymentConfig, GroundingDINOParams, ModelConfig
 
 
-prompt=[
-    {
-        "content": [
-            {
-                "type": "image_url",
-                "image_url": {
-                    "url": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Ours_brun_parcanimalierpyrenees_1.jpg"
-                },
-            },
-            {"type": "text", "text": "What is displayed in this image ? Answer with high level of description like 1000 words. "},
-        ],
-        "role": "user",
-    }
+models = [
+    ModelConfig(
+        name="grounding-dino",
+        model_class="GroundingDINOModel",
+        model_params=GroundingDINOParams(path="IDEA-Research/grounding-dino-tiny"),
+        deployment=DeploymentConfig(num_gpus=1, min_replicas=0, max_replicas=2),
+    )
 ]
-
-output: TextImageConditionalGenerationOutput = llava_qwen.text_image_conditional_generation(
-    prompt=prompt, max_new_tokens=1000
-)
-output.generated_text
 ```
 
-### Run the server
+See the [Server Deployment documentation](../ray_serve/index.md) for all configuration
+options, deploying built-in and custom models, and configuring autoscaling.
 
-#### Launch the server
-
-Pixano-Inference as a server requires a running [Redis server](https://redis.io/docs/latest/operate/oss_and_stack/install/install-redis/install-redis-on-linux/). Its URL can be configured in a `.env` file at the root of the server. By default it will serve the localhost at the 6379 port.
-
-Pixano-Inference can invoke a server that will serve the API. To do so, simply execute the following command:
+### Step 2: Start the server
 
 ```bash
-pixano-inference --port 8000
+pixano-inference --config models.py
 ```
 
-The default port is `8000`. You can change it by passing the `--port` argument.
+The default address is `http://127.0.0.1:7463`. You can override it with
+`--host` and `--port`.
 
-#### Instantiate the client
+### Step 3: Connect the client
 
-The easiest way to interact with Pixano-Inference is through the Python client. However you can take a look at the swagger `http://pixano_inference_url/docs` for using the API REST by yourself.
+The easiest way to interact with Pixano-Inference is through the Python client.
+You can also use the Swagger UI at `http://localhost:7463/docs`.
 
 ```python
 from pixano_inference.client import PixanoInferenceClient
 
 
-client = PixanoInferenceClient.connect(url="http://localhost:8000")
+client = PixanoInferenceClient.connect(url="http://localhost:7463")
 ```
 
-#### Instantiate a model
+### Step 4: Run an inference
 
-To instantiate a model, you need to provide the path of the model file and the task that the model will perform. For example to run a Llava model from the vLLM provider:
-
-```python
-from pixano_inference.pydantic import ModelConfig
-from pixano_inference.tasks import MultimodalImageNLPTask
-
-
-await client.instantiate_model(
-    provider="vllm",
-    config=ModelConfig(
-        name="llava-qwen",
-        task=MultimodalImageNLPTask.CONDITIONAL_GENERATION.value,
-        path="llava-hf/llava-onevision-qwen2-0.5b-ov-hf",
-        config={
-            "dtype": "bfloat16",
-        },
-    ),
-)
-```
-
-#### Run an inference
-
-The client provide methods to run the different models on various tasks. For image-text conditional generation using Llava here is the relevant method:
+Build a request and call the appropriate client method:
 
 ```python
-from pixano_inference.pydantic import TextImageConditionalGenerationRequest, TextImageConditionalGenerationResponse
+import asyncio
+
+from pixano_inference.client import PixanoInferenceClient
+from pixano_inference.schemas import DetectionRequest
 
 
-request = TextImageConditionalGenerationRequest(
-    model="llava-qwen",
-    prompt=[
-        {
-            "content": [
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Ours_brun_parcanimalierpyrenees_1.jpg"
-                    },
-                },
-                {"type": "text", "text": "What is displayed in this image ? Answer concisely. "},
-            ],
-            "role": "user",
-        }
-    ],
-    images=None,
-    max_new_tokens=100,
-)
+async def main():
+    client = PixanoInferenceClient.connect(url="http://localhost:7463")
 
-response: TextImageConditionalGenerationResponse = await client.text_image_conditional_generation(request)
-print(response.data.generated_text)
+    request = DetectionRequest(
+        model="grounding-dino",
+        image="http://images.cocodataset.org/val2017/000000039769.jpg",
+        classes=["cat", "remote control"],
+        box_threshold=0.3,
+        text_threshold=0.2,
+    )
+    response = await client.detection(request)
+    print(response.data.boxes)
+    print(response.data.classes)
+
+
+asyncio.run(main())
 ```

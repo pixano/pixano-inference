@@ -6,14 +6,13 @@
 # =================================
 --->
 
-# SAM2 Video
+# SAM2 Video Segmentation
 
-## Define the visualization utilities (from SAM2)
+## Define visualization utilities
 
 ```python
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
 
 
 np.random.seed(3)
@@ -46,54 +45,62 @@ def show_box(box, ax):
     x0, y0 = box[0], box[1]
     w, h = box[2] - box[0], box[3] - box[1]
     ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor="green", facecolor=(0, 0, 0, 0), lw=2))
-
-
-# select the device for computation
-if torch.cuda.is_available():
-    device = torch.device("cuda")
-elif torch.backends.mps.is_available():
-    device = torch.device("mps")
-else:
-    device = torch.device("cpu")
-print(f"using device: {device}")
-
 ```
 
-## Instantiate the model
+## Python config
+
+Deploy SAM2 for video segmentation:
 
 ```python
-import torch
-
-from pixano_inference.providers.sam2 import Sam2Provider
+from pixano_inference.configs import DeploymentConfig, ModelConfig, Sam2VideoParams
 
 
-provider = Sam2Provider()
-model = provider.load_model(
-    name="sam",
-    task="image_mask_generation",
-    device=torch.device("cuda") if torch.cuda.is_available() else "cpu",
-    path="facebook/sam2-hiera-tiny",
-)
+models = [
+    ModelConfig(
+        name="sam2-video",
+        model_class="Sam2VideoModel",
+        model_params=Sam2VideoParams(path="facebook/sam2-hiera-tiny", torch_dtype="bfloat16", propagate=True),
+        deployment=DeploymentConfig(num_gpus=1),
+    )
+]
 ```
 
-## Call the model
+## Start the server
+
+```bash
+pixano-inference --config models.py
+```
+
+## Connect the client and run inference
 
 ```python
+import asyncio
 from pathlib import Path
 
+from pixano_inference.client import PixanoInferenceClient
+from pixano_inference.schemas import TrackingRequest
 
-obj_ids = [0, 2]
-frame_indexes = [0, 0]
-points = [[[210, 350]], [[400, 500]]]
-labels = [[1], [1]]
-output = model.video_mask_generation(
-    sorted([f for f in Path("./docs/assets/examples/sam2/bedroom").glob("**/*") if f.is_file()]),
-    objects_ids=obj_ids,
-    frame_indexes=frame_indexes,
-    points=points,
-    labels=labels,
-    propagate=True,
-)
+
+async def main():
+    client = PixanoInferenceClient.connect(url="http://localhost:7463")
+
+    frames = sorted([str(f) for f in Path("./docs/assets/examples/sam2/bedroom").glob("**/*") if f.is_file()])
+
+    request = TrackingRequest(
+        model="sam2-video",
+        video=frames,
+        objects_ids=[0, 2],
+        frame_indexes=[0, 0],
+        points=[[[210, 350]], [[400, 500]]],
+        labels=[[1], [1]],
+    )
+    response = await client.tracking(request)
+
+    print(f"Processing time: {response.processing_time:.3f}s")
+    return response
+
+
+response = asyncio.run(main())
 ```
 
 ## Display the result
@@ -106,13 +113,20 @@ from PIL import Image
 
 video_dir = Path("./docs/assets/examples/sam2/bedroom/")
 
-# scan all the JPEG frame names in this directory
 frame_names = [p for p in os.listdir(video_dir) if os.path.splitext(p)[-1] in [".jpg", ".jpeg", ".JPG", ".JPEG"]]
 frame_names.sort(key=lambda p: int(os.path.splitext(p)[0]))
 
-# take a look the first video frame
-frame_idx = 0
-plt.figure(figsize=(9, 6))
-plt.title(f"frame {frame_idx}")
-plt.imshow(Image.open(os.path.join(video_dir, frame_names[frame_idx])))
+vis_frame_stride = 4
+plt.close("all")
+for out_frame_idx in range(0, len(frame_names), vis_frame_stride):
+    plt.figure(figsize=(6, 4))
+    plt.title(f"frame {out_frame_idx}")
+    plt.imshow(Image.open(os.path.join(video_dir, frame_names[out_frame_idx])))
+    for out_obj_id, out_mask, frame_indx in zip(
+        response.data.objects_ids, response.data.masks, response.data.frame_indexes
+    ):
+        if frame_indx != out_frame_idx:
+            continue
+        out_mask = out_mask.to_mask()
+        show_mask(out_mask, plt.gca(), obj_id=out_obj_id)
 ```

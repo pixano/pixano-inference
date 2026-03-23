@@ -10,15 +10,30 @@
 
 ## Overview
 
-Pixano-Inference is a Python library that provides an API for performing inference tasks on multi-modal data such as images, videos, and text. It includes model and API providers for various tasks, including mask generation, text-image conditional generation.
+Pixano-Inference serves multimodal inference models behind a REST API powered by
+[Ray Serve](https://docs.ray.io/en/latest/serve/index.html). Models are declared
+in Python config files, deployed as Ray actors, and invoked through either the
+HTTP API or the Python client.
 
-Pixano-Inference aims to provide a simple and easy-to-use interface for developers to interact with models solving different tasks and from various providers from a common interface via its RESTful API.
+Key capabilities:
 
-## How to use Pixano-Inference
+- **Python-config deployment** -- Declare models in `models.py` with typed validation
+- **GPU-aware actors** -- Assign CPU/GPU resources per model deployment
+- **Autoscaling and batching** -- Tune replicas and batch size per model
+- **Multi-model serving** -- Run several deployments in one server
+- **Custom models** -- Register your own `InferenceModel` subclasses
 
-Please refer to the [Getting Started](../getting_started/index.md) guide for instructions on how to install, configure, and use Pixano-Inference in your project.
+## How it works
 
-For going in-depth on how to use the APIs, please refer to the [API Reference](../api_reference/index.md).
+1. **Write a Python config** with `pixano_inference.configs.ModelConfig`
+2. **Start the server** with `pixano-inference --config models.py`
+3. **Send requests** via the Python client or HTTP API
+
+## Next steps
+
+- **[Getting Started](../getting_started/index.md)** -- Install, configure, and run your first inference
+- **[Server Deployment](../ray_serve/index.md)** -- Advanced configuration, autoscaling, and custom models
+- **[HTTP API Reference](../api-reference.md)** -- Full endpoint and schema documentation
 
 ## Contributing
 

@@ -11,3 +11,7 @@ dist/
 docs/build/*
 docs/source/generated/*
 .env
+site/
+CLAUDE.md
+celery_logs.log
+poc/

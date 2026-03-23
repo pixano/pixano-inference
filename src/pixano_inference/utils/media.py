@@ -10,21 +10,14 @@ import base64
 import re
 from io import BytesIO
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any, cast
 
 import numpy as np
 import requests  # type: ignore[import-untyped]
 from PIL import Image
 
-from .package import assert_torch_installed, is_torch_installed
 from .url import is_url
 
-
-if is_torch_installed():
-    import torch
-
-if TYPE_CHECKING:
-    from torch import Tensor
 
 regex_media_base64 = r"^(data:[a-zA-Z]/[a-zA-Z]+;base64,)"
 
@@ -67,7 +60,7 @@ def extract_media_from_base64(string: str) -> str:
     return string[len(match.group(1)) :]
 
 
-def convert_string_to_image(str_image: str | Path) -> Image.Image:
+def convert_string_to_image(str_image: str | Path | bytes) -> Image.Image:
     """Convert a string or path to an image.
 
     Args:
@@ -83,10 +76,17 @@ def convert_string_to_image(str_image: str | Path) -> Image.Image:
             if is_base64_image(str_image):
                 image_bytes = base64.b64decode(extract_media_from_base64(str_image))
                 image_pil = Image.open(BytesIO(image_bytes))
-            elif Path(str_image).exists():
-                image_pil = Image.open(str_image)
             else:
-                raise ValueError("The image is not a valid path, URL or base64 string.")
+                try:
+                    path_exists = Path(str_image).exists()
+                except OSError:
+                    path_exists = False
+                if path_exists:
+                    image_pil = Image.open(str_image)
+                else:
+                    raise ValueError("The image is not a valid path, URL or base64 string.")
+    elif isinstance(str_image, bytes):
+        image_pil = Image.open(BytesIO(str_image))
     elif isinstance(str_image, Path):
         image_pil = Image.open(str_image)
     else:
@@ -95,18 +95,9 @@ def convert_string_to_image(str_image: str | Path) -> Image.Image:
     return image_converted
 
 
-def convert_image_pil_to_tensor(image: Image, device: "torch.device", size: int | None = None) -> "Tensor":
-    """Convert an image in PIL format to a PyTorch tensor and optionally resize it."""
-    assert_torch_installed()
-    image = image.convert("RGB")
-    if size is not None:
-        image = image.resize((size, size))
-    image_np = np.array(image) / 255.0
-    image = torch.from_numpy(image_np).to(device=device).permute(2, 0, 1)
-    return image
-
-
-def convert_string_video_to_bytes_or_path(str_video: str | Path) -> bytes | Path:
+def convert_string_video_to_bytes_or_path(
+    str_video: list[str | Path | bytes] | str | Path | bytes,
+) -> list[bytes | Path] | bytes | Path:
     """Convert a string to a video or video path.
 
     Args:
@@ -116,47 +107,31 @@ def convert_string_video_to_bytes_or_path(str_video: str | Path) -> bytes | Path
         The video.
     """
     if isinstance(str_video, list):
-        return [convert_string_video_to_bytes_or_path(str_video_elem) for str_video_elem in str_video]
+        return [
+            cast(bytes | Path, convert_string_video_to_bytes_or_path(str_video_elem)) for str_video_elem in str_video
+        ]
+    if isinstance(str_video, bytes):
+        return str_video
     if isinstance(str_video, str):
         if is_url(str_video):
             video_bytes = requests.get(str_video, stream=True).raw
         else:
             if is_base64_video(str_video):
                 video_bytes = base64.b64decode(extract_media_from_base64(str_video))
-            elif Path(str_video).exists():
-                return Path(str_video)
             else:
-                raise ValueError("The image is not a valid path, URL or base64 string.")
+                try:
+                    path_exists = Path(str_video).exists()
+                except OSError:
+                    path_exists = False
+                if path_exists:
+                    return Path(str_video)
+                else:
+                    raise ValueError("The image is not a valid path, URL or base64 string.")
         return video_bytes
     elif isinstance(str_video, Path):
         return str_video
     else:
         raise ValueError("The image is not a valid path, URL or base64 string.")
-
-
-def encode_mask_to_rle(mask: "Tensor") -> dict[str, list[int]]:
-    """Encode a binary mask using RLE.
-
-    Args:
-        mask: A binary mask of shape (height, width).
-
-    Returns:
-        RLE encoded mask as a dictionary.
-    """
-    assert_torch_installed()
-    rle = {"counts": [], "size": list(mask.shape)}
-    mask = mask.permute(1, 0).flatten()
-    diff_arr = torch.diff(mask)
-    nonzero_indices = torch.where(diff_arr != 0)[0] + 1
-    lengths = torch.diff(torch.concatenate((torch.tensor([0]), nonzero_indices, torch.tensor([len(mask)]))))
-
-    # note that the odd counts are always the numbers of zeros
-    if mask[0] == 1:
-        lengths = torch.concatenate(([0], lengths))
-
-    rle["counts"] = lengths.tolist()
-
-    return rle
 
 
 def compress_rle(rle: dict[str, Any]) -> dict[str, Any | str]:
