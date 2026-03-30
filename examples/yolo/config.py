@@ -10,8 +10,8 @@ Usage::
     PYTHONPATH=examples:$PYTHONPATH uv run pixano-inference --config examples/custom_yoloe/config.py
 """
 
-from custom_yoloe.model import YOLOModel
 from pixano_inference.configs import DeploymentConfig, ModelConfig
+from yolo.model import YOLOModel
 
 
 models = [
