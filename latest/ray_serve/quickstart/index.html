@@ -3382,8 +3382,8 @@ Ray actor with dedicated resources:</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 </div>
-<p>See <a href="../custom_models/">custom_models.md</a> for external model modules via
-<code>model_module</code>, and <a href="https://github.com/pixano/pixano-inference/blob/main/deploy/sam2_example.py"><code>deploy/sam2_example.py</code></a>
+<p>See <a href="../custom_models/">custom_models.md</a> for deploying external custom models,
+and <a href="https://github.com/pixano/pixano-inference/blob/main/deploy/sam2_example.py"><code>deploy/sam2_example.py</code></a>
 for a typed config example.</p>
 <h2 id="deployment-configuration-reference">Deployment configuration reference</h2>
 <p>Each <code>ModelConfig(...)</code> entry supports the following fields:</p>
@@ -3409,12 +3409,6 @@ for a typed config example.</p>
 <td><code>str \| type</code></td>
 <td><em>required</em></td>
 <td>Registered model class name or class object</td>
-</tr>
-<tr>
-<td><code>model_module</code></td>
-<td><code>str</code></td>
-<td><code>None</code></td>
-<td>Python module to import before resolving <code>model_class</code> (e.g. <code>my_package.models</code>). Used for <a href="../custom_models/">external custom models</a>.</td>
 </tr>
 <tr>
 <td><code>model_params</code></td>

@@ -3067,15 +3067,13 @@
 <p>This guide shows how to deploy your own models on Pixano-Inference without
 modifying the <code>pixano_inference</code> package itself.</p>
 <h2 id="overview">Overview</h2>
-<p>Custom deployment requires three pieces:</p>
+<p>Custom deployment requires two pieces:</p>
 <ol>
 <li>A model class that subclasses one of the base classes from <code>pixano_inference.models</code></li>
-<li>A <code>@register_model(...)</code> decorator so the class can be resolved by name</li>
-<li>A Python config file that declares a <code>ModelConfig</code> with <code>model_module</code></li>
+<li>A Python config file that imports your class and passes it directly to <code>ModelConfig</code></li>
 </ol>
-<p>At startup, the server imports the module named by <code>model_module</code>, resolves the
-registered class, infers its capability from the base model class, and deploys
-it as a Ray Serve actor.</p>
+<p>At startup, the server resolves the class, infers its capability from the base
+model class, and deploys it as a Ray Serve actor.</p>
 <h2 id="choose-a-base-class">Choose a base class</h2>
 <table>
 <thead>
@@ -3152,14 +3150,14 @@ it as a Ray Serve actor.</p>
 </span></code></pre></div>
 <h2 id="python-config">Python config</h2>
 <p>Create <code>models.py</code> next to your package:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pixano_inference.configs</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeploymentConfig</span><span class="p">,</span> <span class="n">ModelConfig</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">my_models.segmenter</span><span class="w"> </span><span class="kn">import</span> <span class="n">MySegmenter</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pixano_inference.configs</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeploymentConfig</span><span class="p">,</span> <span class="n">ModelConfig</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">models</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">ModelConfig</span><span class="p">(</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;my-segmenter&quot;</span><span class="p">,</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        <span class="n">model_class</span><span class="o">=</span><span class="s2">&quot;MySegmenter&quot;</span><span class="p">,</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        <span class="n">model_module</span><span class="o">=</span><span class="s2">&quot;my_models.segmenter&quot;</span><span class="p">,</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">models</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">ModelConfig</span><span class="p">(</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;my-segmenter&quot;</span><span class="p">,</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        <span class="n">model_class</span><span class="o">=</span><span class="n">MySegmenter</span><span class="p">,</span>
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>        <span class="n">model_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="s2">&quot;my-org/my-segmentation-model&quot;</span><span class="p">,</span> <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.6</span><span class="p">},</span>
 </span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>        <span class="n">deployment</span><span class="o">=</span><span class="n">DeploymentConfig</span><span class="p">(</span><span class="n">num_gpus</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">min_replicas</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_replicas</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
 </span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="p">)</span>
@@ -3194,7 +3192,7 @@ search path:</p>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <ul>
 <li><code>Model class 'MySegmenter' not found</code>
-  Ensure <code>model_module="my_models.segmenter"</code> is set and the module is importable.</li>
+  Pass the class directly to <code>model_class</code> instead of a string name.</li>
 <li>Import errors inside the deployment
   Install the third-party dependencies required by your model in the same
   environment that starts Pixano-Inference.</li>
