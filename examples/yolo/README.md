@@ -19,10 +19,10 @@ pip install pixano-inference[ultralytics]
 ## Project Structure
 
 ```
-examples/custom_yoloe/
+examples/yolo/
     model.py        # Model implementation (extends DetectionModel)
     config.py       # Deployment configuration
-    test_yoloe.py   # End-to-end test script
+    test_yolo.py   # End-to-end test script
 ```
 
 ## Step 1: Implement the Model
@@ -99,13 +99,13 @@ Create a Python config file that defines a `models` list. Import your model clas
 
 ```python
 # config.py
-from custom_yoloe.model import YOLOModel
+from yolo.model import YOLOModel
 from pixano_inference.configs import DeploymentConfig, ModelConfig
 
 models = [
     ModelConfig(
         name="yolo26s",
-        model_class=YOLOModel,               # Pass the class directly
+        model_class=YOLOModel,
         model_params={"path": "yolo26s.pt"},  # Passed to model via config
         deployment=DeploymentConfig(
             num_gpus=1,          # GPUs per replica (set 0 for CPU-only)
@@ -117,22 +117,12 @@ models = [
 ]
 ```
 
-The `--module-path` CLI flag (or `PYTHONPATH`) adds the parent directory to `sys.path` so the import works.
-
 ## Step 3: Start the Server
 
 ```bash
 PYTHONPATH=examples:$PYTHONPATH \
   uv run pixano-inference \
-    --config examples/custom_yoloe/config.py
-```
-
-Or equivalently using `--module-path`:
-
-```bash
-uv run pixano-inference \
-    --module-path examples \
-    --config examples/custom_yoloe/config.py
+    --config examples/yolo/config.py
 ```
 
 You should see:
@@ -147,13 +137,13 @@ With the server running, use the included test script:
 
 ```bash
 # With a real image
-uv run python examples/custom_yoloe/test_yoloe.py \
+uv run python examples/yolo/test_yolo.py \
     --server-url http://127.0.0.1:7463 \
     --model-name yolo26s \
     --image path/to/image.jpg
 
 # With a synthetic test image (no --image flag)
-uv run python examples/custom_yoloe/test_yoloe.py \
+uv run python examples/yolo/test_yolo.py \
     --server-url http://127.0.0.1:7463 \
     --model-name yolo26s
 ```
@@ -161,7 +151,7 @@ uv run python examples/custom_yoloe/test_yoloe.py \
 Example output:
 
 ```
-Test 1: Closed-Vocab Detection (no classes)
+Detection
 Status: SUCCESS
 Processing time: 0.072s
 Detections: 5
@@ -248,6 +238,6 @@ The server deploys models synchronously before starting. If `num_gpus=1` but no 
 
 Install the ultralytics extra: `uv sync --extra ultralytics`
 
-**`ModuleNotFoundError: No module named 'custom_yoloe'`**
+**`ModuleNotFoundError: No module named 'yolo'`**
 
 Ensure the `examples` directory is on the Python path. Use `--module-path examples` or set `PYTHONPATH=examples:$PYTHONPATH`.
