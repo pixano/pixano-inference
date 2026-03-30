@@ -231,8 +231,8 @@ models = [
 ```
 
 !!! tip
-See [custom_models.md](custom_models.md) for external model modules via
-`model_module`, and [`deploy/sam2_example.py`](https://github.com/pixano/pixano-inference/blob/main/deploy/sam2_example.py)
+See [custom_models.md](custom_models.md) for deploying external custom models,
+and [`deploy/sam2_example.py`](https://github.com/pixano/pixano-inference/blob/main/deploy/sam2_example.py)
 for a typed config example.
 
 ## Deployment configuration reference
@@ -245,7 +245,6 @@ Each `ModelConfig(...)` entry supports the following fields:
 | -------------- | ------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`         | `str`                     | _required_ | Unique model name                                                                                                                       |
 | `model_class`  | `str \| type`             | _required_ | Registered model class name or class object                                                                                             |
-| `model_module` | `str`                     | `None`     | Python module to import before resolving `model_class` (e.g. `my_package.models`). Used for [external custom models](custom_models.md). |
 | `model_params` | `dict \| BaseModelParams` | `{}`       | Parameters passed to the model (e.g. `path`, `torch_dtype`)                                                                             |
 
 Capability is derived automatically from `model_class`. For example:

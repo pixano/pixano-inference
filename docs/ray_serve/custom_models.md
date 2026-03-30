@@ -13,15 +13,13 @@ modifying the `pixano_inference` package itself.
 
 ## Overview
 
-Custom deployment requires three pieces:
+Custom deployment requires two pieces:
 
 1. A model class that subclasses one of the base classes from `pixano_inference.models`
-2. A `@register_model(...)` decorator so the class can be resolved by name
-3. A Python config file that declares a `ModelConfig` with `model_module`
+2. A Python config file that imports your class and passes it directly to `ModelConfig`
 
-At startup, the server imports the module named by `model_module`, resolves the
-registered class, infers its capability from the base model class, and deploys
-it as a Ray Serve actor.
+At startup, the server resolves the class, infers its capability from the base
+model class, and deploys it as a Ray Serve actor.
 
 ## Choose a base class
 
@@ -82,14 +80,14 @@ class MySegmenter(SegmentationModel):
 Create `models.py` next to your package:
 
 ```python
+from my_models.segmenter import MySegmenter
 from pixano_inference.configs import DeploymentConfig, ModelConfig
 
 
 models = [
     ModelConfig(
         name="my-segmenter",
-        model_class="MySegmenter",
-        model_module="my_models.segmenter",
+        model_class=MySegmenter,
         model_params={"path": "my-org/my-segmentation-model", "threshold": 0.6},
         deployment=DeploymentConfig(num_gpus=1, min_replicas=0, max_replicas=2, max_batch_size=4),
     )
@@ -134,7 +132,7 @@ curl -X POST http://localhost:7463/inference/segmentation/ \
 ## Troubleshooting
 
 - `Model class 'MySegmenter' not found`
-  Ensure `model_module="my_models.segmenter"` is set and the module is importable.
+  Pass the class directly to `model_class` instead of a string name.
 - Import errors inside the deployment
   Install the third-party dependencies required by your model in the same
   environment that starts Pixano-Inference.

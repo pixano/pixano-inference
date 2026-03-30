@@ -88,6 +88,9 @@ test=[
   "pytest-mock",
   "responses",
 ]
+ultralytics=[
+  "ultralytics",
+]
 vllm=[
   "vllm >= 0.6.0; sys_platform == 'linux'",
 ]

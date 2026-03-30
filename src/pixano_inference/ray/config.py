@@ -51,8 +51,6 @@ class ModelDeploymentConfig(BaseModel):
         name: Unique model name. Optional for HuggingFace models (auto-derived from path).
         capability: Capability string (e.g. "segmentation").
         model_class: Registered class name (e.g. "Sam2ImageModel").
-        model_module: Python module path to import before resolving model_class
-            (e.g. "my_package.models"). Used for external custom models.
         model_params: Parameters passed to model __init__ via config.
         resources: Resource configuration for the deployment.
         autoscaling: Autoscaling configuration for the deployment.
@@ -63,10 +61,6 @@ class ModelDeploymentConfig(BaseModel):
     name: str
     capability: str
     model_class: str
-    model_module: str | None = Field(
-        default=None,
-        description="Python module path to import before resolving model_class (e.g. 'my_package.models').",
-    )
     model_params: dict = Field(default_factory=dict)
     resources: ResourceConfig = Field(default_factory=ResourceConfig)
     autoscaling: AutoscalingConfig = Field(default_factory=AutoscalingConfig)

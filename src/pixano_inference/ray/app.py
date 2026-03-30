@@ -8,7 +8,6 @@
 
 from __future__ import annotations
 
-import importlib
 import logging
 import time
 from dataclasses import dataclass, field
@@ -88,16 +87,6 @@ class DeploymentManager:
         """
         if config.name in self._handles:
             raise ValueError(f"Model '{config.name}' is already deployed.")
-
-        # Import external model module to trigger @register_model decorators
-        if config.model_module is not None:
-            try:
-                importlib.import_module(config.model_module)
-                logger.info(f"Imported model module: {config.model_module}")
-            except ImportError as e:
-                raise ImportError(
-                    f"Failed to import model module '{config.model_module}' for model '{config.name}': {e}"
-                ) from e
 
         # Resolve model class
         model_class = ModelClassRegistry.get(config.model_class)

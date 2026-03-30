@@ -4,9 +4,9 @@
 # License: CECILL-C
 # =================================
 
-"""YOLOE custom model example.
+"""YOLO as custom model example.
 
-Demonstrates how to wrap a third-party model (ultralytics YOLOE) as a
+Demonstrates how to wrap a third-party model (ultralytics YOLO) as a
 pixano-inference :class:`DetectionModel` and register it for deployment
 with Ray Serve.
 
@@ -14,7 +14,7 @@ Requirements:
     pip install ultralytics
 
 Usage:
-    PYTHONPATH=examples:$PYTHONPATH pixano-inference --config examples/custom_yoloe/config.py
+    PYTHONPATH=examples:$PYTHONPATH pixano-inference --config examples/yolo/config.py
 """
 
 from __future__ import annotations
@@ -23,32 +23,17 @@ import gc
 import logging
 from typing import Any
 
-import numpy as np
-
 from pixano_inference.models.detection import DetectionInput, DetectionModel, DetectionOutput
 from pixano_inference.models.registry import register_model
 from pixano_inference.ray.config import ModelDeploymentConfig
-from pixano_inference.schemas.rle import CompressedRLE
 
 
 logger = logging.getLogger(__name__)
 
 
-@register_model("YOLOEModel")
-class YOLOEModel(DetectionModel):
-    """YOLOE instance segmentation model.
-
-    Supports both **open-vocabulary** mode (classes provided at inference
-    time via ``input.classes``) and **closed-vocabulary / prompt-free** mode
-    (``input.classes`` is ``None``).
-
-    ``model_params`` contract:
-
-    - ``path`` (str, required): Model checkpoint path or name (e.g.
-      ``"yoloe-11s-seg.pt"``).
-    - ``config`` (dict, optional): Extra kwargs forwarded to
-      ``YOLOE(path, **config)``.
-    """
+@register_model("YOLOModel")
+class YOLOModel(DetectionModel):
+    """YOLO Detection model."""
 
     def __init__(self, config: ModelDeploymentConfig) -> None:
         """Initialize the model.
@@ -60,15 +45,14 @@ class YOLOEModel(DetectionModel):
         self._model: Any = None
 
     def load_model(self) -> None:
-        """Load the YOLOE model from ultralytics."""
+        """Load the YOLO model from ultralytics."""
         try:
-            from ultralytics import YOLOE
+            from ultralytics import YOLO
         except ImportError as exc:
-            raise ImportError("ultralytics is required for YOLOEModel. Install with: pip install ultralytics") from exc
+            raise ImportError("ultralytics is required for YOLOModel. Install with: pip install ultralytics") from exc
 
         params = dict(self._config.model_params)
         path = params.pop("path")
-        extra = params.pop("config", {})
 
         device = "cpu"
         if self._config.resources.num_gpus > 0:
@@ -80,10 +64,10 @@ class YOLOEModel(DetectionModel):
             except ImportError:
                 pass
 
-        self._model = YOLOE(path, **extra)
+        self._model = YOLO(path)
         self._model.to(device)
 
-        logger.info("YOLOEModel '%s' loaded on %s", self.model_name, device)
+        logger.info("YOLOModel '%s' loaded on %s", self.model_name, device)
 
     @property
     def metadata(self) -> dict[str, Any]:
@@ -105,11 +89,6 @@ class YOLOEModel(DetectionModel):
 
         pil_image = convert_string_to_image(input.image)
 
-        # Open-vocab: set classes on the model before prediction
-        if input.classes is not None:
-            classes = [input.classes] if isinstance(input.classes, str) else list(input.classes)
-            self._model.set_classes(classes)
-
         results = self._model.predict(pil_image, conf=input.box_threshold)
         result = results[0]
 
@@ -128,19 +107,10 @@ class YOLOEModel(DetectionModel):
                 scores.append(float(conf))
                 class_names.append(result.names[int(cls_id)])
 
-        # --- masks (instance segmentation) ---
-        masks: list[CompressedRLE] | None = None
-        if result.masks is not None and len(result.masks.data):
-            masks = []
-            for mask_tensor in result.masks.data.cpu():
-                mask_np = mask_tensor.numpy().astype(np.uint8)
-                masks.append(CompressedRLE.from_mask(mask_np))
-
         return DetectionOutput(
             boxes=boxes,
             scores=scores,
             classes=class_names,
-            masks=masks,
         )
 
     def unload(self) -> None:

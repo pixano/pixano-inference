@@ -184,26 +184,20 @@ class TestModelConfig:
         assert config.model_class_name == "GroundingDINOModel"
         assert config.capability == "detection"
 
-    def test_model_module_import_resolves_capability(self, tmp_path: pytest.TempPathFactory, monkeypatch):
-        module_path = tmp_path / "external_models.py"
-        module_path.write_text(
-            "from pydantic import BaseModel\n"
-            "from pixano_inference.models import SegmentationModel\n"
-            "from pixano_inference.models.segmentation import SegmentationInput, SegmentationOutput\n"
-            "\n"
-            "class ExternalSegmentationModel(SegmentationModel):\n"
-            "    def load_model(self):\n"
-            "        pass\n"
-            "\n"
-            "    def predict(self, input: SegmentationInput) -> SegmentationOutput:\n"
-            "        raise NotImplementedError\n"
-        )
-        monkeypatch.syspath_prepend(str(tmp_path))
+    def test_external_class_resolves_capability(self):
+        from pixano_inference.models import SegmentationModel
+        from pixano_inference.models.segmentation import SegmentationInput, SegmentationOutput
+
+        class ExternalSegmentationModel(SegmentationModel):
+            def load_model(self):
+                pass
+
+            def predict(self, input: SegmentationInput) -> SegmentationOutput:
+                raise NotImplementedError
 
         config = ModelConfig(
             name="external-seg",
-            model_class="ExternalSegmentationModel",
-            model_module="external_models",
+            model_class=ExternalSegmentationModel,
             model_params={"path": "some/model"},
         )
 
@@ -211,7 +205,6 @@ class TestModelConfig:
         dc = config.to_deployment_config()
         assert dc.capability == "segmentation"
         assert dc.model_class == "ExternalSegmentationModel"
-        assert dc.model_module == "external_models"
 
     def test_non_inference_model_class_raises(self):
         class PlainPythonClass:

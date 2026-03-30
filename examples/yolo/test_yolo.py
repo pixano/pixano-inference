@@ -4,25 +4,20 @@
 # License: CECILL-C
 # =================================
 
-r"""Test script for YOLOE instance segmentation with pixano-inference.
+r"""Test script for YOLO object detection with pixano-inference.
 
 Demonstrates how to:
 1. Connect to the pixano-inference server via the client
 2. List deployed models
-3. Run instance segmentation with open-vocab and closed-vocab modes
-4. Decode and inspect the resulting boxes and masks
+3. Run object detection on an image
 
 Prerequisites:
-- Start the server with the YOLOE config:
-
-    pixano-inference \
-        --module-path examples \
-        --config examples/custom_yoloe/config.py
-
+- Start the server with the YOLO config:
+    PYTHONPATH=examples:$PYTHONPATH pixano-inference --config examples/yolo/config.py
 Usage:
-    python examples/custom_yoloe/test_yoloe.py \
+    python examples/custom_yoloe/test_yolo.py \
         [--server-url URL] [--image PATH] [--model-name NAME] \
-        [--classes "cat,dog"] [--threshold 0.3]
+        [--threshold 0.3]
 """
 
 from __future__ import annotations
@@ -33,16 +28,14 @@ import base64
 import sys
 from pathlib import Path
 
-import numpy as np
 import requests  # type: ignore[import-untyped]
-from fastapi import HTTPException
 
 from pixano_inference.client import PixanoInferenceClient
 from pixano_inference.schemas import DetectionRequest
 
 
 DEFAULT_SERVER_URL = "http://localhost:7463"
-DEFAULT_MODEL_NAME = "yoloe"
+DEFAULT_MODEL_NAME = "yolo26s"
 
 
 def image_to_base64(image_path: str | Path) -> str:
@@ -99,17 +92,16 @@ def print_section(title: str) -> None:
 
 
 async def main() -> None:
-    """Run YOLOE instance segmentation tests."""
-    parser = argparse.ArgumentParser(description="Test YOLOE instance segmentation")
+    """Run YOLO object detection test."""
+    parser = argparse.ArgumentParser(description="Test YOLO object detection")
     parser.add_argument("--server-url", default=DEFAULT_SERVER_URL, help=f"Server URL (default: {DEFAULT_SERVER_URL})")
     parser.add_argument("--image", type=str, default=None, help="Path to image file (creates test image if omitted)")
     parser.add_argument("--model-name", default=DEFAULT_MODEL_NAME, help=f"Model name (default: {DEFAULT_MODEL_NAME})")
-    parser.add_argument("--classes", type=str, default=None, help="Comma-separated class names for open-vocab mode")
     parser.add_argument("--threshold", type=float, default=0.3, help="Detection confidence threshold (default: 0.3)")
     args = parser.parse_args()
 
     # --- Connect ---
-    print_section("YOLOE Instance Segmentation Test")
+    print_section("YOLO Object Detection Test")
     print(f"\nServer URL: {args.server_url}")
 
     try:
@@ -153,62 +145,21 @@ async def main() -> None:
         print("Creating synthetic test image...")
         image_b64 = create_sample_image()
 
-    model_name = args.model_name
+    # --- Run detection ---
+    print_section("Detection")
+    request = DetectionRequest(
+        model=args.model_name,
+        image=image_b64,
+        box_threshold=args.threshold,
+    )
+    result = await client.detection(request)
+    print(f"Status: {result.status}")
+    print(f"Processing time: {result.processing_time:.3f}s")
+    print(f"Detections: {len(result.data.boxes)}")
+    for i, (box, score, cls) in enumerate(zip(result.data.boxes, result.data.scores, result.data.classes)):
+        print(f"  [{i}] class={cls}, score={score:.3f}, box={box}")
 
-    # --- Test 1: Closed-vocab (prompt-free) ---
-    print_section("Test 1: Closed-Vocab Detection (no classes)")
-    try:
-        request = DetectionRequest(
-            model=model_name,
-            image=image_b64,
-            classes=None,
-            box_threshold=args.threshold,
-        )
-        result = await client.detection(request)
-        print(f"Status: {result.status}")
-        print(f"Processing time: {result.processing_time:.3f}s")
-        print(f"Detections: {len(result.data.boxes)}")
-        for i, (box, score, cls) in enumerate(zip(result.data.boxes, result.data.scores, result.data.classes)):
-            print(f"  [{i}] class={cls}, score={score:.3f}, box={box}")
-        if result.data.masks:
-            print(f"Masks returned: {len(result.data.masks)}")
-            for i, mask_rle in enumerate(result.data.masks):
-                mask = mask_rle.to_mask()
-                coverage = np.sum(mask) / mask.size * 100
-                print(f"  [{i}] mask shape={mask.shape}, coverage={coverage:.2f}%")
-        else:
-            print("No masks returned (detection-only mode).")
-    except HTTPException as e:
-        print(f"ERROR: {e.detail}")
-
-    # --- Test 2: Open-vocab (with classes) ---
-    classes = args.classes.split(",") if args.classes else ["rectangle", "circle", "triangle"]
-    print_section(f"Test 2: Open-Vocab Detection (classes={classes})")
-    try:
-        request = DetectionRequest(
-            model=model_name,
-            image=image_b64,
-            classes=classes,
-            box_threshold=args.threshold,
-        )
-        result = await client.detection(request)
-        print(f"Status: {result.status}")
-        print(f"Processing time: {result.processing_time:.3f}s")
-        print(f"Detections: {len(result.data.boxes)}")
-        for i, (box, score, cls) in enumerate(zip(result.data.boxes, result.data.scores, result.data.classes)):
-            print(f"  [{i}] class={cls}, score={score:.3f}, box={box}")
-        if result.data.masks:
-            print(f"Masks returned: {len(result.data.masks)}")
-            for i, mask_rle in enumerate(result.data.masks):
-                mask = mask_rle.to_mask()
-                coverage = np.sum(mask) / mask.size * 100
-                print(f"  [{i}] mask shape={mask.shape}, coverage={coverage:.2f}%")
-        else:
-            print("No masks returned (detection-only mode).")
-    except HTTPException as e:
-        print(f"ERROR: {e.detail}")
-
-    print_section("Tests completed!")
+    print_section("Test completed!")
 
 
 if __name__ == "__main__":

@@ -126,5 +126,14 @@ def create_model_deployment(
 
     # Create the actor and wait for it to be ready (model loaded)
     handle = ModelActor.remote()  # type: ignore[attr-defined]
-    ray.get(handle.ready.remote())
+    try:
+        ray.get(handle.ready.remote(), timeout=300)
+    except ray.exceptions.GetTimeoutError:
+        ray.kill(handle)
+        raise TimeoutError(
+            f"Model '{config.name}' actor did not become ready within 300 s. "
+            f"Requested resources: {ray_actor_options}. "
+            f"Available cluster resources: {ray.available_resources()}. "
+            f"Check that the required GPUs/CPUs are available."
+        )
     return handle

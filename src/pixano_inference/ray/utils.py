@@ -38,6 +38,23 @@ def detect_optional_packages() -> list[str]:
     return packages
 
 
+_DEFAULT_EXCLUDES = [
+    ".git",
+    ".venv",
+    "pyproject.toml",
+    "uv.lock",
+]
+"""Paths excluded from Ray's automatic working-directory packaging.
+
+Without these excludes, Ray auto-detects the local module directory and
+uploads the entire project tree (including ``.git``, ``.venv``, and
+``pyproject.toml``).  When workers extract the package, ``uv`` (if
+present) sees the ``pyproject.toml`` and creates a fresh virtual
+environment—often with a different Python version—causing workers to
+hang during startup.
+"""
+
+
 def build_runtime_env(
     pip_packages: list[str] | None = None,
     working_dir: str | None = None,
@@ -64,5 +81,10 @@ def build_runtime_env(
 
     if working_dir:
         env["working_dir"] = working_dir
+
+    # Always set excludes to prevent Ray from packaging .git, .venv,
+    # and project metadata files that cause uv to create new venvs
+    # in worker processes.
+    env["excludes"] = _DEFAULT_EXCLUDES
 
     return env if env else None

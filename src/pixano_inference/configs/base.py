@@ -8,7 +8,6 @@
 
 from __future__ import annotations
 
-import importlib
 from collections.abc import Callable
 from typing import Any
 
@@ -153,14 +152,12 @@ class ModelConfig(BaseModel):
         name: Unique model name. Optional for HuggingFace models (auto-derived from path).
         model_class: Registered model class name or class type (e.g. ``"Sam2ImageModel"``
             or ``Sam2ImageModel``).
-        model_module: Python module path to import before resolving model_class.
         model_params: Typed params or raw dict, auto-resolved via registry.
         deployment: Deployment settings.
     """
 
     name: str | None = None
     model_class: str | type
-    model_module: str | None = None
     model_params: dict[str, Any] | BaseModelParams = Field(default_factory=dict)
     deployment: DeploymentConfig = Field(default_factory=DeploymentConfig)
 
@@ -226,15 +223,6 @@ class ModelConfig(BaseModel):
         import pixano_inference.impls  # noqa: F401
         from pixano_inference.models.base import InferenceModel
 
-        imported_module = None
-        if self.model_module is not None:
-            try:
-                imported_module = importlib.import_module(self.model_module)
-            except ImportError as exc:
-                raise ValueError(
-                    f"Failed to import model_module '{self.model_module}' for model '{self.model_class_name}': {exc}"
-                ) from exc
-
         if isinstance(self.model_class, type):
             if not issubclass(self.model_class, InferenceModel):
                 raise ValueError(
@@ -246,15 +234,11 @@ class ModelConfig(BaseModel):
         try:
             return ModelClassRegistry.get(self.model_class)
         except KeyError:
-            if imported_module is not None:
-                maybe_class = getattr(imported_module, self.model_class, None)
-                if isinstance(maybe_class, type) and issubclass(maybe_class, InferenceModel):
-                    ModelClassRegistry.ensure_registered(maybe_class, self.model_class)
-                    return maybe_class
+            pass
 
         raise ValueError(
-            f"Unknown model_class '{self.model_class}'. Register the class with @register_model, "
-            "pass the class type directly, or set model_module so it can be imported first."
+            f"Unknown model_class '{self.model_class}'. Register the class with @register_model "
+            "or pass the class type directly."
         )
 
     def to_deployment_config(self) -> ModelDeploymentConfig:
@@ -272,7 +256,6 @@ class ModelConfig(BaseModel):
             name=self.resolved_name,
             capability=self.capability,
             model_class=self.model_class_name,
-            model_module=self.model_module,
             model_params=model_params,
             resources=ResourceConfig(
                 num_gpus=dep.num_gpus,
