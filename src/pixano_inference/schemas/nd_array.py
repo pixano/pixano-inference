@@ -4,20 +4,20 @@
 # License: CECILL-C
 # =================================
 
-"""Pydantic models for N-dimensional arrays."""
+"""Pydantic models for N-dimensional arrays.
+
+This is a core, framework-agnostic wire type: it converts to and from ``numpy.ndarray``
+only. Conversions to framework tensors (torch/jax/tf/mlx) live in
+:mod:`pixano_inference.frameworks`, so the core does not privilege any one framework.
+"""
 
 from abc import ABC
-from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
+from typing import ClassVar, Generic, TypeVar
 
 import numpy as np
 from pydantic import BaseModel, field_validator
 from typing_extensions import Self
 
-from pixano_inference.utils.package import assert_torch_installed
-
-
-if TYPE_CHECKING:
-    from torch import Tensor
 
 T = TypeVar("T")
 
@@ -62,20 +62,6 @@ class NDArray(BaseModel, Generic[T], ABC):
             shape=shape,
         )
 
-    @classmethod
-    def from_torch(cls, tensor: "Tensor") -> Self:
-        """Create an instance of the class from a PyTorch tensor.
-
-        Args:
-            tensor: The PyTorch tensor to convert.
-
-        Returns:
-            An instance of the class with values and shape derived from
-                the input tensor.
-        """
-        assert_torch_installed()
-        return cls.from_numpy(tensor.cpu().numpy())
-
     def to_numpy(self) -> np.ndarray:
         """Convert the instance to a NumPy array.
 
@@ -84,17 +70,6 @@ class NDArray(BaseModel, Generic[T], ABC):
         """
         array = np.array(self.values, dtype=self.np_dtype).reshape(self.shape)
         return array
-
-    def to_torch(self) -> "Tensor":
-        """Convert the instance to a PyTorch tensor.
-
-        Returns:
-            A PyTorch tensor with values and shape derived from the instance.
-        """
-        import torch
-
-        assert_torch_installed()
-        return torch.from_numpy(self.to_numpy())
 
 
 class NDArrayFloat(NDArray[float]):

@@ -49,6 +49,33 @@ def is_torch_installed() -> bool:
     return is_package_installed("torch")
 
 
+def is_jax_installed() -> bool:
+    """Check if the jax package is installed.
+
+    Returns:
+        True if the jax package is installed, False otherwise
+    """
+    return is_package_installed("jax")
+
+
+def is_tensorflow_installed() -> bool:
+    """Check if the tensorflow package is installed.
+
+    Returns:
+        True if the tensorflow package is installed, False otherwise
+    """
+    return is_package_installed("tensorflow")
+
+
+def is_mlx_installed() -> bool:
+    """Check if the mlx package is installed.
+
+    Returns:
+        True if the mlx package is installed, False otherwise
+    """
+    return is_package_installed("mlx")
+
+
 def is_transformers_installed() -> bool:
     """Check if the transformers package is installed.
 
@@ -110,6 +137,28 @@ def assert_torch_installed() -> None:
     """Assert that the torch package is installed."""
     assert_package_installed(
         "torch", "torch is not installed. Please install it using 'pip install pixano-inference[torch]'."
+    )
+
+
+def assert_jax_installed() -> None:
+    """Assert that the jax package is installed."""
+    assert_package_installed(
+        "jax", "jax is not installed. Please install it using 'pip install pixano-inference[jax]'."
+    )
+
+
+def assert_tensorflow_installed() -> None:
+    """Assert that the tensorflow package is installed."""
+    assert_package_installed(
+        "tensorflow",
+        "tensorflow is not installed. Please install it using 'pip install pixano-inference[tensorflow]'.",
+    )
+
+
+def assert_mlx_installed() -> None:
+    """Assert that the mlx package is installed."""
+    assert_package_installed(
+        "mlx", "mlx is not installed. Please install it using 'pip install pixano-inference[mlx]'."
     )
 
 

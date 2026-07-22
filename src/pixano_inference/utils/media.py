@@ -13,10 +13,9 @@ from pathlib import Path
 from typing import Any, cast
 
 import numpy as np
-import requests  # type: ignore[import-untyped]
 from PIL import Image
 
-from .url import is_url
+from .media_security import fetch_url_bytes, get_media_policy, is_http_url, resolve_local_path
 
 
 regex_media_base64 = r"^(data:[a-zA-Z]/[a-zA-Z]+;base64,)"
@@ -61,34 +60,32 @@ def extract_media_from_base64(string: str) -> str:
 
 
 def convert_string_to_image(str_image: str | Path | bytes) -> Image.Image:
-    """Convert a string or path to an image.
+    """Convert a string, path, or bytes reference to an image, under the media policy.
+
+    URLs are fetched with SSRF protection, timeouts, and a size cap; local paths are only
+    accepted when they resolve under a configured media root (see
+    :mod:`pixano_inference.utils.media_security`).
 
     Args:
-        str_image: Image as a string or path.
+        str_image: Image as a URL, base64 data-URI, local path, ``Path``, or raw bytes.
 
     Returns:
-        Image.
+        The RGB image.
     """
+    policy = get_media_policy()
     if isinstance(str_image, str):
-        if is_url(str_image):
-            image_pil = Image.open(requests.get(str_image, stream=True).raw)
+        if is_http_url(str_image):
+            image_bytes = fetch_url_bytes(str_image, max_bytes=policy.max_image_bytes, policy=policy)
+            image_pil = Image.open(BytesIO(image_bytes))
+        elif is_base64_image(str_image):
+            image_bytes = base64.b64decode(extract_media_from_base64(str_image))
+            image_pil = Image.open(BytesIO(image_bytes))
         else:
-            if is_base64_image(str_image):
-                image_bytes = base64.b64decode(extract_media_from_base64(str_image))
-                image_pil = Image.open(BytesIO(image_bytes))
-            else:
-                try:
-                    path_exists = Path(str_image).exists()
-                except OSError:
-                    path_exists = False
-                if path_exists:
-                    image_pil = Image.open(str_image)
-                else:
-                    raise ValueError("The image is not a valid path, URL or base64 string.")
+            image_pil = Image.open(resolve_local_path(str_image, policy))
     elif isinstance(str_image, bytes):
         image_pil = Image.open(BytesIO(str_image))
     elif isinstance(str_image, Path):
-        image_pil = Image.open(str_image)
+        image_pil = Image.open(resolve_local_path(str_image, policy))
     else:
         raise ValueError("The image is not a valid path, URL or base64 string.")
     image_converted = image_pil.convert("RGB")
@@ -98,14 +95,19 @@ def convert_string_to_image(str_image: str | Path | bytes) -> Image.Image:
 def convert_string_video_to_bytes_or_path(
     str_video: list[str | Path | bytes] | str | Path | bytes,
 ) -> list[bytes | Path] | bytes | Path:
-    """Convert a string to a video or video path.
+    """Convert a video reference to bytes or a path, under the media policy.
+
+    URLs are fetched with SSRF protection, timeouts, and a size cap; local paths are only
+    accepted when they resolve under a configured media root.
 
     Args:
-        str_video: Video as a string or path.
+        str_video: Video as a URL, base64 data-URI, local path, ``Path``, raw bytes, or a
+            list of any of those (per-frame).
 
     Returns:
-        The video.
+        The video as bytes or a resolved ``Path`` (or a list thereof).
     """
+    policy = get_media_policy()
     if isinstance(str_video, list):
         return [
             cast(bytes | Path, convert_string_video_to_bytes_or_path(str_video_elem)) for str_video_elem in str_video
@@ -113,25 +115,15 @@ def convert_string_video_to_bytes_or_path(
     if isinstance(str_video, bytes):
         return str_video
     if isinstance(str_video, str):
-        if is_url(str_video):
-            video_bytes = requests.get(str_video, stream=True).raw
-        else:
-            if is_base64_video(str_video):
-                video_bytes = base64.b64decode(extract_media_from_base64(str_video))
-            else:
-                try:
-                    path_exists = Path(str_video).exists()
-                except OSError:
-                    path_exists = False
-                if path_exists:
-                    return Path(str_video)
-                else:
-                    raise ValueError("The image is not a valid path, URL or base64 string.")
-        return video_bytes
+        if is_http_url(str_video):
+            return fetch_url_bytes(str_video, max_bytes=policy.max_video_bytes, policy=policy)
+        if is_base64_video(str_video):
+            return base64.b64decode(extract_media_from_base64(str_video))
+        return resolve_local_path(str_video, policy)
     elif isinstance(str_video, Path):
-        return str_video
+        return resolve_local_path(str_video, policy)
     else:
-        raise ValueError("The image is not a valid path, URL or base64 string.")
+        raise ValueError("The video is not a valid path, URL or base64 string.")
 
 
 def compress_rle(rle: dict[str, Any]) -> dict[str, Any | str]:

@@ -288,10 +288,14 @@ class Sam2VideoModel(TrackingModel):
         """
         from sam2.sam2_video_predictor import load_video_frames
 
+        from pixano_inference.utils.media_security import resolve_local_path
+
         compute_device = self._predictor.device
 
         if isinstance(video, (str, Path)):
-            path = Path(video) if isinstance(video, str) else video
+            # Enforce media-root containment before touching the filesystem (a client-supplied
+            # path could otherwise read or glob arbitrary directories on the host).
+            path = resolve_local_path(video)
             if path.is_file():
                 images, video_height, video_width = load_video_frames(
                     video_path=path,

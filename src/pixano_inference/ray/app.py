@@ -16,11 +16,15 @@ from typing import Any
 from uuid import uuid4
 
 import ray
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from pixano_inference.__version__ import __version__
 from pixano_inference.models.registry import ModelClassRegistry
 from pixano_inference.schemas import ModelInfo
+from pixano_inference.security import make_api_key_dependency, warn_if_auth_disabled
+from pixano_inference.server_settings import ServerSettings
 
 from .config import ModelDeploymentConfig, RayServeConfig
 from .deployment import create_model_deployment
@@ -28,6 +32,30 @@ from .routes import register_inference_routes, register_service_routes
 
 
 logger = logging.getLogger(__name__)
+
+
+class BodySizeLimitMiddleware(BaseHTTPMiddleware):
+    """Reject requests whose body exceeds a configured maximum, before reading it."""
+
+    def __init__(self, app: Any, max_body_bytes: int) -> None:
+        """Store the maximum allowed body size in bytes."""
+        super().__init__(app)
+        self._max = max_body_bytes
+
+    async def dispatch(self, request: Request, call_next):  # type: ignore[override]
+        """Return 413 when the declared Content-Length exceeds the configured maximum."""
+        if self._max > 0:
+            content_length = request.headers.get("content-length")
+            if content_length is not None:
+                try:
+                    if int(content_length) > self._max:
+                        return JSONResponse(
+                            status_code=413,
+                            content={"error": {"code": "payload_too_large", "message": "Request body too large."}},
+                        )
+                except ValueError:
+                    pass
+        return await call_next(request)
 
 
 @dataclass
@@ -309,20 +337,49 @@ def create_ray_serve_app(
     # Trigger model registration from installed backends
     import pixano_inference.impls  # noqa: F401
 
+    server_settings = ServerSettings()
+    warn_if_auth_disabled(server_settings, config.host)
+
     app = FastAPI(
         title="Pixano Inference (Ray)",
         description="Pixano Inference API powered by Ray Serve",
         version=__version__,
     )
 
+    # Body-size limit (before any body is read).
+    app.add_middleware(BodySizeLimitMiddleware, max_body_bytes=server_settings.max_request_body_bytes)
+
+    # CORS, only when explicitly configured.
+    if server_settings.cors_allow_origins:
+        from fastapi.middleware.cors import CORSMiddleware
+
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=server_settings.cors_allow_origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+
+    # Never leak raw exception text from unhandled errors.
+    @app.exception_handler(Exception)
+    async def _unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        logger.exception("Unhandled error on %s %s", request.method, request.url.path)
+        return JSONResponse(
+            status_code=500,
+            content={"error": {"code": "internal_error", "message": "Internal server error."}},
+        )
+
     deployment_manager = DeploymentManager(config)
+    auth_dependency = make_api_key_dependency(server_settings)
 
     # Register all route groups
     register_service_routes(app, deployment_manager)
-    register_inference_routes(app, deployment_manager)
+    register_inference_routes(app, deployment_manager, auth_dependency=auth_dependency)
 
     # Store references in app state for access by routes
     app.state.config = config
+    app.state.server_settings = server_settings
     app.state.deployment_manager = deployment_manager
 
     return app, deployment_manager

@@ -4,61 +4,36 @@
 # License: CECILL-C
 # =================================
 
-"""Shared utility functions for built-in model implementations."""
+"""Shared utility functions for built-in model implementations.
+
+The torch-specific helpers (``resolve_device``, ``resolve_torch_dtype``,
+``convert_image_pil_to_tensor``, ``encode_mask_to_rle``) now live in
+:mod:`pixano_inference.frameworks.torch` and are re-exported here for the built-in
+(torch-based) backends that import them. The remaining helpers below are numpy-only and
+framework-agnostic.
+"""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
-
 import numpy as np
 
-from pixano_inference.ray.config import ModelDeploymentConfig
-from pixano_inference.utils.package import assert_torch_installed
+# Re-exported for the built-in torch backends. Home is pixano_inference.frameworks.torch.
+from pixano_inference.frameworks.torch import (
+    convert_image_pil_to_tensor,
+    encode_mask_to_rle,
+    resolve_device,
+    resolve_torch_dtype,
+)
 
 
-if TYPE_CHECKING:
-    import torch
-    from torch import Tensor
-
-
-def resolve_torch_dtype(dtype_str: str) -> Any:
-    """Map a dtype string to a ``torch.dtype``.
-
-    Args:
-        dtype_str: One of ``"float32"``, ``"float16"``, ``"bfloat16"``.
-
-    Returns:
-        Corresponding ``torch.dtype``.
-
-    Raises:
-        ValueError: If *dtype_str* is not recognised.
-    """
-    import torch
-
-    mapping = {
-        "float32": torch.float32,
-        "float16": torch.float16,
-        "bfloat16": torch.bfloat16,
-    }
-    if dtype_str not in mapping:
-        raise ValueError(f"Unsupported torch_dtype '{dtype_str}'. Choose from {list(mapping)}")
-    return mapping[dtype_str]
-
-
-def resolve_device(config: ModelDeploymentConfig) -> Any:
-    """Return ``torch.device('cuda')`` when a GPU is requested and available, else CPU.
-
-    Args:
-        config: Model deployment configuration.
-
-    Returns:
-        A ``torch.device``.
-    """
-    import torch
-
-    if config.resources.num_gpus > 0 and torch.cuda.is_available():
-        return torch.device("cuda")
-    return torch.device("cpu")
+__all__ = [
+    "convert_image_pil_to_tensor",
+    "encode_mask_to_rle",
+    "pad_points_and_labels",
+    "resolve_device",
+    "resolve_torch_dtype",
+    "validate_prompts",
+]
 
 
 def validate_prompts(
@@ -137,51 +112,3 @@ def pad_points_and_labels(
     out_points = np.array(processed_points)
     out_labels = np.array(np_labels) if np_labels is not None else None
     return out_points, out_labels
-
-
-def convert_image_pil_to_tensor(image: Any, device: "torch.device", size: int | None = None) -> "Tensor":
-    """Convert an image in PIL format to a PyTorch tensor and optionally resize it.
-
-    Args:
-        image: PIL image.
-        device: Torch device.
-        size: Optional target size (both height and width).
-
-    Returns:
-        Image as a ``(C, H, W)`` float tensor.
-    """
-    import torch
-
-    assert_torch_installed()
-    image = image.convert("RGB")
-    if size is not None:
-        image = image.resize((size, size))
-    image_np = np.array(image) / 255.0
-    return torch.from_numpy(image_np).to(device=device).permute(2, 0, 1)
-
-
-def encode_mask_to_rle(mask: "Tensor") -> dict[str, list[int]]:
-    """Encode a binary mask using RLE.
-
-    Args:
-        mask: A binary mask of shape (height, width).
-
-    Returns:
-        RLE encoded mask as a dictionary.
-    """
-    import torch
-
-    assert_torch_installed()
-    rle: dict[str, Any] = {"counts": [], "size": list(mask.shape)}
-    mask = mask.permute(1, 0).flatten()
-    diff_arr = torch.diff(mask)
-    nonzero_indices = torch.where(diff_arr != 0)[0] + 1
-    lengths = torch.diff(torch.concatenate((torch.tensor([0]), nonzero_indices, torch.tensor([len(mask)]))))
-
-    # note that the odd counts are always the numbers of zeros
-    if mask[0] == 1:
-        lengths = torch.concatenate(([0], lengths))
-
-    rle["counts"] = lengths.tolist()
-
-    return rle

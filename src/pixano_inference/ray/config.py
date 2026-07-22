@@ -72,7 +72,8 @@ class RayServeConfig(BaseModel):
     """Top-level Ray Serve configuration.
 
     Attributes:
-        host: Host to bind to.
+        host: Host to bind to. Defaults to loopback; bind 0.0.0.0 explicitly to expose the
+            server (do so only with API-key auth enabled — see pixano_inference.security).
         port: Port to serve on.
         num_cpus: Total number of CPUs available to Ray. None means auto-detect.
         num_gpus: Total number of GPUs available to Ray. None means auto-detect.
@@ -83,7 +84,7 @@ class RayServeConfig(BaseModel):
         default_autoscaling: Default autoscaling configuration for deployments.
     """
 
-    host: str = Field(default="0.0.0.0")
+    host: str = Field(default="127.0.0.1")
     port: int = Field(default=7463)
     num_cpus: int | None = Field(default=None)
     num_gpus: int | None = Field(default=None)

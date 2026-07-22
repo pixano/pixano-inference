@@ -15,7 +15,7 @@ Prerequisites:
 - Start the server with the YOLO config:
     PYTHONPATH=examples:$PYTHONPATH pixano-inference --config examples/yolo/config.py
 Usage:
-    python examples/custom_yoloe/test_yolo.py \
+    python examples/yolo/test_yolo.py \
         [--server-url URL] [--image PATH] [--model-name NAME] \
         [--threshold 0.3]
 """
@@ -109,7 +109,7 @@ async def main() -> None:
     except requests.ConnectionError:
         print("\nERROR: Server is not running!")
         print("Start the server with:")
-        print("  pixano-inference --module-path examples --config examples/custom_yoloe/config.py")
+        print("  pixano-inference --module-path examples --config examples/yolo/config.py")
         sys.exit(1)
     except Exception as e:
         print(f"\nERROR: Failed to connect: {type(e).__name__}: {e}")

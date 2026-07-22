@@ -1,3 +1,9 @@
+# =================================
+# Copyright: CEA-LIST/DIASI/SIALV
+# Author : pixano@cea.fr
+# License: CECILL-C
+# =================================
+
 import asyncio
 from pixano_inference.client import PixanoInferenceClient
 from pixano_inference.schemas import SegmentationRequest

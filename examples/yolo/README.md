@@ -1,3 +1,11 @@
+<!---
+# =================================
+# Copyright: CEA-LIST/DIASI/SIALV
+# Author : pixano@cea.fr
+# License: CECILL-C
+# =================================
+--->
+
 # Custom Model Deployment: YOLO Detection
 
 This tutorial walks through deploying a third-party model (Ultralytics YOLO) as a custom detection service with Pixano Inference.

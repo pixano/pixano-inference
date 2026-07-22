@@ -14,6 +14,7 @@ authors = [
   { name="Julien Denize", email="julien.denize@cea.fr" },
 ]
 requires-python = ">=3.10,<3.14"
+license = { file = "LICENSE" }
 classifiers = [
   "Development Status :: 4 - Beta",
   "Environment :: Console",
@@ -23,7 +24,8 @@ classifiers = [
   "Intended Audience :: Information Technology",
   "Intended Audience :: Science/Research",
   "Natural Language :: English",
-  "Operating System :: OS Independent",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: MacOS",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
@@ -48,7 +50,7 @@ dependencies = [
   "python-multipart",
   "requests",
   "uvicorn >= 0.31.0",
-  "ray[serve] >= 2.0.0, < 3.0.0",
+  "ray[serve] >= 2.53.0, < 3.0.0",
   "pyyaml >= 6.0.0",
 ]
 readme = "README.md"
@@ -63,14 +65,31 @@ docs=[
   "mkdocs-literate-nav >= 0.6.0",
   "mkdocs-redirects >= 1.2.1",
 ]
+# NOTE: the SAM2 backend requires the `sam-2` package, which is only distributed from
+# git (not PyPI). PyPI forbids wheels whose metadata carries a direct/VCS reference, so
+# it cannot live in a published extra. Install it manually alongside this extra:
+#   pip install pixano-inference[sam2]
+#   pip install "sam-2 @ git+https://github.com/facebookresearch/sam2.git"
+# (The dev dependency-group below installs it automatically for local development.)
 sam2 = [
-  "sam-2 @ git+https://github.com/facebookresearch/sam2.git",
   "torch >= 2.3.0, < 3.0.0",
 ]
 # Placeholder for future SAM3 integration
 sam3 = []
+# --- ML framework runtimes (optional). The core depends on none of these; a custom model
+# is written against exactly one of them. Model-backend extras below (sam2, transformers,
+# vllm, ultralytics) pull in the framework they need. ---
 torch=[
   "torch >= 2.3.0, < 3.0.0",
+]
+jax=[
+  "jax >= 0.4.0",
+]
+tensorflow=[
+  "tensorflow >= 2.13.0",
+]
+mlx=[
+  "mlx >= 0.1.0; sys_platform == 'darwin'",
 ]
 transformers=[
   "accelerate",
@@ -81,9 +100,8 @@ transformers=[
 ]
 test=[
   "pytest",
-  "pytest.asyncio",
+  "pytest-asyncio",
   "pytest-cov",
-  "pytest-coverage",
   "pytest_httpx",
   "pytest-mock",
   "responses",
@@ -99,10 +117,10 @@ vllm=[
 pixano-inference = "pixano_inference.main:app"
 
 [project.urls]
-"Bug Tracker" = "http://is154588.intra.cea.fr/pixano/pixano-inference/issues"
-"Download" = "http://is154588.intra.cea.fr/pixano/pixano-inference"
-"Homepage" = "http://is154588.intra.cea.fr/pixano/pixano-inference"
-"Source Code" = "http://is154588.intra.cea.fr/pixano/pixano-inference"
+"Homepage" = "https://github.com/pixano/pixano-inference"
+"Documentation" = "https://pixano.github.io/pixano-inference/"
+"Source Code" = "https://github.com/pixano/pixano-inference"
+"Bug Tracker" = "https://github.com/pixano/pixano-inference/issues"
 
 [build-system]
 requires = ["hatchling"]
@@ -133,6 +151,14 @@ indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-ra"
+markers = [
+  "integration: end-to-end tests that start a real Ray/Serve runtime (deselect with '-m \"not integration\"')",
+]
+
 [tool.hatch.version]
 path = "src/pixano_inference/__version__.py"
 
@@ -150,4 +176,7 @@ environments = [
 [dependency-groups]
 dev = [
   "pixano-inference[test,docs,transformers,sam2]",
+  # sam-2 lives here (a dependency-group, which is never published to PyPI) rather than
+  # in the [sam2] extra, so the published wheel carries no direct/VCS reference.
+  "sam-2 @ git+https://github.com/facebookresearch/sam2.git",
 ]

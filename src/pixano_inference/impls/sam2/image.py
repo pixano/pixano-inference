@@ -207,6 +207,7 @@ class Sam2ImageModel(SegmentationModel):
         """
         import torch
 
+        from pixano_inference.frameworks.torch import ndarray_to_tensor
         from pixano_inference.schemas.nd_array import NDArrayFloat
 
         with torch.inference_mode():
@@ -217,13 +218,13 @@ class Sam2ImageModel(SegmentationModel):
 
             if isinstance(image_embedding, dict):
                 image_embedding = NDArrayFloat.model_validate(image_embedding)
-            embed_tensor = image_embedding.to_torch()
+            embed_tensor = ndarray_to_tensor(image_embedding)
 
             hr_tensors = []
             for feat in high_resolution_features:
                 if isinstance(feat, dict):
                     feat = NDArrayFloat.model_validate(feat)
-                hr_tensors.append(feat.to_torch())
+                hr_tensors.append(ndarray_to_tensor(feat))
 
             device = self._predictor.model.device
 

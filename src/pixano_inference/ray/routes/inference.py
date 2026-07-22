@@ -16,7 +16,7 @@ from datetime import datetime
 from json import JSONDecodeError
 from typing import TYPE_CHECKING, Any
 
-from fastapi import FastAPI, HTTPException, Request, UploadFile
+from fastapi import Depends, FastAPI, HTTPException, Request, UploadFile
 from pydantic import BaseModel, ValidationError
 from starlette.datastructures import UploadFile as StarletteUploadFile
 
@@ -172,21 +172,28 @@ def _serialize_tracking_job(job_id: str, job: TrackingJobRecord) -> dict[str, An
     }
 
 
-def register_inference_routes(app: FastAPI, deployment_manager: DeploymentManager) -> None:
+def register_inference_routes(
+    app: FastAPI,
+    deployment_manager: DeploymentManager,
+    auth_dependency: Any | None = None,
+) -> None:
     """Register capability-based inference endpoints.
 
     Args:
         app: FastAPI application.
         deployment_manager: The deployment manager instance.
+        auth_dependency: Optional FastAPI dependency enforcing authentication on every
+            inference/tracking-job route. When ``None``, routes are unauthenticated.
     """
+    deps = [Depends(auth_dependency)] if auth_dependency is not None else []
 
-    @app.post("/inference/segmentation/")
+    @app.post("/inference/segmentation/", dependencies=deps)
     async def segmentation(request: SegmentationRequest) -> dict[str, Any]:
         """Run segmentation inference."""
         input_obj = request.to_input()
         return await _run_inference(deployment_manager, request.model, input_obj, "segmentation")
 
-    @app.post("/inference/segmentation/binary")
+    @app.post("/inference/segmentation/binary", dependencies=deps)
     async def segmentation_binary(
         request: Request,
     ) -> dict[str, Any]:
@@ -201,13 +208,13 @@ def register_inference_routes(app: FastAPI, deployment_manager: DeploymentManage
         input_obj = parsed_request.to_input()
         return await _run_inference(deployment_manager, parsed_request.model, input_obj, "segmentation")
 
-    @app.post("/inference/tracking/")
+    @app.post("/inference/tracking/", dependencies=deps)
     async def tracking(request: TrackingRequest) -> dict[str, Any]:
         """Run tracking inference."""
         input_obj = request.to_input()
         return await _run_inference(deployment_manager, request.model, input_obj, "tracking")
 
-    @app.post("/inference/tracking/binary")
+    @app.post("/inference/tracking/binary", dependencies=deps)
     async def tracking_binary(
         request: Request,
     ) -> dict[str, Any]:
@@ -222,7 +229,7 @@ def register_inference_routes(app: FastAPI, deployment_manager: DeploymentManage
         input_obj = parsed_request.to_input()
         return await _run_inference(deployment_manager, parsed_request.model, input_obj, "tracking")
 
-    @app.post("/inference/tracking/jobs/")
+    @app.post("/inference/tracking/jobs/", dependencies=deps)
     async def tracking_job_submit(request: TrackingRequest) -> dict[str, Any]:
         """Submit an asynchronous tracking job."""
         _get_validated_handle(deployment_manager, request.model, "tracking")
@@ -233,7 +240,7 @@ def register_inference_routes(app: FastAPI, deployment_manager: DeploymentManage
             raise HTTPException(status_code=500, detail=f"Tracking job '{job_id}' was not created.")
         return _serialize_tracking_job(job_id, job)
 
-    @app.post("/inference/tracking/jobs/binary")
+    @app.post("/inference/tracking/jobs/binary", dependencies=deps)
     async def tracking_job_submit_binary(request: Request) -> dict[str, Any]:
         """Submit an asynchronous tracking job from uploaded frame binaries."""
         parsed_request = await _build_binary_request_from_request(
@@ -251,7 +258,7 @@ def register_inference_routes(app: FastAPI, deployment_manager: DeploymentManage
             raise HTTPException(status_code=500, detail=f"Tracking job '{job_id}' was not created.")
         return _serialize_tracking_job(job_id, job)
 
-    @app.get("/inference/tracking/jobs/{job_id}")
+    @app.get("/inference/tracking/jobs/{job_id}", dependencies=deps)
     async def tracking_job_status(job_id: str) -> dict[str, Any]:
         """Poll the current status of an asynchronous tracking job."""
         job = deployment_manager.get_tracking_job(job_id)
@@ -259,7 +266,7 @@ def register_inference_routes(app: FastAPI, deployment_manager: DeploymentManage
             raise HTTPException(status_code=404, detail=f"Tracking job '{job_id}' not found")
         return _serialize_tracking_job(job_id, job)
 
-    @app.delete("/inference/tracking/jobs/{job_id}")
+    @app.delete("/inference/tracking/jobs/{job_id}", dependencies=deps)
     async def tracking_job_cancel(job_id: str) -> dict[str, Any]:
         """Cancel an asynchronous tracking job."""
         job = deployment_manager.cancel_tracking_job(job_id)
@@ -267,13 +274,13 @@ def register_inference_routes(app: FastAPI, deployment_manager: DeploymentManage
             raise HTTPException(status_code=404, detail=f"Tracking job '{job_id}' not found")
         return _serialize_tracking_job(job_id, job)
 
-    @app.post("/inference/vlm/")
+    @app.post("/inference/vlm/", dependencies=deps)
     async def vlm(request: VLMRequest) -> dict[str, Any]:
         """Run VLM inference."""
         input_obj = request.to_input()
         return await _run_inference(deployment_manager, request.model, input_obj, "vlm")
 
-    @app.post("/inference/detection/")
+    @app.post("/inference/detection/", dependencies=deps)
     async def detection(request: DetectionRequest) -> dict[str, Any]:
         """Run detection inference."""
         input_obj = request.to_input()

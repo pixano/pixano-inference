@@ -62,6 +62,13 @@ def create_model_deployment(
         """Ray actor wrapping an InferenceModel."""
 
         def __init__(self) -> None:
+            # Install the media-ingestion security policy in this worker process from the
+            # environment the driver passed on, so URL/path resolution inside the model is
+            # SSRF/path-traversal guarded.
+            from pixano_inference.utils.media_security import MediaPolicy, set_media_policy
+
+            set_media_policy(MediaPolicy.from_env())
+
             self._model = _model_class(_config)
             self._model.load_model()
             self._request_count = 0

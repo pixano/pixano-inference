@@ -4,10 +4,10 @@
 # License: CECILL-C
 # =================================
 
-"""YOLOE deployment configuration.
+"""YOLO deployment configuration.
 
 Usage::
-    PYTHONPATH=examples:$PYTHONPATH uv run pixano-inference --config examples/custom_yoloe/config.py
+    PYTHONPATH=examples:$PYTHONPATH uv run pixano-inference --config examples/yolo/config.py
 """
 
 from pixano_inference.configs import DeploymentConfig, ModelConfig
