@@ -10,13 +10,25 @@ from abc import ABC
 from datetime import datetime
 from typing import Any, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 
 
 T = TypeVar("T", bound=BaseModel)
 
 
-class BaseRequest(BaseModel, ABC):
+class CamelModel(BaseModel):
+    """Base model whose fields serialize as camelCase on the wire.
+
+    Fields stay snake_case in Python; ``populate_by_name=True`` means both the camelCase
+    alias and the snake_case name are accepted on input, so existing Python callers keep
+    working while the HTTP contract (and generated TypeScript client) is camelCase.
+    """
+
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True, arbitrary_types_allowed=True)
+
+
+class BaseRequest(CamelModel, ABC):
     """Base request model.
 
     Attributes:
@@ -29,23 +41,11 @@ class BaseRequest(BaseModel, ABC):
         """Convert request to input type."""
         if not issubclass(base_model, BaseModel):
             raise ValueError(f"base_model must be a subclass of pydantic's BaseModel, got {base_model.__name__}.")
-        return base_model.model_validate(self.model_dump(include=list(base_model.model_fields.keys())))
+        return base_model.model_validate(self.model_dump(include=set(base_model.model_fields.keys())))
 
 
-class APIRequest(BaseRequest, ABC):
-    """API request model.
-
-    Attributes:
-        api_key: API key.
-        secret_key: Secret key.
-    """
-
-    api_key: str
-    secret_key: str
-
-
-class BaseResponse(BaseModel, ABC):
-    """Base response model.
+class BaseResponse(CamelModel, ABC):
+    """Base response envelope.
 
     Attributes:
         id: ID of the task.
@@ -53,7 +53,7 @@ class BaseResponse(BaseModel, ABC):
         timestamp: Timestamp of the response.
         processing_time: Processing time of the response.
         metadata: Metadata of the response.
-        data: Data of the response.
+        data: Task-specific output payload.
     """
 
     id: str

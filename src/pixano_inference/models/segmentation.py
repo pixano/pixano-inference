@@ -10,15 +10,16 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import ClassVar
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import field_validator
 
+from pixano_inference.schemas.base import CamelModel
 from pixano_inference.schemas.nd_array import NDArrayFloat
 from pixano_inference.schemas.rle import CompressedRLE
 
 from .base import InferenceModel
 
 
-class SegmentationInput(BaseModel):
+class SegmentationInput(CamelModel):
     """Input for image segmentation.
 
     Attributes:
@@ -36,7 +37,6 @@ class SegmentationInput(BaseModel):
         return_logits: Whether to return low-resolution logits for iterative refinement.
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
     image: str | Path | bytes
     image_embedding: NDArrayFloat | None = None
     high_resolution_features: list[NDArrayFloat] | None = None
@@ -70,7 +70,7 @@ class SegmentationInput(BaseModel):
         return v
 
 
-class SegmentationOutput(BaseModel):
+class SegmentationOutput(CamelModel):
     """Output for image segmentation.
 
     Attributes:

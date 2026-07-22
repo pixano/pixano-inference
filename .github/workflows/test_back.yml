@@ -115,3 +115,7 @@ jobs:
       - name: Assert core imports pull no ML framework
         run: |
           pytest tests/test_core_framework_free.py -v
+
+      - name: Check the committed OpenAPI schema is in sync
+        run: |
+          python scripts/gen_openapi.py --check

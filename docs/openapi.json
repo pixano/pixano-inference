@@ -1,0 +1,2574 @@
+{
+  "components": {
+    "schemas": {
+      "CompressedRLE-Input": {
+        "description": "Compressed or numeric RLE mask type.\n\nAttributes:\n    size: Mask size.\n    counts: Mask RLE encoding as compressed bytes/string or a numeric array.",
+        "properties": {
+          "counts": {
+            "anyOf": [
+              {
+                "format": "binary",
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              }
+            ],
+            "title": "Counts"
+          },
+          "size": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Size",
+            "type": "array"
+          }
+        },
+        "required": [
+          "size",
+          "counts"
+        ],
+        "title": "CompressedRLE",
+        "type": "object"
+      },
+      "CompressedRLE-Output": {
+        "description": "Compressed or numeric RLE mask type.\n\nAttributes:\n    size: Mask size.\n    counts: Mask RLE encoding as compressed bytes/string or a numeric array.",
+        "properties": {
+          "counts": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              }
+            ],
+            "title": "Counts"
+          },
+          "size": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Size",
+            "type": "array"
+          }
+        },
+        "required": [
+          "size",
+          "counts"
+        ],
+        "title": "CompressedRLE",
+        "type": "object"
+      },
+      "DeployModelRequest": {
+        "description": "Admin request to deploy a model at runtime (mirrors a config-file ModelConfig).",
+        "properties": {
+          "deployment": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Deployment",
+            "type": "object"
+          },
+          "modelClass": {
+            "title": "Modelclass",
+            "type": "string"
+          },
+          "modelParams": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Modelparams",
+            "type": "object"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "required": [
+          "modelClass"
+        ],
+        "title": "DeployModelRequest",
+        "type": "object"
+      },
+      "DetectionOutput": {
+        "description": "Output for detection.\n\n``masks`` is populated when the model performs instance segmentation\n(boxes + masks).  For detection-only models it is ``None``.\n\nAttributes:\n    boxes: List of detected boxes.\n    scores: List of confidence scores.\n    classes: List of class names associated with each box.\n    masks: Optional instance masks in compressed-RLE format.",
+        "properties": {
+          "boxes": {
+            "items": {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            "title": "Boxes",
+            "type": "array"
+          },
+          "classes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Classes",
+            "type": "array"
+          },
+          "masks": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CompressedRLE-Output"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Masks"
+          },
+          "scores": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Scores",
+            "type": "array"
+          }
+        },
+        "required": [
+          "boxes",
+          "scores",
+          "classes"
+        ],
+        "title": "DetectionOutput",
+        "type": "object"
+      },
+      "DetectionRequest": {
+        "description": "Request for detection inference.",
+        "properties": {
+          "boxThreshold": {
+            "default": 0.5,
+            "title": "Boxthreshold",
+            "type": "number"
+          },
+          "classes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classes"
+          },
+          "image": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "format": "path",
+                "type": "string"
+              }
+            ],
+            "title": "Image"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "textThreshold": {
+            "default": 0.5,
+            "title": "Textthreshold",
+            "type": "number"
+          }
+        },
+        "required": [
+          "image",
+          "model"
+        ],
+        "title": "DetectionRequest",
+        "type": "object"
+      },
+      "DetectionResponse": {
+        "description": "Response for detection inference.",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DetectionOutput"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          },
+          "processingTime": {
+            "default": 0.0,
+            "title": "Processingtime",
+            "type": "number"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "timestamp",
+          "metadata",
+          "data"
+        ],
+        "title": "DetectionResponse",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "ModelStatusInfo": {
+        "description": "Model listing entry with its live Serve status.",
+        "properties": {
+          "capability": {
+            "title": "Capability",
+            "type": "string"
+          },
+          "modelClass": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modelclass"
+          },
+          "modelPath": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modelpath"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "capability",
+          "status"
+        ],
+        "title": "ModelStatusInfo",
+        "type": "object"
+      },
+      "NDArrayFloat": {
+        "description": "An N-dimensional array of 32-bit floating-point values.",
+        "properties": {
+          "data": {
+            "title": "Data",
+            "type": "string"
+          },
+          "dtype": {
+            "default": "",
+            "title": "Dtype",
+            "type": "string"
+          },
+          "shape": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Shape",
+            "type": "array"
+          }
+        },
+        "required": [
+          "shape",
+          "data"
+        ],
+        "title": "NDArrayFloat",
+        "type": "object"
+      },
+      "NEREntity": {
+        "description": "A single recognized entity.\n\nAttributes:\n    text: The entity text span.\n    label: The entity label.\n    start: Start character offset.\n    end: End character offset.\n    score: Confidence score.",
+        "properties": {
+          "end": {
+            "title": "End",
+            "type": "integer"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "start": {
+            "title": "Start",
+            "type": "integer"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "label",
+          "start",
+          "end",
+          "score"
+        ],
+        "title": "NEREntity",
+        "type": "object"
+      },
+      "NEROutput": {
+        "description": "Output for named entity recognition.\n\nAttributes:\n    entities: List of recognised entities.",
+        "properties": {
+          "entities": {
+            "items": {
+              "$ref": "#/components/schemas/NEREntity"
+            },
+            "title": "Entities",
+            "type": "array"
+          }
+        },
+        "required": [
+          "entities"
+        ],
+        "title": "NEROutput",
+        "type": "object"
+      },
+      "NERRequest": {
+        "description": "Request for NER inference.",
+        "properties": {
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "model"
+        ],
+        "title": "NERRequest",
+        "type": "object"
+      },
+      "NERResponse": {
+        "description": "Response for NER inference.",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/NEROutput"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          },
+          "processingTime": {
+            "default": 0.0,
+            "title": "Processingtime",
+            "type": "number"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "timestamp",
+          "metadata",
+          "data"
+        ],
+        "title": "NERResponse",
+        "type": "object"
+      },
+      "SegmentationOutput": {
+        "description": "Output for image segmentation.\n\nAttributes:\n    masks: Generated masks [num_predictions, num_masks_per_prediction].\n    scores: Scores of the masks.\n    image_embedding: Image embeddings (optional).\n    high_resolution_features: High resolution features (optional).\n    mask_logits: Low-resolution logits for iterative refinement (optional).",
+        "properties": {
+          "highResolutionFeatures": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/NDArrayFloat"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Highresolutionfeatures"
+          },
+          "imageEmbedding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NDArrayFloat"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "maskLogits": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NDArrayFloat"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "masks": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/CompressedRLE-Output"
+              },
+              "type": "array"
+            },
+            "title": "Masks",
+            "type": "array"
+          },
+          "scores": {
+            "$ref": "#/components/schemas/NDArrayFloat"
+          }
+        },
+        "required": [
+          "masks",
+          "scores"
+        ],
+        "title": "SegmentationOutput",
+        "type": "object"
+      },
+      "SegmentationRequest": {
+        "description": "Request for segmentation inference.",
+        "properties": {
+          "boxes": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Boxes"
+          },
+          "highResolutionFeatures": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/NDArrayFloat"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Highresolutionfeatures"
+          },
+          "image": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "format": "path",
+                "type": "string"
+              },
+              {
+                "format": "binary",
+                "type": "string"
+              }
+            ],
+            "title": "Image"
+          },
+          "imageEmbedding": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NDArrayFloat"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "labels": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Labels"
+          },
+          "maskInput": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NDArrayFloat"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "multimaskOutput": {
+            "default": true,
+            "title": "Multimaskoutput",
+            "type": "boolean"
+          },
+          "numMultimaskOutputs": {
+            "default": 3,
+            "title": "Nummultimaskoutputs",
+            "type": "integer"
+          },
+          "points": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {
+                    "items": {
+                      "type": "integer"
+                    },
+                    "type": "array"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Points"
+          },
+          "resetPredictor": {
+            "default": true,
+            "title": "Resetpredictor",
+            "type": "boolean"
+          },
+          "returnImageEmbedding": {
+            "default": false,
+            "title": "Returnimageembedding",
+            "type": "boolean"
+          },
+          "returnLogits": {
+            "default": false,
+            "title": "Returnlogits",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "image",
+          "model"
+        ],
+        "title": "SegmentationRequest",
+        "type": "object"
+      },
+      "SegmentationResponse": {
+        "description": "Response for segmentation inference.",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SegmentationOutput"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          },
+          "processingTime": {
+            "default": 0.0,
+            "title": "Processingtime",
+            "type": "number"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "timestamp",
+          "metadata",
+          "data"
+        ],
+        "title": "SegmentationResponse",
+        "type": "object"
+      },
+      "TrackingBoxPrompt": {
+        "description": "Box prompt for a tracking keyframe.",
+        "properties": {
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          },
+          "x": {
+            "title": "X",
+            "type": "integer"
+          },
+          "y": {
+            "title": "Y",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "width",
+          "height"
+        ],
+        "title": "TrackingBoxPrompt",
+        "type": "object"
+      },
+      "TrackingInterval": {
+        "description": "Optional propagation window relative to the provided video frames.",
+        "properties": {
+          "direction": {
+            "default": "forward",
+            "enum": [
+              "forward",
+              "backward"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "endFrame": {
+            "title": "Endframe",
+            "type": "integer"
+          },
+          "startFrame": {
+            "title": "Startframe",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "startFrame",
+          "endFrame"
+        ],
+        "title": "TrackingInterval",
+        "type": "object"
+      },
+      "TrackingKeyframeV1": {
+        "description": "A keyframe with nested prompts, matching the Pixano frontend contract.\n\nFrame indices are 0-based **relative to the submitted media window**.",
+        "properties": {
+          "frameIndex": {
+            "title": "Frameindex",
+            "type": "integer"
+          },
+          "prompts": {
+            "$ref": "#/components/schemas/TrackingPrompts"
+          }
+        },
+        "required": [
+          "frameIndex",
+          "prompts"
+        ],
+        "title": "TrackingKeyframeV1",
+        "type": "object"
+      },
+      "TrackingOutput": {
+        "description": "Output for video mask generation / tracking.\n\nAttributes:\n    objects_ids: IDs of the objects.\n    frame_indexes: Indexes of the frames where the objects are located.\n    masks: Masks for the objects.",
+        "properties": {
+          "frameIndexes": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Frameindexes",
+            "type": "array"
+          },
+          "masks": {
+            "items": {
+              "$ref": "#/components/schemas/CompressedRLE-Output"
+            },
+            "title": "Masks",
+            "type": "array"
+          },
+          "objectsIds": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Objectsids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "objectsIds",
+          "frameIndexes",
+          "masks"
+        ],
+        "title": "TrackingOutput",
+        "type": "object"
+      },
+      "TrackingPointPrompt": {
+        "description": "Point prompt for a tracking keyframe.",
+        "properties": {
+          "label": {
+            "enum": [
+              0,
+              1
+            ],
+            "title": "Label",
+            "type": "integer"
+          },
+          "x": {
+            "title": "X",
+            "type": "integer"
+          },
+          "y": {
+            "title": "Y",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "label"
+        ],
+        "title": "TrackingPointPrompt",
+        "type": "object"
+      },
+      "TrackingPrompts": {
+        "description": "Prompt payload for a single keyframe (points/box XOR mask).",
+        "properties": {
+          "box": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrackingBoxPrompt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mask": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompressedRLE-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "points": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TrackingPointPrompt"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Points"
+          }
+        },
+        "title": "TrackingPrompts",
+        "type": "object"
+      },
+      "TrackingRequestV1": {
+        "description": "Video-tracking request with nested keyframe prompts.\n\nMedia is passed by value (URL/base64/frame list/path within an allowed media root);\ndataset-reference resolution belongs in the caller (the Pixano backend).",
+        "properties": {
+          "frameIndexes": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Frameindexes",
+            "type": "array"
+          },
+          "interval": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrackingInterval"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "keyframes": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TrackingKeyframeV1"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keyframes"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "objectsIds": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Objectsids",
+            "type": "array"
+          },
+          "propagate": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Propagate"
+          },
+          "video": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "format": "path",
+                      "type": "string"
+                    },
+                    {
+                      "format": "binary",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "format": "path",
+                "type": "string"
+              },
+              {
+                "format": "binary",
+                "type": "string"
+              }
+            ],
+            "title": "Video"
+          }
+        },
+        "required": [
+          "model",
+          "video",
+          "objectsIds",
+          "frameIndexes"
+        ],
+        "title": "TrackingRequestV1",
+        "type": "object"
+      },
+      "TrackingResponse": {
+        "description": "Response for tracking inference.",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/TrackingOutput"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          },
+          "processingTime": {
+            "default": 0.0,
+            "title": "Processingtime",
+            "type": "number"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "timestamp",
+          "metadata",
+          "data"
+        ],
+        "title": "TrackingResponse",
+        "type": "object"
+      },
+      "UsageInfo": {
+        "description": "Usage metadata for generation.\n\nAttributes:\n    prompt_tokens: Number of tokens in the prompt.\n    completion_tokens: Number of tokens in the completion.\n    total_tokens: Total number of tokens.",
+        "properties": {
+          "completionTokens": {
+            "title": "Completiontokens",
+            "type": "integer"
+          },
+          "promptTokens": {
+            "title": "Prompttokens",
+            "type": "integer"
+          },
+          "totalTokens": {
+            "title": "Totaltokens",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "promptTokens",
+          "completionTokens",
+          "totalTokens"
+        ],
+        "title": "UsageInfo",
+        "type": "object"
+      },
+      "VLMOutput": {
+        "description": "Output for vision-language model generation.\n\nAttributes:\n    generated_text: Generated text.\n    usage: Usage metadata.\n    generation_config: Configuration used for the generation.",
+        "properties": {
+          "generatedText": {
+            "title": "Generatedtext",
+            "type": "string"
+          },
+          "generationConfig": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Generationconfig",
+            "type": "object"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/UsageInfo"
+          }
+        },
+        "required": [
+          "generatedText",
+          "usage"
+        ],
+        "title": "VLMOutput",
+        "type": "object"
+      },
+      "VLMRequest": {
+        "description": "Request for VLM inference.",
+        "properties": {
+          "images": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "format": "path",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Images"
+          },
+          "maxNewTokens": {
+            "title": "Maxnewtokens",
+            "type": "integer"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "prompt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            ],
+            "title": "Prompt"
+          },
+          "temperature": {
+            "default": 1.0,
+            "title": "Temperature",
+            "type": "number"
+          }
+        },
+        "required": [
+          "prompt",
+          "maxNewTokens",
+          "model"
+        ],
+        "title": "VLMRequest",
+        "type": "object"
+      },
+      "VLMResponse": {
+        "description": "Response for VLM inference.",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/VLMOutput"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          },
+          "processingTime": {
+            "default": 0.0,
+            "title": "Processingtime",
+            "type": "number"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "timestamp",
+          "metadata",
+          "data"
+        ],
+        "title": "VLMResponse",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Pixano Inference API powered by Ray Serve",
+    "title": "Pixano Inference (Ray)",
+    "version": "0.6.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "description": "Liveness check: the ingress process is up (cheap, always 200).",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Health Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "service"
+        ]
+      }
+    },
+    "/info": {
+      "get": {
+        "description": "Server and cluster information.",
+        "operationId": "info_info_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Info Info Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Info",
+        "tags": [
+          "service"
+        ]
+      }
+    },
+    "/ready": {
+      "get": {
+        "description": "Readiness check: 503 unless every configured model is RUNNING in Serve.",
+        "operationId": "ready_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Ready Ready Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Ready",
+        "tags": [
+          "service"
+        ]
+      }
+    },
+    "/v1/health": {
+      "get": {
+        "description": "Liveness check: the ingress process is up (cheap, always 200).",
+        "operationId": "health_v1_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Health V1 Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "service"
+        ]
+      }
+    },
+    "/v1/inference/detection": {
+      "post": {
+        "operationId": "detection_v1_inference_detection_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DetectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetectionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detection",
+        "tags": [
+          "inference"
+        ]
+      }
+    },
+    "/v1/inference/detection/binary": {
+      "post": {
+        "operationId": "detection_binary_v1_inference_detection_binary_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetectionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detection Binary",
+        "tags": [
+          "inference"
+        ]
+      }
+    },
+    "/v1/inference/ner": {
+      "post": {
+        "operationId": "ner_v1_inference_ner_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NERRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NERResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ner",
+        "tags": [
+          "inference"
+        ]
+      }
+    },
+    "/v1/inference/segmentation": {
+      "post": {
+        "operationId": "segmentation_v1_inference_segmentation_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SegmentationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SegmentationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Segmentation",
+        "tags": [
+          "inference"
+        ]
+      }
+    },
+    "/v1/inference/segmentation/binary": {
+      "post": {
+        "operationId": "segmentation_binary_v1_inference_segmentation_binary_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SegmentationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Segmentation Binary",
+        "tags": [
+          "inference"
+        ]
+      }
+    },
+    "/v1/inference/tracking": {
+      "post": {
+        "operationId": "tracking_v1_inference_tracking_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrackingRequestV1"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackingResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Tracking",
+        "tags": [
+          "inference"
+        ]
+      }
+    },
+    "/v1/inference/tracking/binary": {
+      "post": {
+        "operationId": "tracking_binary_v1_inference_tracking_binary_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackingResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Tracking Binary",
+        "tags": [
+          "inference"
+        ]
+      }
+    },
+    "/v1/inference/tracking/jobs": {
+      "post": {
+        "operationId": "submit_tracking_job_v1_inference_tracking_jobs_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrackingRequestV1"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Submit Tracking Job V1 Inference Tracking Jobs Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Tracking Job",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/v1/inference/tracking/jobs/binary": {
+      "post": {
+        "operationId": "submit_tracking_job_binary_v1_inference_tracking_jobs_binary_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Submit Tracking Job Binary V1 Inference Tracking Jobs Binary Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Tracking Job Binary",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/v1/inference/vlm": {
+      "post": {
+        "operationId": "vlm_v1_inference_vlm_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VLMRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VLMResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Vlm",
+        "tags": [
+          "inference"
+        ]
+      }
+    },
+    "/v1/inference/vlm/binary": {
+      "post": {
+        "operationId": "vlm_binary_v1_inference_vlm_binary_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VLMResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Vlm Binary",
+        "tags": [
+          "inference"
+        ]
+      }
+    },
+    "/v1/info": {
+      "get": {
+        "description": "Server and cluster information.",
+        "operationId": "info_v1_info_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Info V1 Info Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Info",
+        "tags": [
+          "service"
+        ]
+      }
+    },
+    "/v1/jobs/{job_id}": {
+      "delete": {
+        "operationId": "cancel_job_v1_jobs__job_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Cancel Job V1 Jobs  Job Id  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel Job",
+        "tags": [
+          "jobs"
+        ]
+      },
+      "get": {
+        "operationId": "get_job_v1_jobs__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Job V1 Jobs  Job Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Job",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/v1/models": {
+      "get": {
+        "operationId": "list_models_v1_models_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ModelStatusInfo"
+                  },
+                  "title": "Response List Models V1 Models Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Models",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "deploy_model_v1_models_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeployModelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelStatusInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Deploy Model",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/models/{name}": {
+      "delete": {
+        "operationId": "undeploy_model_v1_models__name__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Undeploy Model V1 Models  Name  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Undeploy Model",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/models/{name}/stats": {
+      "get": {
+        "operationId": "model_stats_v1_models__name__stats_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Model Stats V1 Models  Name  Stats Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Model Stats",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/ready": {
+      "get": {
+        "description": "Readiness check: 503 unless every configured model is RUNNING in Serve.",
+        "operationId": "ready_v1_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Ready V1 Ready Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Ready",
+        "tags": [
+          "service"
+        ]
+      }
+    }
+  }
+}

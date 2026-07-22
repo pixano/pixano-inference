@@ -10,12 +10,12 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import Any, ClassVar
 
-from pydantic import BaseModel
+from pixano_inference.schemas.base import CamelModel
 
 from .base import InferenceModel
 
 
-class UsageInfo(BaseModel):
+class UsageInfo(CamelModel):
     """Usage metadata for generation.
 
     Attributes:
@@ -29,7 +29,7 @@ class UsageInfo(BaseModel):
     total_tokens: int
 
 
-class VLMInput(BaseModel):
+class VLMInput(CamelModel):
     """Input for vision-language model generation.
 
     Attributes:
@@ -45,7 +45,7 @@ class VLMInput(BaseModel):
     temperature: float = 1.0
 
 
-class VLMOutput(BaseModel):
+class VLMOutput(CamelModel):
     """Output for vision-language model generation.
 
     Attributes:

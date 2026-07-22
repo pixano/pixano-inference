@@ -9,6 +9,7 @@
 from pydantic import ConfigDict
 
 from pixano_inference.models.detection import DetectionInput, DetectionOutput
+from pixano_inference.models.ner import NERInput, NEROutput
 from pixano_inference.models.segmentation import SegmentationInput, SegmentationOutput
 from pixano_inference.models.tracking import TrackingInput, TrackingOutput
 from pixano_inference.models.vlm import VLMInput, VLMOutput
@@ -76,3 +77,17 @@ class VLMResponse(BaseResponse):
     """Response for VLM inference."""
 
     data: VLMOutput
+
+
+class NERRequest(BaseRequest, NERInput):
+    """Request for NER inference."""
+
+    def to_input(self) -> NERInput:
+        """Convert the request to the input."""
+        return self.to_base_model(NERInput)
+
+
+class NERResponse(BaseResponse):
+    """Response for NER inference."""
+
+    data: NEROutput

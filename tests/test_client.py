@@ -9,6 +9,7 @@ import base64
 import re
 from datetime import datetime
 
+import numpy as np
 import pytest
 import responses
 from fastapi import HTTPException
@@ -17,6 +18,7 @@ from pytest_httpx import HTTPXMock
 from pixano_inference.client import PixanoInferenceClient
 from pixano_inference.schemas import (
     ModelInfo,
+    NDArrayFloat,
     SegmentationRequest,
     SegmentationResponse,
 )
@@ -24,6 +26,11 @@ from pixano_inference.settings import Settings
 
 
 URL = "http://localhost:8081"
+
+
+def _ndarray_wire(values: list[float]) -> dict:
+    """Build the camelCase NDArrayFloat wire dict for a 1-D float array."""
+    return NDArrayFloat.from_numpy(np.array(values, dtype=np.float32)).model_dump(by_alias=True)
 
 
 class TestPixanoInferenceClient:
@@ -125,7 +132,7 @@ class TestPixanoInferenceClient:
             "metadata": {"model": "facebook/sam-vit-base"},
             "data": {
                 "masks": [[{"size": [100, 100], "counts": counts_b64}]],
-                "scores": {"values": [0.99], "shape": [1]},
+                "scores": _ndarray_wire([0.99]),
             },
         }
         httpx_mock.add_response(json=mock_response)
@@ -151,7 +158,7 @@ class TestPixanoInferenceClient:
             "metadata": {"model": "facebook/sam-vit-base"},
             "data": {
                 "masks": [[{"size": [100, 100], "counts": counts_b64}]],
-                "scores": {"values": [0.95], "shape": [1]},
+                "scores": _ndarray_wire([0.95]),
             },
         }
         httpx_mock.add_response(json=mock_response)

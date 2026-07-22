@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from pixano_inference.models.base import InferenceModel
 from pixano_inference.models.detection import DetectionModel
+from pixano_inference.models.ner import NERModel
 from pixano_inference.models.segmentation import SegmentationModel
 from pixano_inference.models.tracking import TrackingModel
 from pixano_inference.models.vlm import VLMModel
@@ -20,6 +21,7 @@ HTTP_CAPABILITY_BASES: tuple[type[InferenceModel], ...] = (
     DetectionModel,
     TrackingModel,
     VLMModel,
+    NERModel,
 )
 
 

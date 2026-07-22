@@ -167,16 +167,11 @@ class Sam2ImageModel(SegmentationModel):
 
         if input.return_image_embedding:
             embed = self._predictor._features["image_embed"]
-            embed_list = embed.to(torch.float32).flatten().tolist()
-            out_image_embedding = NDArrayFloat(values=embed_list, shape=list(embed.shape[1:]))
+            out_image_embedding = NDArrayFloat.from_numpy(embed[0].to(torch.float32).cpu().numpy())
 
             hr_feats = self._predictor._features["high_res_feats"]
             out_high_resolution_features = [
-                NDArrayFloat(
-                    values=feat.to(torch.float32).flatten().tolist(),
-                    shape=list(feat.shape[1:]),
-                )
-                for feat in hr_feats
+                NDArrayFloat.from_numpy(feat[0].to(torch.float32).cpu().numpy()) for feat in hr_feats
             ]
 
         if input.return_logits:

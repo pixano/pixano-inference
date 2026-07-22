@@ -10,14 +10,15 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import ClassVar, Literal
 
-from pydantic import BaseModel, ConfigDict, field_validator, model_validator
+from pydantic import field_validator, model_validator
 
+from pixano_inference.schemas.base import CamelModel
 from pixano_inference.schemas.rle import CompressedRLE
 
 from .base import InferenceModel
 
 
-class TrackingPointPrompt(BaseModel):
+class TrackingPointPrompt(CamelModel):
     """Point prompt for a tracking keyframe."""
 
     x: int
@@ -25,7 +26,7 @@ class TrackingPointPrompt(BaseModel):
     label: Literal[0, 1]
 
 
-class TrackingBoxPrompt(BaseModel):
+class TrackingBoxPrompt(CamelModel):
     """Box prompt for a tracking keyframe."""
 
     x: int
@@ -34,7 +35,7 @@ class TrackingBoxPrompt(BaseModel):
     height: int
 
 
-class TrackingInterval(BaseModel):
+class TrackingInterval(CamelModel):
     """Optional propagation window relative to the provided video frames."""
 
     start_frame: int
@@ -42,7 +43,7 @@ class TrackingInterval(BaseModel):
     direction: Literal["forward", "backward"] = "forward"
 
 
-class TrackingKeyframe(BaseModel):
+class TrackingKeyframe(CamelModel):
     """Prompt payload for a single tracking keyframe."""
 
     frame_index: int
@@ -60,7 +61,7 @@ class TrackingKeyframe(BaseModel):
         return self
 
 
-class TrackingInput(BaseModel):
+class TrackingInput(CamelModel):
     """Input for video mask generation / tracking.
 
     Attributes:
@@ -75,7 +76,6 @@ class TrackingInput(BaseModel):
         frame_indexes: Indexes of the prompted frames.
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
     video: list[str | Path | bytes] | str | Path | bytes
     points: list[list[list[int]]] | None = None
     labels: list[list[int]] | None = None
@@ -121,7 +121,7 @@ class TrackingInput(BaseModel):
         return self
 
 
-class TrackingOutput(BaseModel):
+class TrackingOutput(CamelModel):
     """Output for video mask generation / tracking.
 
     Attributes:

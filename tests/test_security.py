@@ -175,14 +175,14 @@ def test_inference_routes_enforce_api_key(monkeypatch):
     payload = {"model": "nope", "image": "https://example.com/x.jpg"}
 
     # No key -> 401 (auth runs before the endpoint body).
-    assert client.post("/inference/detection/", json=payload).status_code == 401
+    assert client.post("/v1/inference/detection", json=payload).status_code == 401
     # Wrong key -> 403.
-    assert client.post("/inference/detection/", json=payload, headers={"X-API-Key": "wrong"}).status_code == 403
+    assert client.post("/v1/inference/detection", json=payload, headers={"X-API-Key": "wrong"}).status_code == 403
     # Correct key -> passes auth (downstream may 404/422, but never 401/403).
-    ok = client.post("/inference/detection/", json=payload, headers={"X-API-Key": "topsecret"})
+    ok = client.post("/v1/inference/detection", json=payload, headers={"X-API-Key": "topsecret"})
     assert ok.status_code not in (401, 403)
     # Bearer form also works.
-    ok_bearer = client.post("/inference/detection/", json=payload, headers={"Authorization": "Bearer topsecret"})
+    ok_bearer = client.post("/v1/inference/detection", json=payload, headers={"Authorization": "Bearer topsecret"})
     assert ok_bearer.status_code not in (401, 403)
     # Health probe stays unauthenticated.
     assert client.get("/health").status_code == 200
@@ -200,5 +200,5 @@ def test_inference_routes_open_when_no_keys(monkeypatch):
     app, _ = create_ray_serve_app(RayServeConfig(num_gpus=0))
     client = TestClient(app, raise_server_exceptions=False)
 
-    resp = client.post("/inference/detection/", json={"model": "nope", "image": "https://example.com/x.jpg"})
+    resp = client.post("/v1/inference/detection", json={"model": "nope", "image": "https://example.com/x.jpg"})
     assert resp.status_code not in (401, 403)

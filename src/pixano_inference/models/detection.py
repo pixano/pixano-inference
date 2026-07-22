@@ -12,14 +12,13 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import ClassVar
 
-from pydantic import BaseModel, ConfigDict
-
+from pixano_inference.schemas.base import CamelModel
 from pixano_inference.schemas.rle import CompressedRLE
 
 from .base import InferenceModel
 
 
-class DetectionInput(BaseModel):
+class DetectionInput(CamelModel):
     """Input for detection.
 
     When ``classes`` is provided the model runs in **open-vocabulary** mode
@@ -34,14 +33,13 @@ class DetectionInput(BaseModel):
         text_threshold: Confidence threshold for text matching (open-vocab only).
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
     image: str | Path
     classes: list[str] | str | None = None
     box_threshold: float = 0.5
     text_threshold: float = 0.5
 
 
-class DetectionOutput(BaseModel):
+class DetectionOutput(CamelModel):
     """Output for detection.
 
     ``masks`` is populated when the model performs instance segmentation

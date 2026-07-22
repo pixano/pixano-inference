@@ -8,14 +8,10 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import time
 from contextlib import asynccontextmanager
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from typing import Any
-from uuid import uuid4
 
 import ray
 from fastapi import FastAPI, Request
@@ -24,6 +20,9 @@ from ray import serve
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from pixano_inference.__version__ import __version__
+from pixano_inference.api.v1 import register_v1_api
+from pixano_inference.api.v1.errors import register_exception_handlers
+from pixano_inference.jobs import JobManager, JobRecord
 from pixano_inference.models.registry import ModelClassRegistry
 from pixano_inference.schemas import ModelInfo
 from pixano_inference.security import make_api_key_dependency, warn_if_auth_disabled
@@ -31,16 +30,12 @@ from pixano_inference.server_settings import ServerSettings
 
 from .config import ModelDeploymentConfig, RayServeConfig
 from .deployment import build_model_app
-from .routes import register_inference_routes, register_service_routes
 from .utils import build_runtime_env
 
 
 logger = logging.getLogger(__name__)
 
-_TERMINAL_JOB_STATES = {"completed", "failed", "canceled"}
 _DEPLOY_TIMEOUT_S = 600.0
-_JOB_TTL_S = 3600.0
-_MAX_JOBS = 500
 _DEFAULT_TIMEOUTS: dict[str, float] = {
     "segmentation": 60.0,
     "detection": 60.0,
@@ -48,10 +43,6 @@ _DEFAULT_TIMEOUTS: dict[str, float] = {
     "tracking": 600.0,
     "ner": 60.0,
 }
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 class BodySizeLimitMiddleware(BaseHTTPMiddleware):
@@ -78,29 +69,14 @@ class BodySizeLimitMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
-@dataclass
-class TrackingJobRecord:
-    """In-memory status for an asynchronous tracking job."""
-
-    model_name: str
-    response: Any = None
-    task: Any = None
-    status: str = "queued"
-    detail: str | None = None
-    result: dict[str, Any] | None = None
-    metadata: dict[str, Any] = field(default_factory=dict)
-    timestamp: datetime = field(default_factory=_utcnow)
-    submitted_at_monotonic: float = field(default_factory=time.time)
-    processing_time: float = 0.0
-
-
 class DeploymentManager:
     """In-process manager for Ray Serve model deployments and async tracking jobs.
 
     Each model runs as its own Serve application (``serve.run(app, name=..., route_prefix=None)``).
     Handles are obtained lazily via ``serve.get_app_handle`` and inference is dispatched
     through the native async ``DeploymentResponse``. Deployment/config state is process-local;
-    Serve owns replica supervision, autoscaling, and batching.
+    Serve owns replica supervision, autoscaling, and batching. Async jobs are delegated to a
+    :class:`~pixano_inference.jobs.JobManager`.
     """
 
     def __init__(self, config: RayServeConfig) -> None:
@@ -113,7 +89,7 @@ class DeploymentManager:
         self._handles: dict[str, Any] = {}  # model_name -> Serve DeploymentHandle (cache)
         self._configs: dict[str, ModelDeploymentConfig] = {}  # model_name -> config
         self._metadata_cache: dict[str, dict[str, Any]] = {}  # model_name -> metadata
-        self._tracking_jobs: dict[str, TrackingJobRecord] = {}
+        self.jobs = JobManager()
 
     @property
     def config(self) -> RayServeConfig:
@@ -175,9 +151,7 @@ class DeploymentManager:
         self._configs.pop(name, None)
         self._handles.pop(name, None)
         self._metadata_cache.pop(name, None)
-        for job_id, job in list(self._tracking_jobs.items()):
-            if job.model_name == name and job.status not in _TERMINAL_JOB_STATES:
-                self._finalize_job(job_id, status="canceled", detail="Model undeployed.")
+        self.jobs.cancel_for_model(name)
         logger.info("Undeployed model '%s'", name)
 
     def _preflight_resource_check(self, config: ModelDeploymentConfig) -> None:
@@ -310,93 +284,23 @@ class DeploymentManager:
             "version": __version__,
         }
 
-    # --- Async tracking jobs --------------------------------------------------------
+    # --- Async jobs (delegated to JobManager) ---------------------------------------
 
     def submit_tracking_job(self, model_name: str, input_data: Any) -> str:
         """Submit a tracking request as an asynchronous job over the Serve handle."""
         handle = self.get_handle(model_name)
         if handle is None:
             raise ValueError(f"Model '{model_name}' is not deployed.")
-
         response = handle.predict.remote(input_data)
-        job_id = f"tracking-job-{uuid4().hex}"
-        record = TrackingJobRecord(
-            model_name=model_name,
-            response=response,
-            status="running",
-            metadata=self.get_model_metadata(model_name),
-            timestamp=_utcnow(),
-        )
-        self._tracking_jobs[job_id] = record
-        record.task = asyncio.get_running_loop().create_task(self._await_job(job_id, response))
-        self._evict_terminal_jobs()
-        return job_id
+        return self.jobs.submit(response, model_name=model_name, metadata=self.get_model_metadata(model_name))
 
-    async def _await_job(self, job_id: str, response: Any) -> None:
-        """Await a job's DeploymentResponse and record its terminal state."""
-        try:
-            result = await response
-        except asyncio.CancelledError:
-            return
-        except Exception as exc:
-            logger.warning("Tracking job %s failed: %s", job_id, exc)
-            self._finalize_job(job_id, status="failed", detail=str(exc))
-            return
-        payload = result.model_dump() if hasattr(result, "model_dump") else result
-        self._finalize_job(job_id, status="completed", result=payload)
+    def get_tracking_job(self, job_id: str) -> JobRecord | None:
+        """Return the current state of a tracking job."""
+        return self.jobs.get(job_id)
 
-    def _finalize_job(
-        self,
-        job_id: str,
-        *,
-        status: str,
-        detail: str | None = None,
-        result: dict[str, Any] | None = None,
-    ) -> TrackingJobRecord | None:
-        job = self._tracking_jobs.get(job_id)
-        if job is None:
-            return None
-        if job.status in _TERMINAL_JOB_STATES:
-            return job
-        job.status = status
-        job.detail = detail
-        job.result = result
-        job.timestamp = _utcnow()
-        job.processing_time = max(0.0, time.time() - job.submitted_at_monotonic)
-        return job
-
-    def get_tracking_job(self, job_id: str) -> TrackingJobRecord | None:
-        """Return the current state of a tracking job (kept up to date by its task)."""
-        return self._tracking_jobs.get(job_id)
-
-    def cancel_tracking_job(self, job_id: str) -> TrackingJobRecord | None:
+    def cancel_tracking_job(self, job_id: str) -> JobRecord | None:
         """Cancel a tracking job on a best-effort basis."""
-        job = self._tracking_jobs.get(job_id)
-        if job is None:
-            return None
-        if job.status in _TERMINAL_JOB_STATES:
-            return job
-        try:
-            if job.response is not None:
-                job.response.cancel()
-        except Exception as exc:
-            logger.warning("Failed to cancel tracking job %s response: %s", job_id, exc)
-        if job.task is not None:
-            job.task.cancel()
-        return self._finalize_job(job_id, status="canceled", detail="Tracking job canceled.")
-
-    def _evict_terminal_jobs(self) -> None:
-        """Bound the job store: drop terminal jobs past their TTL, then oldest over the cap."""
-        now = time.time()
-        for job_id, job in list(self._tracking_jobs.items()):
-            if job.status in _TERMINAL_JOB_STATES and (now - job.submitted_at_monotonic) > _JOB_TTL_S:
-                del self._tracking_jobs[job_id]
-        if len(self._tracking_jobs) <= _MAX_JOBS:
-            return
-        terminal = [(jid, job) for jid, job in self._tracking_jobs.items() if job.status in _TERMINAL_JOB_STATES]
-        terminal.sort(key=lambda item: item[1].submitted_at_monotonic)
-        for job_id, _ in terminal[: len(self._tracking_jobs) - _MAX_JOBS]:
-            del self._tracking_jobs[job_id]
+        return self.jobs.cancel(job_id)
 
     # --- Cluster info ---------------------------------------------------------------
 
@@ -525,20 +429,13 @@ def create_ray_serve_app(
             allow_headers=["*"],
         )
 
-    # Never leak raw exception text from unhandled errors.
-    @app.exception_handler(Exception)
-    async def _unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-        logger.exception("Unhandled error on %s %s", request.method, request.url.path)
-        return JSONResponse(
-            status_code=500,
-            content={"error": {"code": "internal_error", "message": "Internal server error."}},
-        )
+    # Consistent {"error": {...}} envelope; unhandled errors never leak their text.
+    register_exception_handlers(app)
 
     auth_dependency = make_api_key_dependency(server_settings)
 
-    # Register all route groups
-    register_service_routes(app, deployment_manager)
-    register_inference_routes(app, deployment_manager, auth_dependency=auth_dependency)
+    # Mount the versioned API (/v1) plus the unversioned /health alias.
+    register_v1_api(app, deployment_manager, auth_dependency=auth_dependency)
 
     # Store references in app state for access by routes
     app.state.config = config

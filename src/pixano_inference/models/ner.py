@@ -4,16 +4,17 @@
 # License: CECILL-C
 # =================================
 
-"""NER (Named Entity Recognition) model base class and I/O types (stub)."""
+"""NER (Named Entity Recognition) model base class and I/O types."""
 
 from abc import abstractmethod
+from typing import ClassVar
 
-from pydantic import BaseModel
+from pixano_inference.schemas.base import CamelModel
 
 from .base import InferenceModel
 
 
-class NERInput(BaseModel):
+class NERInput(CamelModel):
     """Input for named entity recognition.
 
     Attributes:
@@ -23,7 +24,7 @@ class NERInput(BaseModel):
     text: str
 
 
-class NEREntity(BaseModel):
+class NEREntity(CamelModel):
     """A single recognized entity.
 
     Attributes:
@@ -41,7 +42,7 @@ class NEREntity(BaseModel):
     score: float
 
 
-class NEROutput(BaseModel):
+class NEROutput(CamelModel):
     """Output for named entity recognition.
 
     Attributes:
@@ -52,7 +53,21 @@ class NEROutput(BaseModel):
 
 
 class NERModel(InferenceModel):
-    """Base class for named entity recognition models (stub)."""
+    """Base class for named entity recognition models.
+
+    Example:
+        ```python
+        @register_model("my-ner")
+        class MyNER(NERModel):
+            def load_model(self):
+                self.model = load_weights(self.config.model_params["path"])
+
+            def predict(self, input: NERInput) -> NEROutput:
+                return NEROutput(entities=[...])
+        ```
+    """
+
+    capability_name: ClassVar[str] = "ner"
 
     @abstractmethod
     def predict(self, input: NERInput) -> NEROutput:

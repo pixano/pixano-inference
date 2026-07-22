@@ -7,7 +7,7 @@
 # ruff: noqa: F401
 # ruff: noqa: D104
 
-from .base import APIRequest, BaseRequest, BaseResponse
+from .base import BaseRequest, BaseResponse, CamelModel
 from .models import ModelInfo
 from .nd_array import NDArray, NDArrayFloat
 from .rle import CompressedRLE
@@ -18,6 +18,8 @@ def __getattr__(name: str):
     _task_names = {
         "DetectionRequest",
         "DetectionResponse",
+        "NERRequest",
+        "NERResponse",
         "SegmentationRequest",
         "SegmentationResponse",
         "TrackingRequest",
