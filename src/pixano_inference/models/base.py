@@ -95,5 +95,20 @@ class InferenceModel(ABC):
             Task-specific Output object (subclasses narrow this type).
         """
 
+    def predict_batch(self, inputs: list[BaseModel]) -> list[BaseModel]:
+        """Run inference on a batch of inputs.
+
+        Only used when the deployment sets ``max_batch_size > 1``. The default runs
+        :meth:`predict` sequentially; override it to exploit true batched execution
+        (e.g. a single padded forward pass).
+
+        Args:
+            inputs: A list of task-specific Input objects.
+
+        Returns:
+            A list of task-specific Output objects, one per input, in order.
+        """
+        return [self.predict(inp) for inp in inputs]
+
     def unload(self) -> None:
         """Free resources. Override for custom cleanup."""

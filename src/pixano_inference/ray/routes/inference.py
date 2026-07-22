@@ -12,9 +12,10 @@ import asyncio
 import json
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from json import JSONDecodeError
 from typing import TYPE_CHECKING, Any
+from uuid import uuid4
 
 from fastapi import Depends, FastAPI, HTTPException, Request, UploadFile
 from pydantic import BaseModel, ValidationError
@@ -136,28 +137,39 @@ async def _run_inference(
         Response dictionary.
     """
     handle = _get_validated_handle(deployment_manager, model_name, expected_capability)
+    timeout_s = deployment_manager.get_timeout(model_name, expected_capability)
     start_time = time.time()
 
+    response = handle.predict.remote(input_data)
     try:
-        import ray
-
-        result = await asyncio.get_event_loop().run_in_executor(
-            None, lambda: ray.get(handle.predict.remote(input_data))
-        )
+        result = await asyncio.wait_for(_await_response(response), timeout=timeout_s)
+    except asyncio.TimeoutError:
+        try:
+            response.cancel()
+        except Exception:
+            pass
+        raise HTTPException(status_code=504, detail=f"Inference timed out after {timeout_s:g}s.")
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.exception(f"Inference error for model '{model_name}' on capability '{expected_capability}': {e}")
-        raise HTTPException(status_code=500, detail=f"Inference error: {e}")
+        logger.exception("Inference error for model '%s' on capability '%s': %s", model_name, expected_capability, e)
+        raise HTTPException(status_code=500, detail="Inference error.")
 
     processing_time = time.time() - start_time
 
     return {
-        "id": f"ray-{model_name}-{int(time.time() * 1000)}",
+        "id": f"ray-{model_name}-{uuid4().hex[:12]}",
         "status": "SUCCESS",
-        "timestamp": datetime.now(),
+        "timestamp": datetime.now(timezone.utc),
         "processing_time": processing_time,
         "metadata": deployment_manager.get_model_metadata(model_name),
         "data": result.model_dump(),
     }
+
+
+async def _await_response(response: Any) -> Any:
+    """Await a Serve ``DeploymentResponse`` (wrapping it so ``asyncio.wait_for`` accepts it)."""
+    return await response
 
 
 def _serialize_tracking_job(job_id: str, job: TrackingJobRecord) -> dict[str, Any]:

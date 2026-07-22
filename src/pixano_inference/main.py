@@ -27,6 +27,10 @@ def serve(
         Optional[list[Path]],
         typer.Option(help="Directory to add to Python path for custom model modules. Can be repeated."),
     ] = None,
+    strict_startup: Annotated[
+        bool,
+        typer.Option(help="Fail startup if any configured model cannot be deployed (recommended for production)."),
+    ] = True,
 ):
     """Start the Pixano Inference server.
 
@@ -48,7 +52,7 @@ def serve(
 
     from .ray import InferenceServer, RayServeConfig
 
-    ray_config = RayServeConfig(host=host, port=port)
+    ray_config = RayServeConfig(host=host, port=port, strict_startup=strict_startup)
     server = InferenceServer(config=ray_config)
 
     if config is not None:

@@ -37,7 +37,7 @@ class AutoscalingConfig(BaseModel):
         upscale_delay_s: Delay in seconds before scaling up.
     """
 
-    min_replicas: int = Field(default=0, ge=0)
+    min_replicas: int = Field(default=1, ge=0)
     max_replicas: int = Field(default=4, ge=1)
     target_num_ongoing_requests_per_replica: int = Field(default=2, ge=1)
     downscale_delay_s: float = Field(default=60.0, gt=0)
@@ -54,8 +54,12 @@ class ModelDeploymentConfig(BaseModel):
         model_params: Parameters passed to model __init__ via config.
         resources: Resource configuration for the deployment.
         autoscaling: Autoscaling configuration for the deployment.
-        max_batch_size: Maximum batch size for inference.
+        max_batch_size: Maximum batch size for inference (1 disables batching).
         batch_wait_timeout_s: Timeout for waiting to fill batch.
+        max_ongoing_requests: Max concurrent requests Serve routes to one replica before
+            queueing / triggering autoscaling.
+        health_check_period_s: How often Serve calls the replica health check.
+        timeout_s: Per-request inference timeout. None uses the capability default.
     """
 
     name: str
@@ -64,8 +68,11 @@ class ModelDeploymentConfig(BaseModel):
     model_params: dict = Field(default_factory=dict)
     resources: ResourceConfig = Field(default_factory=ResourceConfig)
     autoscaling: AutoscalingConfig = Field(default_factory=AutoscalingConfig)
-    max_batch_size: int = Field(default=8, ge=1)
+    max_batch_size: int = Field(default=1, ge=1)
     batch_wait_timeout_s: float = Field(default=0.1, ge=0)
+    max_ongoing_requests: int = Field(default=2, ge=1)
+    health_check_period_s: float = Field(default=10.0, gt=0)
+    timeout_s: float | None = Field(default=None, gt=0)
 
 
 class RayServeConfig(BaseModel):
@@ -93,3 +100,6 @@ class RayServeConfig(BaseModel):
     models: list[ModelDeploymentConfig] = Field(default_factory=list)
     default_resources: ResourceConfig = Field(default_factory=ResourceConfig)
     default_autoscaling: AutoscalingConfig = Field(default_factory=AutoscalingConfig)
+    strict_startup: bool = Field(default=True)
+    ray_address: str | None = Field(default=None)
+    ray_namespace: str = Field(default="pixano-inference")

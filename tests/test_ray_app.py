@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from types import SimpleNamespace
 
@@ -19,26 +20,59 @@ from pixano_inference.models.segmentation import SegmentationOutput
 from pixano_inference.models.tracking import TrackingOutput
 from pixano_inference.models.vlm import UsageInfo, VLMOutput
 from pixano_inference.ray import app as ray_app_module
-from pixano_inference.ray.app import create_ray_serve_app
-from pixano_inference.ray.config import RayServeConfig
+from pixano_inference.ray.app import DeploymentManager, create_ray_serve_app
+from pixano_inference.ray.config import ModelDeploymentConfig, RayServeConfig
 from pixano_inference.schemas import ModelInfo
 from pixano_inference.schemas.nd_array import NDArrayFloat
 from pixano_inference.schemas.rle import CompressedRLE
 
 
-class FakeRemoteMethod:
-    def __init__(self, result):
+class FakeResponse:
+    """Awaitable stand-in for a Serve DeploymentResponse.
+
+    Resolves immediately by default; ``pending=True`` never resolves until cancelled (used
+    to test the async job cancel path without a completion race).
+    """
+
+    def __init__(self, result, *, error: Exception | None = None, pending: bool = False):
         self._result = result
+        self._error = error
+        self._pending = pending
+        self.cancelled = False
+
+    def __await__(self):
+        import asyncio
+
+        async def _resolve():
+            if self._pending:
+                await asyncio.Event().wait()  # never set; cancelled via task.cancel()
+            if self._error is not None:
+                raise self._error
+            return self._result
+
+        return _resolve().__await__()
+
+    def cancel(self):
+        self.cancelled = True
+
+
+class FakeRemoteMethod:
+    def __init__(self, result, *, error: Exception | None = None, pending: bool = False):
+        self._result = result
+        self._error = error
+        self._pending = pending
         self.last_input = None
+        self.last_response: FakeResponse | None = None
 
     def remote(self, input_data):
         self.last_input = input_data
-        return self._result
+        self.last_response = FakeResponse(self._result, error=self._error, pending=self._pending)
+        return self.last_response
 
 
 class FakeHandle:
-    def __init__(self, result):
-        self.predict = FakeRemoteMethod(result)
+    def __init__(self, result, *, error: Exception | None = None, pending: bool = False):
+        self.predict = FakeRemoteMethod(result, error=error, pending=pending)
 
 
 def _mask_to_numeric_rle(mask: np.ndarray) -> list[int]:
@@ -66,6 +100,59 @@ def ray_app_client():
     return TestClient(app)
 
 
+def _make_tracking_config(name: str = "sam2-video"):
+    return ModelDeploymentConfig(name=name, capability="tracking", model_class="Sam2VideoModel")
+
+
+class TestJobManager:
+    """Async unit tests for the in-process tracking-job mechanism (over Serve handles)."""
+
+    async def test_job_completes(self):
+        result = TrackingOutput(
+            objects_ids=[1],
+            frame_indexes=[0],
+            masks=[CompressedRLE.from_mask(np.array([[1, 1], [0, 0]], dtype=np.uint8))],
+        )
+        manager = DeploymentManager(RayServeConfig(num_gpus=0))
+        manager._configs["sam2-video"] = _make_tracking_config()
+        manager._handles["sam2-video"] = FakeHandle(result)
+
+        job_id = manager.submit_tracking_job("sam2-video", input_data=object())
+        assert manager.get_tracking_job(job_id).status == "running"
+
+        await asyncio.sleep(0)  # let the background task run to completion
+        job = manager.get_tracking_job(job_id)
+        assert job.status == "completed"
+        assert job.result["frame_indexes"] == [0]
+        assert job.processing_time >= 0.0
+
+    async def test_job_records_failure(self):
+        manager = DeploymentManager(RayServeConfig(num_gpus=0))
+        manager._configs["sam2-video"] = _make_tracking_config()
+        manager._handles["sam2-video"] = FakeHandle(None, error=RuntimeError("boom"))
+
+        job_id = manager.submit_tracking_job("sam2-video", input_data=object())
+        await asyncio.sleep(0)
+        job = manager.get_tracking_job(job_id)
+        assert job.status == "failed"
+        assert "boom" in job.detail
+
+    async def test_job_store_evicts_over_cap(self):
+        from pixano_inference.ray import app as app_module
+
+        manager = DeploymentManager(RayServeConfig(num_gpus=0))
+        manager._configs["sam2-video"] = _make_tracking_config()
+        manager._handles["sam2-video"] = FakeHandle(
+            TrackingOutput(objects_ids=[1], frame_indexes=[0], masks=[]),
+        )
+        # Submit more than the cap; finalized jobs beyond the cap are evicted.
+        for _ in range(app_module._MAX_JOBS + 5):
+            jid = manager.submit_tracking_job("sam2-video", input_data=object())
+            manager._finalize_job(jid, status="completed", result={})
+        manager._evict_terminal_jobs()
+        assert len(manager._tracking_jobs) <= app_module._MAX_JOBS
+
+
 class TestManagementRoutesRemoved:
     def test_instantiate_model_not_found(self, ray_app_client: TestClient):
         response = ray_app_client.post("/providers/instantiate")
@@ -85,6 +172,23 @@ class TestServiceRoutes:
         response = ray_app_client.get("/health")
         assert response.status_code == 200
         assert response.json()["status"] == "healthy"
+
+    def test_ready_with_no_models_is_ready(self, ray_app_client: TestClient):
+        # No models configured -> readiness is trivially satisfied.
+        response = ray_app_client.get("/ready")
+        assert response.status_code == 200
+        body = response.json()
+        assert body["ready"] is True
+        assert body["models_loaded"] == 0
+
+    def test_ready_returns_503_when_model_not_running(
+        self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ):
+        manager = ray_app_client.app.state.deployment_manager
+        monkeypatch.setattr(manager, "model_statuses", lambda: {"sam2-image": "DEPLOYING"})
+        response = ray_app_client.get("/ready")
+        assert response.status_code == 503
+        assert response.json()["ready"] is False
 
     def test_list_models(self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch):
         manager = ray_app_client.app.state.deployment_manager
@@ -142,7 +246,6 @@ class TestInferenceRoutes:
         monkeypatch.setattr(manager, "get_handle", lambda name: handle)
         monkeypatch.setattr(manager, "get_model_capability", lambda name: capability if handle is not None else None)
         monkeypatch.setattr(manager, "get_model_metadata", lambda name: metadata or {"capability": capability})
-        monkeypatch.setattr(ray, "get", lambda value: value)
 
     def test_segmentation_route(self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch):
         result = SegmentationOutput(
@@ -345,8 +448,6 @@ class TestInferenceRoutes:
         )
         handle = FakeHandle(result)
         self._install_manager_stubs(ray_app_client, monkeypatch, handle=handle, capability="tracking")
-        monkeypatch.setattr(ray, "wait", lambda object_refs, timeout=0: ([], object_refs))
-        monkeypatch.setattr(ray, "cancel", lambda object_ref: None)
 
         keyframe_mask = np.array([[1, 1], [0, 0]], dtype=np.uint8)
         numeric_rle = _mask_to_numeric_rle(keyframe_mask)
@@ -434,9 +535,7 @@ class TestInferenceRoutes:
         assert response.status_code == 200
         assert handle.predict.last_input.video == [b"frame-0"]
 
-    def test_tracking_job_route_polls_until_completed(
-        self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch
-    ):
+    def test_tracking_job_submit_and_status(self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch):
         result = TrackingOutput(
             objects_ids=[1],
             frame_indexes=[0],
@@ -444,17 +543,7 @@ class TestInferenceRoutes:
         )
         handle = FakeHandle(result)
         self._install_manager_stubs(ray_app_client, monkeypatch, handle=handle, capability="tracking")
-
-        wait_calls = {"count": 0}
-
-        def fake_wait(object_refs, timeout=0):
-            wait_calls["count"] += 1
-            if wait_calls["count"] < 3:
-                return ([], object_refs)
-            return (object_refs, [])
-
-        monkeypatch.setattr(ray, "wait", fake_wait)
-        monkeypatch.setattr(ray, "cancel", lambda object_ref: None)
+        manager = ray_app_client.app.state.deployment_manager
 
         submit_response = ray_app_client.post(
             "/inference/tracking/jobs/",
@@ -470,15 +559,17 @@ class TestInferenceRoutes:
         assert submit_response.status_code == 200
         job_id = submit_response.json()["job_id"]
         assert submit_response.json()["status"] == "running"
+        assert handle.predict.last_input.video == ["frame-0001.png"]
 
-        running_response = ray_app_client.get(f"/inference/tracking/jobs/{job_id}")
-        assert running_response.status_code == 200
-        assert running_response.json()["status"] == "running"
+        # Unknown job -> 404.
+        assert ray_app_client.get("/inference/tracking/jobs/does-not-exist").status_code == 404
 
-        completed_response = ray_app_client.get(f"/inference/tracking/jobs/{job_id}")
-        assert completed_response.status_code == 200
-        assert completed_response.json()["status"] == "completed"
-        assert completed_response.json()["data"]["frame_indexes"] == [0]
+        # Drive the job to completion deterministically, then poll via HTTP.
+        manager._finalize_job(job_id, status="completed", result=result.model_dump())
+        completed = ray_app_client.get(f"/inference/tracking/jobs/{job_id}")
+        assert completed.status_code == 200
+        assert completed.json()["status"] == "completed"
+        assert completed.json()["data"]["frame_indexes"] == [0]
 
     def test_tracking_job_binary_route_accepts_uploaded_frames(
         self,
@@ -492,8 +583,6 @@ class TestInferenceRoutes:
         )
         handle = FakeHandle(result)
         self._install_manager_stubs(ray_app_client, monkeypatch, handle=handle, capability="tracking")
-        monkeypatch.setattr(ray, "wait", lambda object_refs, timeout=0: ([], object_refs))
-        monkeypatch.setattr(ray, "cancel", lambda object_ref: None)
 
         response = ray_app_client.post(
             "/inference/tracking/jobs/binary",
@@ -531,11 +620,10 @@ class TestInferenceRoutes:
             frame_indexes=[0],
             masks=[CompressedRLE.from_mask(np.array([[1, 1], [0, 0]], dtype=np.uint8))],
         )
-        handle = FakeHandle(result)
+        # Pending response so the job stays 'running' until we cancel it.
+        handle = FakeHandle(result, pending=True)
         self._install_manager_stubs(ray_app_client, monkeypatch, handle=handle, capability="tracking")
-        monkeypatch.setattr(ray, "wait", lambda object_refs, timeout=0: ([], object_refs))
-        canceled_refs = []
-        monkeypatch.setattr(ray, "cancel", lambda object_ref: canceled_refs.append(object_ref))
+        manager = ray_app_client.app.state.deployment_manager
 
         submit_response = ray_app_client.post(
             "/inference/tracking/jobs/",
@@ -552,7 +640,8 @@ class TestInferenceRoutes:
         cancel_response = ray_app_client.delete(f"/inference/tracking/jobs/{job_id}")
         assert cancel_response.status_code == 200
         assert cancel_response.json()["status"] == "canceled"
-        assert canceled_refs == [result]
+        # The Serve response was cancelled.
+        assert manager._tracking_jobs[job_id].response.cancelled is True
 
         polled_response = ray_app_client.get(f"/inference/tracking/jobs/{job_id}")
         assert polled_response.status_code == 200

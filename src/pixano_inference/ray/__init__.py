@@ -54,7 +54,7 @@ Example:
 
 from .config import AutoscalingConfig, ModelDeploymentConfig, RayServeConfig, ResourceConfig
 from .config_loader import ConfigLoader
-from .deployment import create_model_deployment
+from .deployment import build_model_app
 from .server import InferenceServer
 from .utils import build_runtime_env, detect_optional_packages
 
@@ -65,7 +65,7 @@ __all__ = [
     "ResourceConfig",
     "AutoscalingConfig",
     "ConfigLoader",
-    "create_model_deployment",
+    "build_model_app",
     "InferenceServer",
     "build_runtime_env",
     "detect_optional_packages",

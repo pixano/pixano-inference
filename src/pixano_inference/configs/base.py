@@ -122,20 +122,26 @@ class DeploymentConfig(BaseModel):
         target_num_ongoing_requests_per_replica: Target ongoing requests per replica before scaling up.
         downscale_delay_s: Delay in seconds before scaling down.
         upscale_delay_s: Delay in seconds before scaling up.
-        max_batch_size: Maximum batch size for inference.
+        max_batch_size: Maximum batch size for inference (1 disables batching).
         batch_wait_timeout_s: Timeout for waiting to fill batch.
+        max_ongoing_requests: Max concurrent requests per replica before queueing/scaling.
+        health_check_period_s: How often Serve calls the replica health check.
+        timeout_s: Per-request inference timeout. None uses the capability default.
     """
 
     num_gpus: float = Field(default=0.0, ge=0)
     num_cpus: float = Field(default=1.0, ge=0)
     memory_mb: int | None = Field(default=None, ge=0)
-    min_replicas: int = Field(default=0, ge=0)
+    min_replicas: int = Field(default=1, ge=0)
     max_replicas: int = Field(default=4, ge=1)
     target_num_ongoing_requests_per_replica: int = Field(default=2, ge=1)
     downscale_delay_s: float = Field(default=60.0, gt=0)
     upscale_delay_s: float = Field(default=5.0, gt=0)
-    max_batch_size: int = Field(default=8, ge=1)
+    max_batch_size: int = Field(default=1, ge=1)
     batch_wait_timeout_s: float = Field(default=0.1, ge=0)
+    max_ongoing_requests: int = Field(default=2, ge=1)
+    health_check_period_s: float = Field(default=10.0, gt=0)
+    timeout_s: float | None = Field(default=None, gt=0)
 
 
 class ModelConfig(BaseModel):
@@ -271,6 +277,9 @@ class ModelConfig(BaseModel):
             ),
             max_batch_size=dep.max_batch_size,
             batch_wait_timeout_s=dep.batch_wait_timeout_s,
+            max_ongoing_requests=dep.max_ongoing_requests,
+            health_check_period_s=dep.health_check_period_s,
+            timeout_s=dep.timeout_s,
         )
 
 

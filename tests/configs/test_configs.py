@@ -268,9 +268,10 @@ class TestModelConfig:
         dc = config.to_deployment_config()
         assert dc.resources.num_gpus == 0.0
         assert dc.resources.num_cpus == 1.0
-        assert dc.autoscaling.min_replicas == 0
+        assert dc.autoscaling.min_replicas == 1
         assert dc.autoscaling.max_replicas == 4
-        assert dc.max_batch_size == 8
+        assert dc.max_batch_size == 1
+        assert dc.max_ongoing_requests == 2
 
 
 class TestDeploymentConfig:
@@ -278,9 +279,10 @@ class TestDeploymentConfig:
         dep = DeploymentConfig()
         assert dep.num_gpus == 0.0
         assert dep.num_cpus == 1.0
-        assert dep.min_replicas == 0
+        assert dep.min_replicas == 1
         assert dep.max_replicas == 4
-        assert dep.max_batch_size == 8
+        assert dep.max_batch_size == 1
+        assert dep.max_ongoing_requests == 2
 
     def test_custom_values(self):
         dep = DeploymentConfig(
