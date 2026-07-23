@@ -8,7 +8,7 @@
 
 from typing import Literal
 
-from .base import BaseModelParams, register_model_params
+from pixano_inference.configs.base import BaseModelParams, register_model_params
 
 
 @register_model_params("Sam2ImageModel")

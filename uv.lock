@@ -3598,9 +3598,8 @@ jax = [
 mlx = [
     { name = "mlx", marker = "sys_platform == 'darwin'" },
 ]
-sam2 = [
-    { name = "torch", version = "2.9.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux'" },
-    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.13' and sys_platform == 'linux') or (platform_machine == 'aarch64' and sys_platform == 'linux') or sys_platform == 'darwin'" },
+sam = [
+    { name = "pixano-inference-sam", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
 ]
 tensorflow = [
     { name = "tensorflow", version = "2.18.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.12' and platform_machine == 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.13' and sys_platform == 'darwin')" },
@@ -3638,7 +3637,7 @@ vllm = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "pixano-inference", extra = ["docs", "sam2", "test", "transformers"], marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "pixano-inference", extra = ["docs", "sam", "test", "transformers"], marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "pixano-numpy-detector", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "sam-2", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
 ]
@@ -3660,6 +3659,7 @@ requires-dist = [
     { name = "mlx", marker = "sys_platform == 'darwin' and extra == 'mlx'", specifier = ">=0.1.0" },
     { name = "numpy", specifier = "<2.0.0" },
     { name = "pillow", specifier = ">=9.0.0" },
+    { name = "pixano-inference-sam", marker = "extra == 'sam'", editable = "packages/pixano-inference-sam" },
     { name = "pycocotools" },
     { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
     { name = "pydantic-settings" },
@@ -3675,7 +3675,6 @@ requires-dist = [
     { name = "requests" },
     { name = "responses", marker = "extra == 'test'" },
     { name = "tensorflow", marker = "extra == 'tensorflow'", specifier = ">=2.13.0" },
-    { name = "torch", marker = "extra == 'sam2'", specifier = ">=2.3.0,<3.0.0" },
     { name = "torch", marker = "extra == 'torch'", specifier = ">=2.3.0,<3.0.0" },
     { name = "torch", marker = "extra == 'transformers'", specifier = ">=2.3.0,<3.0.0" },
     { name = "torchvision", marker = "extra == 'transformers'" },
@@ -3685,13 +3684,29 @@ requires-dist = [
     { name = "uvicorn", specifier = ">=0.31.0" },
     { name = "vllm", marker = "sys_platform == 'linux' and extra == 'vllm'", specifier = ">=0.6.0" },
 ]
-provides-extras = ["docs", "jax", "mlx", "sam2", "sam3", "tensorflow", "test", "torch", "transformers", "ultralytics", "vllm"]
+provides-extras = ["docs", "jax", "mlx", "sam", "tensorflow", "test", "torch", "transformers", "ultralytics", "vllm"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "pixano-inference", extras = ["test", "docs", "transformers", "sam2"] },
+    { name = "pixano-inference", extras = ["test", "docs", "transformers", "sam"] },
     { name = "pixano-numpy-detector", editable = "examples/numpy_detector" },
     { name = "sam-2", git = "https://github.com/facebookresearch/sam2.git" },
+]
+
+[[package]]
+name = "pixano-inference-sam"
+version = "0.1.0"
+source = { editable = "packages/pixano-inference-sam" }
+dependencies = [
+    { name = "pixano-inference", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "torch", version = "2.9.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux'" },
+    { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.13' and sys_platform == 'linux') or (platform_machine == 'aarch64' and sys_platform == 'linux') or sys_platform == 'darwin'" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pixano-inference" },
+    { name = "torch", specifier = ">=2.3.0,<3.0.0" },
 ]
 
 [[package]]

@@ -65,19 +65,17 @@ docs=[
   "mkdocs-literate-nav >= 0.6.0",
   "mkdocs-redirects >= 1.2.1",
 ]
-# NOTE: the SAM2 backend requires the `sam-2` package, which is only distributed from
-# git (not PyPI). PyPI forbids wheels whose metadata carries a direct/VCS reference, so
-# it cannot live in a published extra. Install it manually alongside this extra:
-#   pip install pixano-inference[sam2]
+# SAM2 ships as a separate first-party plugin package (packages/pixano-inference-sam). This
+# extra pulls it in. The upstream `sam-2` library is git-only (not on PyPI), so install it
+# alongside:
+#   pip install pixano-inference[sam]
 #   pip install "sam-2 @ git+https://github.com/facebookresearch/sam2.git"
-# (The dev dependency-group below installs it automatically for local development.)
-sam2 = [
-  "torch >= 2.3.0, < 3.0.0",
+# (The dev dependency-group below wires both up automatically for local development.)
+sam = [
+  "pixano-inference-sam",
 ]
-# Placeholder for future SAM3 integration
-sam3 = []
 # --- ML framework runtimes (optional). The core depends on none of these; a custom model
-# is written against exactly one of them. Model-backend extras below (sam2, transformers,
+# is written against exactly one of them. Model-backend extras below (sam, transformers,
 # vllm, ultralytics) pull in the framework they need. ---
 torch=[
   "torch >= 2.3.0, < 3.0.0",
@@ -175,9 +173,9 @@ environments = [
 
 [dependency-groups]
 dev = [
-  "pixano-inference[test,docs,transformers,sam2]",
-  # sam-2 lives here (a dependency-group, which is never published to PyPI) rather than
-  # in the [sam2] extra, so the published wheel carries no direct/VCS reference.
+  "pixano-inference[test,docs,transformers,sam]",
+  # The upstream sam-2 library (git-only) lives here — a dependency-group is never published
+  # to PyPI, so the published wheel carries no direct/VCS reference.
   "sam-2 @ git+https://github.com/facebookresearch/sam2.git",
   # The example plugin package, installed editable so the entry-point discovery tests run.
   "pixano-numpy-detector",
@@ -185,3 +183,4 @@ dev = [
 
 [tool.uv.sources]
 pixano-numpy-detector = { path = "examples/numpy_detector", editable = true }
+pixano-inference-sam = { path = "packages/pixano-inference-sam", editable = true }

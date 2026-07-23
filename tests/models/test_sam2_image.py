@@ -13,10 +13,14 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from pixano_inference.impls.sam2.image import Sam2ImageModel
-from pixano_inference.models.segmentation import SegmentationInput
-from pixano_inference.ray.config import ModelDeploymentConfig
-from pixano_inference.schemas.rle import CompressedRLE
+
+pytest.importorskip("pixano_inference_sam")
+
+from pixano_inference_sam.image import Sam2ImageModel  # noqa: E402
+
+from pixano_inference.models.segmentation import SegmentationInput  # noqa: E402
+from pixano_inference.ray.config import ModelDeploymentConfig  # noqa: E402
+from pixano_inference.schemas.rle import CompressedRLE  # noqa: E402
 
 
 class FakePredictor:

@@ -15,11 +15,12 @@ from typing import Any
 
 import numpy as np
 
+from pixano_inference.frameworks.torch import resolve_device, resolve_torch_dtype
 from pixano_inference.models.registry import register_model
 from pixano_inference.models.segmentation import SegmentationInput, SegmentationModel, SegmentationOutput
 from pixano_inference.ray.config import ModelDeploymentConfig
 
-from .._helpers import pad_points_and_labels, resolve_device, resolve_torch_dtype, validate_prompts
+from ._prompts import pad_points_and_labels, validate_prompts
 
 
 logger = logging.getLogger(__name__)

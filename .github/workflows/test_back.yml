@@ -54,7 +54,8 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
           python -m pip install .[test,transformers]
-          python -m pip install -e examples/numpy_detector  # example entry-point plugin
+          python -m pip install -e examples/numpy_detector       # example entry-point plugin
+          python -m pip install -e packages/pixano-inference-sam  # SAM2 plugin (fake predictor in tests; sam-2 lib not needed)
 
       # Fast unit tests (the Ray Serve integration suite runs in its own job below).
       - name: Test with pytest

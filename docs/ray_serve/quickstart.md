@@ -23,13 +23,13 @@ Install Pixano-Inference with the model-specific extras you need:
 === "SAM2 (segmentation)"
 
     ```bash
-    uv sync --extra sam2
+    uv sync --extra sam
     ```
 
     or with `pip`:
 
     ```bash
-    pip install pixano-inference[sam2]
+    pip install pixano-inference[sam]
     ```
 
 === "Transformers (detection, VQA)"
@@ -47,13 +47,13 @@ Install Pixano-Inference with the model-specific extras you need:
 === "All extras"
 
     ```bash
-    uv sync --extra sam2 --extra transformers --extra vllm
+    uv sync --extra sam --extra transformers --extra vllm
     ```
 
     or with `pip`:
 
     ```bash
-    pip install pixano-inference[sam2,transformers,vllm]
+    pip install pixano-inference[sam,transformers,vllm]
     ```
 
 ## Write a Python config

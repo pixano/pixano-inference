@@ -11,24 +11,31 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from pixano_inference.configs import (
+
+# SAM2 is a plugin package; these tests exercise the config machinery through it.
+pytest.importorskip("pixano_inference_sam")
+
+from pixano_inference_sam import Sam2ImageModel, Sam2ImageParams, Sam2VideoModel, Sam2VideoParams  # noqa: E402
+
+from pixano_inference.configs import (  # noqa: E402
     BaseModelParams,
     DeploymentConfig,
     GroundingDINOParams,
     ModelConfig,
     ModelParamsRegistry,
-    Sam2ImageParams,
-    Sam2VideoParams,
     ServerConfig,
     TransformersVLMParams,
     VLLMVLMParams,
 )
-from pixano_inference.impls.sam2.image import Sam2ImageModel
-from pixano_inference.impls.sam2.video import Sam2VideoModel
-from pixano_inference.impls.transformers.grounding_dino import GroundingDINOModel
-from pixano_inference.impls.transformers.vlm import TransformersVLMModel
-from pixano_inference.models import InferenceModel
-from pixano_inference.ray.config import ModelDeploymentConfig
+from pixano_inference.impls.transformers.grounding_dino import GroundingDINOModel  # noqa: E402
+from pixano_inference.impls.transformers.vlm import TransformersVLMModel  # noqa: E402
+from pixano_inference.models import InferenceModel  # noqa: E402
+from pixano_inference.plugins import ensure_models_loaded  # noqa: E402
+from pixano_inference.ray.config import ModelDeploymentConfig  # noqa: E402
+
+
+# Register built-in + plugin params (Sam2*Params) into the registry for the assertions below.
+ensure_models_loaded()
 
 
 class TestModelParamsRegistry:

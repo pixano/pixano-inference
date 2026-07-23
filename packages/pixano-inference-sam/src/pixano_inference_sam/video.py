@@ -17,11 +17,12 @@ from typing import Any
 
 import numpy as np
 
+from pixano_inference.frameworks.torch import resolve_device, resolve_torch_dtype
 from pixano_inference.models.registry import register_model
 from pixano_inference.models.tracking import TrackingInput, TrackingKeyframe, TrackingModel, TrackingOutput
 from pixano_inference.ray.config import ModelDeploymentConfig
 
-from .._helpers import resolve_device, resolve_torch_dtype, validate_prompts
+from ._prompts import validate_prompts
 
 
 logger = logging.getLogger(__name__)
@@ -371,9 +372,8 @@ class Sam2VideoModel(TrackingModel):
         """
         import torch
 
+        from pixano_inference.frameworks.torch import convert_image_pil_to_tensor
         from pixano_inference.utils.media import convert_string_to_image
-
-        from .._helpers import convert_image_pil_to_tensor
 
         num_frames = len(frames)
         if num_frames == 0:

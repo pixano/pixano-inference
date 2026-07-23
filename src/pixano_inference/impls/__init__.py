@@ -4,39 +4,17 @@
 # License: CECILL-C
 # =================================
 
-"""Concrete model implementations, organised by backend/extra.
+"""Concrete first-party model implementations, organised by backend/extra.
 
-Importing this module triggers ``@register_model`` decorators for all
-available model implementations, depending on which optional dependencies
-are installed.
+Importing this module triggers ``@register_model`` decorators for the built-in
+implementations whose optional dependencies are installed. SAM2 lives in the separate
+``pixano-inference-sam`` plugin package (discovered via its entry point).
 """
 
 import logging
 
 
 logger = logging.getLogger(__name__)
-
-# SAM2 models ---------------------------------------------------------------
-try:
-    from pixano_inference.utils.package import is_sam2_installed
-
-    if is_sam2_installed():
-        from . import sam2  # noqa: F401
-
-        logger.debug("Registered SAM2 models")
-except Exception as e:
-    logger.debug("SAM2 models not available: %s", e)
-
-# SAM3 models (placeholder) ------------------------------------------------
-try:
-    from pixano_inference.utils.package import is_sam3_installed
-
-    if is_sam3_installed():
-        from . import sam3  # noqa: F401
-
-        logger.debug("Registered SAM3 models")
-except Exception as e:
-    logger.debug("SAM3 models not available: %s", e)
 
 # Transformers models -------------------------------------------------------
 try:
