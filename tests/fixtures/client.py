@@ -6,18 +6,14 @@
 
 import pytest
 
-from pixano_inference.client import PixanoInferenceClient
+from pixano_inference.client import PixanoInferenceClient, SyncPixanoInferenceClient
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def simple_pixano_inference_client() -> PixanoInferenceClient:
-    return PixanoInferenceClient(
-        url="http://localhost:8081",
-        app_name="Pixano Inference",
-        app_version="0.1.0",
-        app_description="Pixano Inference",
-        num_cpus=4,
-        num_gpus=2,
-        num_nodes=1,
-        gpus_used=0.0,
-    )
+    return PixanoInferenceClient(url="http://localhost:8081", max_retries=0)
+
+
+@pytest.fixture
+def sync_pixano_inference_client() -> SyncPixanoInferenceClient:
+    return SyncPixanoInferenceClient(url="http://localhost:8081", max_retries=0)

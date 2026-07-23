@@ -4,216 +4,411 @@
 # License: CECILL-C
 # =================================
 
-"""Pixano inference client."""
+"""Client for the Pixano Inference /v1 API.
 
-from typing import Any, Literal
+Two clients share one contract: :class:`PixanoInferenceClient` (async) and
+:class:`SyncPixanoInferenceClient` (sync). Both hold a pooled httpx transport, send the
+optional API key, retry transient failures with backoff, and raise
+:class:`PixanoInferenceError` carrying the server's ``{code, message, requestId}`` envelope.
+Requests serialize as camelCase JSON (``by_alias=True``); media is passed by value as a URL,
+base64 data-URI, or media-root path (the server also exposes ``/binary`` multipart routes for
+callers that prefer raw uploads).
+"""
+
+from __future__ import annotations
+
+import asyncio
+import time
+from typing import Any
 
 import httpx
-import requests  # type: ignore[import-untyped]
-from fastapi import HTTPException
-from httpx import Response
-from pydantic import field_validator
 
 from .schemas import (
-    BaseRequest,
     BaseResponse,
     DetectionRequest,
     DetectionResponse,
-    ModelInfo,
+    NERRequest,
+    NERResponse,
     SegmentationRequest,
     SegmentationResponse,
-    TrackingRequest,
     TrackingResponse,
     VLMRequest,
     VLMResponse,
 )
-from .settings import Settings
+from .schemas.v1 import DeployModelRequest, JobStatus, ModelStatusInfo, TrackingRequestV1
 from .utils import is_url
 
 
-def raise_if_error(response: Response) -> None:
-    """Raise an error from a response."""
-    if response.is_success:
-        return
-    error_out = f"HTTP {response.status_code}: {response.reason_phrase}"
-    try:
-        json_detail = response.json()
-    except Exception:
-        json_detail = {}
-
-    detail = json_detail.get("detail", None)
-    if detail is not None:
-        error_out += f" - {detail}"
-    error = json_detail.get("error", None)
-    if error is not None:
-        error_out += f" - {error}"
-    raise HTTPException(response.status_code, detail=error_out)
+DEFAULT_TIMEOUT = 60.0
+TRACKING_TIMEOUT = 600.0
+DEPLOY_TIMEOUT = 600.0
+_RETRY_STATUS = frozenset({502, 503, 504})
+_TERMINAL_JOB_STATES = frozenset({"completed", "failed", "canceled"})
 
 
-class PixanoInferenceClient(Settings):
-    """Pixano Inference Client."""
+class PixanoInferenceError(Exception):
+    """Error raised by the client, carrying the server error envelope."""
 
-    url: str
+    def __init__(self, status_code: int, code: str, message: Any, request_id: str | None = None) -> None:
+        """Store the status code, error code, message, and optional request id."""
+        self.status_code = status_code
+        self.code = code
+        self.message = message
+        self.request_id = request_id
+        suffix = f" (requestId={request_id})" if request_id else ""
+        super().__init__(f"[{status_code} {code}] {message}{suffix}")
 
-    @field_validator("url", mode="after")
-    def _validate_url(cls, v):
-        if not is_url(v):
-            raise ValueError(f"Invalid URL, got '{v}'.")
-        if v.endswith("/"):
-            v = v[:-1]
-        return v
+
+class _ClientBase:
+    """Shared configuration and request/response helpers for both clients."""
+
+    def __init__(
+        self,
+        url: str,
+        *,
+        api_key: str | None = None,
+        timeout: float = DEFAULT_TIMEOUT,
+        tracking_timeout: float = TRACKING_TIMEOUT,
+        max_retries: int = 2,
+        backoff_factor: float = 0.5,
+        headers: dict[str, str] | None = None,
+    ) -> None:
+        """Configure the client target, auth, timeouts, and retry policy."""
+        url = url.rstrip("/")
+        if not is_url(url):
+            raise ValueError(f"Invalid URL, got '{url}'.")
+        self.url = url
+        self._api_key = api_key
+        self._timeout = timeout
+        self._tracking_timeout = tracking_timeout
+        self._max_retries = max_retries
+        self._backoff_factor = backoff_factor
+        self._extra_headers = dict(headers or {})
+
+    def _headers(self, extra: dict[str, str] | None = None) -> dict[str, str]:
+        headers = dict(self._extra_headers)
+        if self._api_key:
+            headers["X-API-Key"] = self._api_key
+        if extra:
+            headers.update(extra)
+        return headers
+
+    def _full_url(self, path: str) -> str:
+        return f"{self.url}/{path.lstrip('/')}"
 
     @staticmethod
-    def connect(url: str) -> "PixanoInferenceClient":
-        """Connect to pixano inference.
+    def _json_body(request: Any) -> Any:
+        return request.model_dump(mode="json", by_alias=True)
+
+    def _backoff(self, attempt: int) -> float:
+        return self._backoff_factor * (2**attempt)
+
+    def _raise_for_error(self, response: httpx.Response) -> None:
+        if response.is_success:
+            return
+        code = "error"
+        message: Any = response.reason_phrase
+        request_id: str | None = None
+        try:
+            body = response.json()
+        except Exception:
+            body = None
+        if isinstance(body, dict):
+            error = body.get("error")
+            if isinstance(error, dict):
+                code = error.get("code", "error")
+                message = error.get("message", message)
+                request_id = error.get("requestId")
+            else:
+                message = body.get("detail") or body.get("message") or message
+        raise PixanoInferenceError(response.status_code, code, message, request_id)
+
+
+class PixanoInferenceClient(_ClientBase):
+    """Asynchronous client for the Pixano Inference /v1 API."""
+
+    def __init__(self, url: str, *, transport: httpx.AsyncBaseTransport | None = None, **kwargs: Any) -> None:
+        """Create the client and its pooled async transport.
 
         Args:
-            url: The URL of the pixano inference server.
+            url: Base server URL.
+            transport: Optional httpx transport (e.g. an ASGI transport for in-process tests).
+            **kwargs: Shared client options (api_key, timeout, retries, ...).
         """
-        server_settings = requests.get(f"{url}/app/settings/").json()
-        server_settings = {k: v for k, v in server_settings.items() if v is not None}
-        client = PixanoInferenceClient(url=url, **server_settings)
-        return client
+        super().__init__(url, **kwargs)
+        self._client = httpx.AsyncClient(timeout=self._timeout, transport=transport)
 
-    async def _rest_call(
+    @classmethod
+    def connect(cls, url: str, *, api_key: str | None = None, **kwargs: Any) -> PixanoInferenceClient:
+        """Construct a client for *url* (kept for backward compatibility)."""
+        return cls(url, api_key=api_key, **kwargs)
+
+    async def aclose(self) -> None:
+        """Close the underlying connection pool."""
+        await self._client.aclose()
+
+    async def __aenter__(self) -> PixanoInferenceClient:
+        """Enter the async context manager."""
+        return self
+
+    async def __aexit__(self, *exc: Any) -> None:
+        """Close the client on context exit."""
+        await self.aclose()
+
+    async def _request(
         self,
+        method: str,
         path: str,
-        method: Literal["GET", "POST", "PUT", "DELETE"],
-        timeout: int = 60,
-        **kwargs,
-    ) -> Response:
-        """Perform a REST call to the pixano inference server."""
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            match method:
-                case "GET":
-                    request_fn = client.get
-                case "POST":
-                    request_fn = client.post
-                case "PUT":
-                    request_fn = client.put
-                case "DELETE":
-                    request_fn = client.delete
-                case _:
-                    raise ValueError(
-                        f"Invalid REST call method. Expected one of ['GET', 'POST', 'PUT', 'DELETE'], but got "
-                        f"'{method}'."
-                    )
-
-            if path.startswith("/"):
-                path = path[1:]
-
-            url = f"{self.url}/{path}"
-            response = await request_fn(url, **kwargs)
-            raise_if_error(response)
-
+        *,
+        timeout: float | None = None,
+        retry_statuses: frozenset[int] = _RETRY_STATUS,
+        raise_on_error: bool = True,
+        **kwargs: Any,
+    ) -> httpx.Response:
+        url = self._full_url(path)
+        headers = self._headers(kwargs.pop("headers", None))
+        request_timeout = timeout or self._timeout
+        attempt = 0
+        while True:
+            try:
+                response = await self._client.request(method, url, headers=headers, timeout=request_timeout, **kwargs)
+            except (httpx.ConnectError, httpx.ConnectTimeout, httpx.ReadTimeout) as exc:
+                if attempt >= self._max_retries:
+                    raise PixanoInferenceError(0, "connection_error", str(exc)) from exc
+                await asyncio.sleep(self._backoff(attempt))
+                attempt += 1
+                continue
+            if response.status_code in retry_statuses and attempt < self._max_retries:
+                await asyncio.sleep(self._backoff(attempt))
+                attempt += 1
+                continue
+            if raise_on_error:
+                self._raise_for_error(response)
             return response
 
-    async def get_settings(self) -> Settings:
-        """Get the settings for the pixano inference server."""
-        response = await self.get("app/settings/")
-        raise_if_error(response)
-        return Settings(**response.json())
-
-    async def get(self, path: str, **kwargs: Any) -> Response:
-        """Perform a GET request to the pixano inference server.
-
-        Args:
-            path: The path of the request.
-            kwargs: The keyword arguments to pass to the request or httpx client.
-        """
-        return await self._rest_call(path=path, method="GET", **kwargs)
-
-    async def post(self, path: str, **kwargs: Any) -> Response:
-        """Perform a POST request to the pixano inference server.
-
-        Args:
-            path: The path of the request.
-            kwargs: The keyword arguments to pass to the request or httpx client.
-        """
-        return await self._rest_call(path=path, method="POST", **kwargs)
-
-    async def put(self, path: str, **kwargs: Any) -> Response:
-        """Perform a PUT request to the pixano inference server.
-
-        Args:
-            path: The path of the request.
-            kwargs: The keyword arguments to pass to the request or httpx client.
-        """
-        return await self._rest_call(path=path, method="PUT", **kwargs)
-
-    async def delete(self, path: str, **kwargs: Any) -> Response:
-        """Perform a DELETE request to the pixano inference server.
-
-        Args:
-            path: The path of the request.
-            kwargs: The keyword arguments to pass to the request or httpx client.
-        """
-        return await self._rest_call(path=path, method="DELETE", **kwargs)
-
-    async def list_models(self) -> list[ModelInfo]:
-        """List all models."""
-        response = await self.get("app/models/")
-        return [ModelInfo.model_construct(**model) for model in response.json()]
-
-    async def inference(
-        self,
-        route: str,
-        request: BaseRequest,
-        response_type: type[BaseResponse],
-    ) -> BaseResponse:
-        """Perform inference via a POST request to the pixano inference server.
-
-        Args:
-            route: The route for the request.
-            request: The request payload.
-            response_type: The expected response type.
-
-        Returns:
-            The parsed response from the server.
-        """
-        response = await self.post(route, json=request.model_dump())
+    async def _infer(self, path: str, request: Any, response_type: type[BaseResponse], timeout: float | None) -> Any:
+        response = await self._request("POST", path, json=self._json_body(request), timeout=timeout)
         return response_type.model_validate(response.json())
 
+    # --- Inference ------------------------------------------------------------------
+
     async def segmentation(
-        self,
-        request: SegmentationRequest,
+        self, request: SegmentationRequest, *, timeout: float | None = None
     ) -> SegmentationResponse:
-        """Perform an inference to perform image segmentation."""
-        return await self.inference(
-            route="inference/segmentation/",
-            request=request,
-            response_type=SegmentationResponse,
+        """Run image segmentation."""
+        return await self._infer("/v1/inference/segmentation", request, SegmentationResponse, timeout)
+
+    async def detection(self, request: DetectionRequest, *, timeout: float | None = None) -> DetectionResponse:
+        """Run object detection."""
+        return await self._infer("/v1/inference/detection", request, DetectionResponse, timeout)
+
+    async def vlm(self, request: VLMRequest, *, timeout: float | None = None) -> VLMResponse:
+        """Run vision-language generation."""
+        return await self._infer("/v1/inference/vlm", request, VLMResponse, timeout)
+
+    async def ner(self, request: NERRequest, *, timeout: float | None = None) -> NERResponse:
+        """Run named entity recognition."""
+        return await self._infer("/v1/inference/ner", request, NERResponse, timeout)
+
+    async def tracking(self, request: TrackingRequestV1, *, timeout: float | None = None) -> TrackingResponse:
+        """Run synchronous video tracking (short intervals)."""
+        return await self._infer(
+            "/v1/inference/tracking", request, TrackingResponse, timeout or self._tracking_timeout
         )
 
-    async def tracking(
-        self,
-        request: TrackingRequest,
-    ) -> TrackingResponse:
-        """Perform an inference to perform video tracking."""
-        return await self.inference(
-            route="inference/tracking/",
-            request=request,
-            response_type=TrackingResponse,
-        )
+    # --- Async tracking jobs --------------------------------------------------------
 
-    async def vlm(
-        self,
-        request: VLMRequest,
-    ) -> VLMResponse:
-        """Perform an inference for vision-language model generation."""
-        return await self.inference(
-            route="inference/vlm/",
-            request=request,
-            response_type=VLMResponse,
+    async def submit_tracking_job(self, request: TrackingRequestV1, *, timeout: float | None = None) -> JobStatus:
+        """Submit a tracking request as an asynchronous job."""
+        response = await self._request(
+            "POST", "/v1/inference/tracking/jobs", json=self._json_body(request), timeout=timeout
         )
+        return JobStatus.model_validate(response.json())
 
-    async def detection(
-        self,
-        request: DetectionRequest,
-    ) -> DetectionResponse:
-        """Perform an inference to perform zero-shot detection."""
-        return await self.inference(
-            route="inference/detection/",
-            request=request,
-            response_type=DetectionResponse,
+    async def get_job(self, job_id: str) -> JobStatus:
+        """Poll the status of a job."""
+        response = await self._request("GET", f"/v1/jobs/{job_id}")
+        return JobStatus.model_validate(response.json())
+
+    async def cancel_job(self, job_id: str) -> JobStatus:
+        """Cancel a job."""
+        response = await self._request("DELETE", f"/v1/jobs/{job_id}")
+        return JobStatus.model_validate(response.json())
+
+    async def wait_for_job(
+        self, job_id: str, *, poll_interval: float = 1.0, timeout: float | None = None
+    ) -> JobStatus:
+        """Poll a job until it reaches a terminal state."""
+        deadline = None if timeout is None else time.monotonic() + timeout
+        while True:
+            job = await self.get_job(job_id)
+            if job.status in _TERMINAL_JOB_STATES:
+                return job
+            if deadline is not None and time.monotonic() > deadline:
+                raise PixanoInferenceError(0, "timeout", f"Job '{job_id}' did not finish within {timeout}s.")
+            await asyncio.sleep(poll_interval)
+
+    # --- Admin / service ------------------------------------------------------------
+
+    async def list_models(self) -> list[ModelStatusInfo]:
+        """List deployed models with their live status."""
+        response = await self._request("GET", "/v1/models")
+        return [ModelStatusInfo.model_validate(model) for model in response.json()]
+
+    async def deploy_model(self, request: DeployModelRequest, *, timeout: float | None = None) -> ModelStatusInfo:
+        """Deploy a model at runtime."""
+        response = await self._request(
+            "POST", "/v1/models", json=self._json_body(request), timeout=timeout or DEPLOY_TIMEOUT
         )
+        return ModelStatusInfo.model_validate(response.json())
+
+    async def undeploy_model(self, name: str) -> dict[str, Any]:
+        """Undeploy a model."""
+        response = await self._request("DELETE", f"/v1/models/{name}")
+        return response.json()
+
+    async def info(self) -> dict[str, Any]:
+        """Return server and cluster information."""
+        return (await self._request("GET", "/v1/info")).json()
+
+    async def ready(self) -> dict[str, Any]:
+        """Return the readiness report (does not raise on 503)."""
+        response = await self._request("GET", "/v1/ready", retry_statuses=frozenset(), raise_on_error=False)
+        return response.json()
+
+    async def health(self) -> dict[str, Any]:
+        """Return the liveness report."""
+        return (await self._request("GET", "/health")).json()
+
+
+class SyncPixanoInferenceClient(_ClientBase):
+    """Synchronous twin of :class:`PixanoInferenceClient` for callers not on an event loop."""
+
+    def __init__(self, url: str, *, transport: httpx.BaseTransport | None = None, **kwargs: Any) -> None:
+        """Create the client and its pooled sync transport."""
+        super().__init__(url, **kwargs)
+        self._client = httpx.Client(timeout=self._timeout, transport=transport)
+
+    @classmethod
+    def connect(cls, url: str, *, api_key: str | None = None, **kwargs: Any) -> SyncPixanoInferenceClient:
+        """Construct a client for *url*."""
+        return cls(url, api_key=api_key, **kwargs)
+
+    def close(self) -> None:
+        """Close the underlying connection pool."""
+        self._client.close()
+
+    def __enter__(self) -> SyncPixanoInferenceClient:
+        """Enter the context manager."""
+        return self
+
+    def __exit__(self, *exc: Any) -> None:
+        """Close the client on context exit."""
+        self.close()
+
+    def _request(
+        self,
+        method: str,
+        path: str,
+        *,
+        timeout: float | None = None,
+        retry_statuses: frozenset[int] = _RETRY_STATUS,
+        raise_on_error: bool = True,
+        **kwargs: Any,
+    ) -> httpx.Response:
+        url = self._full_url(path)
+        headers = self._headers(kwargs.pop("headers", None))
+        request_timeout = timeout or self._timeout
+        attempt = 0
+        while True:
+            try:
+                response = self._client.request(method, url, headers=headers, timeout=request_timeout, **kwargs)
+            except (httpx.ConnectError, httpx.ConnectTimeout, httpx.ReadTimeout) as exc:
+                if attempt >= self._max_retries:
+                    raise PixanoInferenceError(0, "connection_error", str(exc)) from exc
+                time.sleep(self._backoff(attempt))
+                attempt += 1
+                continue
+            if response.status_code in retry_statuses and attempt < self._max_retries:
+                time.sleep(self._backoff(attempt))
+                attempt += 1
+                continue
+            if raise_on_error:
+                self._raise_for_error(response)
+            return response
+
+    def _infer(self, path: str, request: Any, response_type: type[BaseResponse], timeout: float | None) -> Any:
+        response = self._request("POST", path, json=self._json_body(request), timeout=timeout)
+        return response_type.model_validate(response.json())
+
+    def segmentation(self, request: SegmentationRequest, *, timeout: float | None = None) -> SegmentationResponse:
+        """Run image segmentation."""
+        return self._infer("/v1/inference/segmentation", request, SegmentationResponse, timeout)
+
+    def detection(self, request: DetectionRequest, *, timeout: float | None = None) -> DetectionResponse:
+        """Run object detection."""
+        return self._infer("/v1/inference/detection", request, DetectionResponse, timeout)
+
+    def vlm(self, request: VLMRequest, *, timeout: float | None = None) -> VLMResponse:
+        """Run vision-language generation."""
+        return self._infer("/v1/inference/vlm", request, VLMResponse, timeout)
+
+    def ner(self, request: NERRequest, *, timeout: float | None = None) -> NERResponse:
+        """Run named entity recognition."""
+        return self._infer("/v1/inference/ner", request, NERResponse, timeout)
+
+    def tracking(self, request: TrackingRequestV1, *, timeout: float | None = None) -> TrackingResponse:
+        """Run synchronous video tracking (short intervals)."""
+        return self._infer("/v1/inference/tracking", request, TrackingResponse, timeout or self._tracking_timeout)
+
+    def submit_tracking_job(self, request: TrackingRequestV1, *, timeout: float | None = None) -> JobStatus:
+        """Submit a tracking request as an asynchronous job."""
+        response = self._request("POST", "/v1/inference/tracking/jobs", json=self._json_body(request), timeout=timeout)
+        return JobStatus.model_validate(response.json())
+
+    def get_job(self, job_id: str) -> JobStatus:
+        """Poll the status of a job."""
+        return JobStatus.model_validate(self._request("GET", f"/v1/jobs/{job_id}").json())
+
+    def cancel_job(self, job_id: str) -> JobStatus:
+        """Cancel a job."""
+        return JobStatus.model_validate(self._request("DELETE", f"/v1/jobs/{job_id}").json())
+
+    def wait_for_job(self, job_id: str, *, poll_interval: float = 1.0, timeout: float | None = None) -> JobStatus:
+        """Poll a job until it reaches a terminal state."""
+        deadline = None if timeout is None else time.monotonic() + timeout
+        while True:
+            job = self.get_job(job_id)
+            if job.status in _TERMINAL_JOB_STATES:
+                return job
+            if deadline is not None and time.monotonic() > deadline:
+                raise PixanoInferenceError(0, "timeout", f"Job '{job_id}' did not finish within {timeout}s.")
+            time.sleep(poll_interval)
+
+    def list_models(self) -> list[ModelStatusInfo]:
+        """List deployed models with their live status."""
+        response = self._request("GET", "/v1/models")
+        return [ModelStatusInfo.model_validate(model) for model in response.json()]
+
+    def deploy_model(self, request: DeployModelRequest, *, timeout: float | None = None) -> ModelStatusInfo:
+        """Deploy a model at runtime."""
+        response = self._request(
+            "POST", "/v1/models", json=self._json_body(request), timeout=timeout or DEPLOY_TIMEOUT
+        )
+        return ModelStatusInfo.model_validate(response.json())
+
+    def undeploy_model(self, name: str) -> dict[str, Any]:
+        """Undeploy a model."""
+        return self._request("DELETE", f"/v1/models/{name}").json()
+
+    def info(self) -> dict[str, Any]:
+        """Return server and cluster information."""
+        return self._request("GET", "/v1/info").json()
+
+    def ready(self) -> dict[str, Any]:
+        """Return the readiness report (does not raise on 503)."""
+        return self._request("GET", "/v1/ready", retry_statuses=frozenset(), raise_on_error=False).json()
+
+    def health(self) -> dict[str, Any]:
+        """Return the liveness report."""
+        return self._request("GET", "/health").json()

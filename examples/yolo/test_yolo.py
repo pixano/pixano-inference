@@ -115,7 +115,8 @@ async def main() -> None:
         print(f"\nERROR: Failed to connect: {type(e).__name__}: {e}")
         sys.exit(1)
 
-    print(f"Connected! GPUs: {client.num_gpus}")
+    info = await client.info()
+    print(f"Connected! GPUs: {info.get('numGpus')}")
 
     # --- List models ---
     print_section("Deployed Models")

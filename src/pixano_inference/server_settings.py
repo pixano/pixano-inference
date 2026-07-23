@@ -10,10 +10,9 @@ These are read from environment variables prefixed ``PIXANO_INFERENCE_`` (or a `
 file) and drive the request-facing behaviour of the server: API-key authentication, the
 media-ingestion security policy, CORS, and request-body limits.
 
-This is distinct from :class:`pixano_inference.settings.Settings`, which is a legacy
-client/app-info model. ``ServerSettings`` is what the ingress and model replicas consult
-at request time; because it derives entirely from the environment, a Ray worker process
-reconstructs the same policy its driver used (see :mod:`pixano_inference.utils.media`).
+``ServerSettings`` is what the ingress and model replicas consult at request time; because
+it derives entirely from the environment, a Ray worker process reconstructs the same policy
+its driver used (see :mod:`pixano_inference.utils.media`).
 """
 
 from __future__ import annotations

@@ -4,4 +4,6 @@
 # License: CECILL-C
 # =================================
 
-from .fixtures.client import simple_pixano_inference_client
+# ruff: noqa: F401
+
+from .fixtures.client import simple_pixano_inference_client, sync_pixano_inference_client
