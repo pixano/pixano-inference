@@ -247,6 +247,137 @@
         "title": "DetectionResponse",
         "type": "object"
       },
+      "EmbeddingOutput": {
+        "description": "Output for embedding computation.\n\nAttributes:\n    embeddings: Embedding vectors as a ``[num_inputs, dim]`` array.\n    dim: Dimensionality of each embedding vector.",
+        "properties": {
+          "dim": {
+            "title": "Dim",
+            "type": "integer"
+          },
+          "embeddings": {
+            "$ref": "#/components/schemas/NDArrayFloat"
+          }
+        },
+        "required": [
+          "embeddings",
+          "dim"
+        ],
+        "title": "EmbeddingOutput",
+        "type": "object"
+      },
+      "EmbeddingRequest": {
+        "description": "Request for embedding inference.",
+        "properties": {
+          "image": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "format": "path",
+                      "type": "string"
+                    },
+                    {
+                      "format": "binary",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "format": "path",
+                "type": "string"
+              },
+              {
+                "format": "binary",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "normalize": {
+            "default": true,
+            "title": "Normalize",
+            "type": "boolean"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "required": [
+          "model"
+        ],
+        "title": "EmbeddingRequest",
+        "type": "object"
+      },
+      "EmbeddingResponse": {
+        "description": "Response for embedding inference.",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/EmbeddingOutput"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          },
+          "processingTime": {
+            "default": 0.0,
+            "title": "Processingtime",
+            "type": "number"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "timestamp",
+          "metadata",
+          "data"
+        ],
+        "title": "EmbeddingResponse",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1434,6 +1565,146 @@
           }
         },
         "summary": "Detection Binary",
+        "tags": [
+          "inference"
+        ]
+      }
+    },
+    "/v1/inference/embedding": {
+      "post": {
+        "operationId": "embedding_v1_inference_embedding_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmbeddingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmbeddingResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Embedding",
+        "tags": [
+          "inference"
+        ]
+      }
+    },
+    "/v1/inference/embedding/binary": {
+      "post": {
+        "operationId": "embedding_binary_v1_inference_embedding_binary_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmbeddingResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Embedding Binary",
         "tags": [
           "inference"
         ]

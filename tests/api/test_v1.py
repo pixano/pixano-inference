@@ -13,6 +13,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from pixano_inference.models.detection import DetectionOutput
+from pixano_inference.models.embedding import EmbeddingOutput
 from pixano_inference.models.ner import NEREntity, NEROutput
 from pixano_inference.models.segmentation import SegmentationOutput
 from pixano_inference.models.tracking import TrackingOutput
@@ -100,6 +101,37 @@ def test_ner_route_is_servable(client, monkeypatch):
     resp = client.post("/v1/inference/ner", json={"model": "ner-model", "text": "Pixano rocks"})
     assert resp.status_code == 200
     assert resp.json()["data"]["entities"][0]["label"] == "ORG"
+
+
+def test_embedding_text_and_image_share_binary_wire(client, monkeypatch):
+    vectors = np.arange(8, dtype=np.float32).reshape(2, 4)
+    result = EmbeddingOutput(embeddings=NDArrayFloat.from_numpy(vectors), dim=4)
+    handle = FakeHandle(result)
+    _install(client, monkeypatch, handle=handle, capability="embedding")
+
+    # Text request (batch of 2).
+    text_resp = client.post("/v1/inference/embedding", json={"model": "clip", "text": ["a cat", "a dog"]})
+    assert text_resp.status_code == 200
+    body = text_resp.json()["data"]
+    assert body["dim"] == 4
+    assert set(body["embeddings"].keys()) == {"shape", "dtype", "data"}
+    restored = NDArrayFloat.model_validate(body["embeddings"]).to_numpy()
+    np.testing.assert_allclose(restored, vectors)
+    assert handle.predict.last_input.text == ["a cat", "a dog"]
+
+    # Image request (URL).
+    img_resp = client.post("/v1/inference/embedding", json={"model": "clip", "image": "https://example.com/x.jpg"})
+    assert img_resp.status_code == 200
+
+
+def test_embedding_requires_exactly_one_modality(client, monkeypatch):
+    _install(client, monkeypatch, handle=FakeHandle(None), capability="embedding")
+    # Neither image nor text -> 422 validation error (never reaches the model).
+    resp = client.post("/v1/inference/embedding", json={"model": "clip"})
+    assert resp.status_code == 422
+    # Both -> 422.
+    resp = client.post("/v1/inference/embedding", json={"model": "clip", "text": "a", "image": "https://x/y.jpg"})
+    assert resp.status_code == 422
 
 
 def test_tracking_nested_keyframes_map_to_flat_input(client, monkeypatch):

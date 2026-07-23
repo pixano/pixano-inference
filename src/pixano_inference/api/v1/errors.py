@@ -16,6 +16,7 @@ from __future__ import annotations
 import logging
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
@@ -53,11 +54,12 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(HTTPException)
     async def _http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
         code = _STATUS_CODES.get(exc.status_code, "error")
-        return _envelope(exc.status_code, code, exc.detail, _request_id(request))
+        return _envelope(exc.status_code, code, jsonable_encoder(exc.detail), _request_id(request))
 
     @app.exception_handler(RequestValidationError)
     async def _validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
-        return _envelope(422, "validation_error", exc.errors(), _request_id(request))
+        # jsonable_encoder makes validator error context (e.g. a raised ValueError) JSON-safe.
+        return _envelope(422, "validation_error", jsonable_encoder(exc.errors()), _request_id(request))
 
     @app.exception_handler(Exception)
     async def _unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:

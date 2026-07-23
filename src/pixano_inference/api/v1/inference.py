@@ -15,6 +15,8 @@ from fastapi import APIRouter, Request
 from pixano_inference.schemas.inference import (
     DetectionRequest,
     DetectionResponse,
+    EmbeddingRequest,
+    EmbeddingResponse,
     NERRequest,
     NERResponse,
     SegmentationRequest,
@@ -72,6 +74,17 @@ def build_inference_router(deployment_manager: DeploymentManager) -> APIRouter:
     @router.post("/ner", response_model=NERResponse)
     async def ner(request: NERRequest) -> Any:
         return await run_inference(deployment_manager, request.model, request.to_input(), "ner")
+
+    @router.post("/embedding", response_model=EmbeddingResponse)
+    async def embedding(request: EmbeddingRequest) -> Any:
+        return await run_inference(deployment_manager, request.model, request.to_input(), "embedding")
+
+    @router.post("/embedding/binary", response_model=EmbeddingResponse)
+    async def embedding_binary(request: Request) -> Any:
+        parsed = await build_binary_request_from_request(
+            request, EmbeddingRequest, file_field="image", payload_key="image"
+        )
+        return await run_inference(deployment_manager, parsed.model, parsed.to_input(), "embedding")
 
     @router.post("/tracking", response_model=TrackingResponse)
     async def tracking(request: TrackingRequestV1) -> Any:

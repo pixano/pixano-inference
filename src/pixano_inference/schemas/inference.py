@@ -9,6 +9,7 @@
 from pydantic import ConfigDict
 
 from pixano_inference.models.detection import DetectionInput, DetectionOutput
+from pixano_inference.models.embedding import EmbeddingInput, EmbeddingOutput
 from pixano_inference.models.ner import NERInput, NEROutput
 from pixano_inference.models.segmentation import SegmentationInput, SegmentationOutput
 from pixano_inference.models.tracking import TrackingInput, TrackingOutput
@@ -91,3 +92,19 @@ class NERResponse(BaseResponse):
     """Response for NER inference."""
 
     data: NEROutput
+
+
+class EmbeddingRequest(BaseRequest, EmbeddingInput):
+    """Request for embedding inference."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    def to_input(self) -> EmbeddingInput:
+        """Convert the request to the input."""
+        return self.to_base_model(EmbeddingInput)
+
+
+class EmbeddingResponse(BaseResponse):
+    """Response for embedding inference."""
+
+    data: EmbeddingOutput

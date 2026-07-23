@@ -1,0 +1,24 @@
+[project]
+name = "pixano-inference-clip"
+version = "0.1.0"
+description = "CLIP-style image/text embedding models (default MobileCLIP2), packaged as a Pixano Inference plugin."
+requires-python = ">=3.10,<3.14"
+license = { file = "../../LICENSE" }
+dependencies = [
+  "pixano-inference",
+  "torch >= 2.3.0, < 3.0.0",
+  # open_clip provides a unified API over CLIP-family models (MobileCLIP, OpenCLIP, MetaCLIP,
+  # and some SigLIP checkpoints), so this one plugin can load any of them by checkpoint spec.
+  "open_clip_torch >= 2.24.0",
+  "Pillow >= 9.0.0",
+]
+
+[project.entry-points."pixano_inference.models"]
+clip = "pixano_inference_clip"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pixano_inference_clip"]

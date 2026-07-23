@@ -18,6 +18,8 @@ def __getattr__(name: str):
     _task_names = {
         "DetectionRequest",
         "DetectionResponse",
+        "EmbeddingRequest",
+        "EmbeddingResponse",
         "NERRequest",
         "NERResponse",
         "SegmentationRequest",

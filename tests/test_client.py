@@ -17,7 +17,7 @@ from pixano_inference.client import (
     PixanoInferenceError,
     SyncPixanoInferenceClient,
 )
-from pixano_inference.schemas import DetectionRequest, SegmentationRequest
+from pixano_inference.schemas import DetectionRequest, EmbeddingRequest, SegmentationRequest
 from pixano_inference.schemas.nd_array import NDArrayFloat
 from pixano_inference.schemas.v1 import TrackingRequestV1
 
@@ -92,6 +92,24 @@ async def test_detection_serializes_camelcase_body(httpx_mock: HTTPXMock, simple
     )
     body = httpx_mock.get_request().read().decode()
     assert "boxThreshold" in body  # camelCase on the wire
+
+
+async def test_embedding_parses_binary_vectors(httpx_mock: HTTPXMock, simple_pixano_inference_client):
+    vectors = np.arange(4, dtype=np.float32).reshape(1, 4)
+    httpx_mock.add_response(
+        json={
+            "id": "e1",
+            "status": "SUCCESS",
+            "timestamp": "2024-01-01T00:00:00Z",
+            "processingTime": 0.1,
+            "metadata": {},
+            "data": {"embeddings": _ndarray_wire([0.0, 1.0, 2.0, 3.0]), "dim": 4},
+        }
+    )
+    result = await simple_pixano_inference_client.embedding(EmbeddingRequest(model="clip", text="a cat"))
+    assert result.data.dim == 4
+    np.testing.assert_allclose(result.data.embeddings.to_numpy(), vectors.reshape(-1))
+    assert httpx_mock.get_request().url.path == "/v1/inference/embedding"
 
 
 # --- Errors -------------------------------------------------------------------------

@@ -27,6 +27,8 @@ from .schemas import (
     BaseResponse,
     DetectionRequest,
     DetectionResponse,
+    EmbeddingRequest,
+    EmbeddingResponse,
     NERRequest,
     NERResponse,
     SegmentationRequest,
@@ -210,6 +212,10 @@ class PixanoInferenceClient(_ClientBase):
         """Run named entity recognition."""
         return await self._infer("/v1/inference/ner", request, NERResponse, timeout)
 
+    async def embedding(self, request: EmbeddingRequest, *, timeout: float | None = None) -> EmbeddingResponse:
+        """Compute image or text embeddings (CLIP-style shared space)."""
+        return await self._infer("/v1/inference/embedding", request, EmbeddingResponse, timeout)
+
     async def tracking(self, request: TrackingRequestV1, *, timeout: float | None = None) -> TrackingResponse:
         """Run synchronous video tracking (short intervals)."""
         return await self._infer(
@@ -356,6 +362,10 @@ class SyncPixanoInferenceClient(_ClientBase):
     def ner(self, request: NERRequest, *, timeout: float | None = None) -> NERResponse:
         """Run named entity recognition."""
         return self._infer("/v1/inference/ner", request, NERResponse, timeout)
+
+    def embedding(self, request: EmbeddingRequest, *, timeout: float | None = None) -> EmbeddingResponse:
+        """Compute image or text embeddings (CLIP-style shared space)."""
+        return self._infer("/v1/inference/embedding", request, EmbeddingResponse, timeout)
 
     def tracking(self, request: TrackingRequestV1, *, timeout: float | None = None) -> TrackingResponse:
         """Run synchronous video tracking (short intervals)."""

@@ -42,6 +42,7 @@ _DEFAULT_TIMEOUTS: dict[str, float] = {
     "vlm": 300.0,
     "tracking": 600.0,
     "ner": 60.0,
+    "embedding": 60.0,
 }
 
 
