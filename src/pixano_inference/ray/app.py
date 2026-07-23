@@ -432,6 +432,11 @@ def create_ray_serve_app(
             allow_headers=["*"],
         )
 
+    # Request-id propagation (outermost) + Prometheus HTTP metrics.
+    from pixano_inference.observability import install_observability_middleware
+
+    install_observability_middleware(app)
+
     # Consistent {"error": {...}} envelope; unhandled errors never leak their text.
     register_exception_handlers(app)
 

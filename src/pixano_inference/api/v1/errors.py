@@ -38,7 +38,10 @@ _STATUS_CODES = {
 
 
 def _request_id(request: Request) -> str:
-    return request.headers.get("X-Request-ID") or request.headers.get("X-Request-Id") or "-"
+    # Set by RequestContextMiddleware (generated when the client sends none); fall back to the
+    # raw header, then "-", so handlers still work if the middleware is absent.
+    state_id = getattr(request.state, "request_id", None)
+    return state_id or request.headers.get("X-Request-ID") or request.headers.get("X-Request-Id") or "-"
 
 
 def _envelope(status_code: int, code: str, message, request_id: str) -> JSONResponse:

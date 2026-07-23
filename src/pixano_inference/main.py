@@ -40,7 +40,13 @@ def serve(
         # Start with a Python config declaring the models to deploy
         pixano-inference --host 0.0.0.0 --port 7463 --config models.py
     """
+    from .observability import configure_logging
     from .ray import InferenceServer, RayServeConfig
+    from .server_settings import ServerSettings
+
+    # Structured, request-id-aware logging driven by PIXANO_INFERENCE_LOG_LEVEL / _LOG_JSON.
+    settings = ServerSettings()
+    configure_logging(level=settings.log_level, json_logs=settings.log_json)
 
     ray_config = RayServeConfig(host=host, port=port, strict_startup=strict_startup)
     server = InferenceServer(config=ray_config)

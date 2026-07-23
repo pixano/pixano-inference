@@ -10,10 +10,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 from fastapi.responses import JSONResponse
 
 from pixano_inference.__version__ import __version__
+from pixano_inference.observability import render_metrics
 
 
 if TYPE_CHECKING:
@@ -36,6 +37,12 @@ def build_service_router(deployment_manager: DeploymentManager) -> APIRouter:
         if not result["ready"]:
             return JSONResponse(status_code=503, content=result)
         return result
+
+    @router.get("/metrics", include_in_schema=False)
+    async def metrics() -> Response:
+        """Prometheus exposition of the ingress HTTP metrics (unauthenticated scrape endpoint)."""
+        body, content_type = render_metrics()
+        return Response(content=body, media_type=content_type)
 
     @router.get("/info")
     async def info() -> dict[str, Any]:

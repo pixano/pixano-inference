@@ -16,7 +16,7 @@ from pixano_inference.models.registry import register_model
 from pixano_inference.models.vlm import UsageInfo, VLMInput, VLMModel, VLMOutput
 from pixano_inference.ray.config import ModelDeploymentConfig
 
-from .._helpers import resolve_device
+from .._helpers import resolve_device, should_compile
 
 
 logger = logging.getLogger(__name__)
@@ -33,6 +33,7 @@ class TransformersVLMModel(VLMModel):
     - ``config`` (dict, optional): Kwargs for model ``from_pretrained``.
     - ``model_type`` (str, optional): Model type hint (e.g. "llava", "llava-next").
       If not provided, falls back to ``AutoModelForVision2Seq``.
+    - ``compile`` (bool, optional): ``torch.compile`` the model. Default auto (GPU only).
     """
 
     def __init__(self, config: ModelDeploymentConfig) -> None:
@@ -59,13 +60,15 @@ class TransformersVLMModel(VLMModel):
         processor_config = params.pop("processor_config", {})
         model_config = params.pop("config", {})
         model_type = params.pop("model_type", None)
+        compile_model = params.pop("compile", None)
 
         device = resolve_device(self._config)
 
         self._processor = AutoProcessor.from_pretrained(path, **processor_config)
         self._model = self._load_vlm_model(path, model_type, device, model_config)
         self._model = self._model.eval()
-        self._model = torch.compile(self._model)
+        if should_compile(device, compile_model):
+            self._model = torch.compile(self._model)
 
         logger.info("TransformersVLMModel '%s' loaded on %s", self.model_name, device)
 
