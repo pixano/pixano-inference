@@ -126,10 +126,14 @@ class InferenceServer:
         self._running = True
         logger.info(f"Inference server starting on {host}:{port}")
 
+        # Bound the graceful-shutdown drain so it (plus serve/ray teardown in the lifespan)
+        # completes before an orchestrator's stop grace period elapses and sends SIGKILL.
         if blocking:
-            uvicorn.run(fastapi_app, host=host, port=port)
+            uvicorn.run(fastapi_app, host=host, port=port, timeout_graceful_shutdown=self._config.graceful_shutdown_s)
         else:
-            uvicorn_config = uvicorn.Config(fastapi_app, host=host, port=port)
+            uvicorn_config = uvicorn.Config(
+                fastapi_app, host=host, port=port, timeout_graceful_shutdown=self._config.graceful_shutdown_s
+            )
             self._uvicorn_server = uvicorn.Server(uvicorn_config)
             thread = threading.Thread(target=self._uvicorn_server.run, daemon=True)
             thread.start()

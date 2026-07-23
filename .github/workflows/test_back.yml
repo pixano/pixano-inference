@@ -91,6 +91,39 @@ jobs:
         run: |
           pytest -m integration tests/integration/
 
+  docker_smoke:
+    name: Docker build & smoke (CPU, framework-free)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Build a minimal, framework-free image (no torch, no SAM) with the numpy example
+      # plugin, so the Dockerfile mechanics + entrypoint + healthcheck + Serve deploy path
+      # are validated fast, without pulling multi-GB torch/sam-2.
+      - name: Build minimal image
+        run: |
+          docker build \
+            --build-arg TORCH_INDEX_URL= \
+            --build-arg PIXANO_EXTRAS= \
+            --build-arg INSTALL_SAM=false \
+            --build-arg INSTALL_EXAMPLE=true \
+            -t pixano-inference:smoke .
+
+      - name: Run container and smoke-test /v1/ready
+        run: |
+          docker run -d --name pi -p 7463:7463 --shm-size=2g \
+            -v "$PWD/docker/models.numpy.py:/config/models.py:ro" \
+            pixano-inference:smoke --host 0.0.0.0 --port 7463 --config /config/models.py
+          for i in $(seq 1 40); do
+            if curl -fsS http://localhost:7463/health >/dev/null 2>&1; then echo "healthy"; break; fi
+            sleep 3
+          done
+          curl -fsS http://localhost:7463/v1/ready \
+            | python3 -c "import sys, json; d = json.load(sys.stdin); print(d); sys.exit(0 if d['ready'] else 1)" \
+            || (docker logs pi; exit 1)
+          docker rm -f pi
+
   framework_free_core:
     name: Framework-free core
     runs-on: ubuntu-latest

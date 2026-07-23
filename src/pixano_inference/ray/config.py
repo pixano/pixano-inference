@@ -103,3 +103,4 @@ class RayServeConfig(BaseModel):
     strict_startup: bool = Field(default=True)
     ray_address: str | None = Field(default=None)
     ray_namespace: str = Field(default="pixano-inference")
+    graceful_shutdown_s: float = Field(default=30.0, gt=0)
