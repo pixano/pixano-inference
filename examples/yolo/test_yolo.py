@@ -13,7 +13,8 @@ Demonstrates how to:
 
 Prerequisites:
 - Start the server with the YOLO config:
-    PYTHONPATH=examples:$PYTHONPATH pixano-inference --config examples/yolo/config.py
+    uv pip install -e examples/yolo
+    pixano-inference --config examples/yolo/config.py
 Usage:
     python examples/yolo/test_yolo.py \
         [--server-url URL] [--image PATH] [--model-name NAME] \
@@ -28,9 +29,7 @@ import base64
 import sys
 from pathlib import Path
 
-import requests  # type: ignore[import-untyped]
-
-from pixano_inference.client import PixanoInferenceClient
+from pixano_inference.client import PixanoInferenceClient, PixanoInferenceError
 from pixano_inference.schemas import DetectionRequest
 
 
@@ -104,18 +103,14 @@ async def main() -> None:
     print_section("YOLO Object Detection Test")
     print(f"\nServer URL: {args.server_url}")
 
+    client = PixanoInferenceClient.connect(args.server_url)
     try:
-        client = PixanoInferenceClient.connect(args.server_url)
-    except requests.ConnectionError:
+        info = await client.info()
+    except PixanoInferenceError:
         print("\nERROR: Server is not running!")
         print("Start the server with:")
-        print("  pixano-inference --module-path examples --config examples/yolo/config.py")
+        print("  uv pip install -e examples/yolo && pixano-inference --config examples/yolo/config.py")
         sys.exit(1)
-    except Exception as e:
-        print(f"\nERROR: Failed to connect: {type(e).__name__}: {e}")
-        sys.exit(1)
-
-    info = await client.info()
     print(f"Connected! GPUs: {info.get('numGpus')}")
 
     # --- List models ---

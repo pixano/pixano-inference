@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from typing import Any
 
@@ -16,6 +17,9 @@ from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from pixano_inference.models import ModelClassRegistry, infer_http_capability
 
 from ..ray.config import AutoscalingConfig, ModelDeploymentConfig, RayServeConfig, ResourceConfig
+
+
+logger = logging.getLogger(__name__)
 
 
 class ModelParamsRegistry:
@@ -226,13 +230,22 @@ class ModelConfig(BaseModel):
 
     def _resolve_model_class(self) -> type:
         """Resolve ``model_class`` to a Python type and validate support."""
-        import pixano_inference.impls  # noqa: F401
         from pixano_inference.models.base import InferenceModel
+        from pixano_inference.plugins import ensure_models_loaded
+
+        # Register built-in backends and installed entry-point plugins before resolving.
+        ensure_models_loaded()
 
         if isinstance(self.model_class, type):
             if not issubclass(self.model_class, InferenceModel):
                 raise ValueError(
                     f"Configured model_class '{self.model_class.__name__}' must inherit from InferenceModel."
+                )
+            if self.model_class.__module__ == "__main__":
+                logger.warning(
+                    "Model class '%s' is defined in __main__. Package it as an installable plugin "
+                    "(pixano_inference.models entry point) so Ray Serve workers can import it.",
+                    self.model_class.__name__,
                 )
             ModelClassRegistry.ensure_registered(self.model_class)
             return self.model_class
@@ -243,8 +256,8 @@ class ModelConfig(BaseModel):
             pass
 
         raise ValueError(
-            f"Unknown model_class '{self.model_class}'. Register the class with @register_model "
-            "or pass the class type directly."
+            f"Unknown model_class '{self.model_class}'. Install a model plugin that provides it "
+            "(pixano_inference.models entry point) or pass the class type directly."
         )
 
     def to_deployment_config(self) -> ModelDeploymentConfig:

@@ -179,4 +179,9 @@ dev = [
   # sam-2 lives here (a dependency-group, which is never published to PyPI) rather than
   # in the [sam2] extra, so the published wheel carries no direct/VCS reference.
   "sam-2 @ git+https://github.com/facebookresearch/sam2.git",
+  # The example plugin package, installed editable so the entry-point discovery tests run.
+  "pixano-numpy-detector",
 ]
+
+[tool.uv.sources]
+pixano-numpy-detector = { path = "examples/numpy_detector", editable = true }

@@ -3639,6 +3639,7 @@ vllm = [
 [package.dev-dependencies]
 dev = [
     { name = "pixano-inference", extra = ["docs", "sam2", "test", "transformers"], marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "pixano-numpy-detector", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "sam-2", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
 ]
 
@@ -3689,7 +3690,25 @@ provides-extras = ["docs", "jax", "mlx", "sam2", "sam3", "tensorflow", "test", "
 [package.metadata.requires-dev]
 dev = [
     { name = "pixano-inference", extras = ["test", "docs", "transformers", "sam2"] },
+    { name = "pixano-numpy-detector", editable = "examples/numpy_detector" },
     { name = "sam-2", git = "https://github.com/facebookresearch/sam2.git" },
+]
+
+[[package]]
+name = "pixano-numpy-detector"
+version = "0.1.0"
+source = { editable = "examples/numpy_detector" }
+dependencies = [
+    { name = "numpy", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "pillow", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "pixano-inference", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "numpy", specifier = "<2.0.0" },
+    { name = "pillow", specifier = ">=9.0.0" },
+    { name = "pixano-inference" },
 ]
 
 [[package]]

@@ -1,0 +1,84 @@
+# =================================
+# Copyright: CEA-LIST/DIASI/SIALV
+# Author : pixano@cea.fr
+# License: CECILL-C
+# =================================
+
+"""Discovery of custom model implementations shipped as installable packages.
+
+A third-party model is packaged like any Python distribution and advertises itself through
+a ``pixano_inference.models`` entry point. Because the package is installed in the same
+environment as the server, it is importable both in the ingress process and in every Ray
+Serve worker — no source directory needs to be shipped to workers.
+
+Example plugin ``pyproject.toml``::
+
+    [project.entry-points."pixano_inference.models"]
+    my_detector = "my_pkg.model"        # importing the module runs @register_model
+    # or point directly at the class:
+    my_detector = "my_pkg.model:MyDetector"
+
+At startup the server loads all such entry points (importing them registers their models),
+alongside the built-in backends. This is the recommended way to extend Pixano Inference and
+the foundation for a shared "model store" of installable models.
+"""
+
+from __future__ import annotations
+
+import logging
+from importlib.metadata import entry_points
+
+from pixano_inference.models.base import InferenceModel
+from pixano_inference.models.registry import ModelClassRegistry
+
+
+logger = logging.getLogger(__name__)
+
+ENTRY_POINT_GROUP = "pixano_inference.models"
+
+_LOADED = False
+
+
+def load_plugin_models() -> dict[str, list[str]]:
+    """Discover and import all ``pixano_inference.models`` entry-point plugins.
+
+    Each entry point is loaded (importing its module, which runs the ``@register_model``
+    decorators); if it resolves to an :class:`InferenceModel` subclass, it is also
+    registered defensively. A failing plugin is logged and skipped rather than aborting
+    startup.
+
+    Returns:
+        ``{"loaded": [...], "failed": [...]}`` entry-point names.
+    """
+    loaded: list[str] = []
+    failed: list[str] = []
+    for entry_point in entry_points(group=ENTRY_POINT_GROUP):
+        try:
+            obj = entry_point.load()
+            if isinstance(obj, type) and issubclass(obj, InferenceModel):
+                ModelClassRegistry.ensure_registered(obj)
+            loaded.append(entry_point.name)
+            logger.debug("Loaded model plugin '%s' (%s)", entry_point.name, entry_point.value)
+        except Exception as exc:
+            logger.warning("Failed to load model plugin '%s': %s", entry_point.name, exc)
+            failed.append(entry_point.name)
+    return {"loaded": loaded, "failed": failed}
+
+
+def ensure_models_loaded(force: bool = False) -> None:
+    """Register all available models: built-in backends and entry-point plugins.
+
+    Idempotent — safe to call from every entry point that needs the registry populated
+    (config resolution, app creation, replica init).
+
+    Args:
+        force: Re-run discovery even if it already ran in this process.
+    """
+    global _LOADED
+    if _LOADED and not force:
+        return
+    # Built-in backends (guarded by which optional extras are installed).
+    import pixano_inference.impls  # noqa: F401
+
+    load_plugin_models()
+    _LOADED = True

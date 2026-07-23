@@ -143,3 +143,44 @@ def test_double_deploy_raises(serve_runtime):
             manager.deploy_model(_stub_config(name="stub-dup"))
     finally:
         manager.undeploy_model("stub-dup")
+
+
+def test_deploy_installed_plugin_model(serve_runtime):
+    """An entry-point plugin (installed package, no torch) deploys and predicts."""
+    import base64
+    import io
+
+    pytest.importorskip("pixano_numpy_detector")  # importing it also registers the model
+    from PIL import Image
+
+    from pixano_inference.models import DetectionInput
+    from pixano_inference.plugins import ensure_models_loaded
+
+    ensure_models_loaded(force=True)
+
+    manager = DeploymentManager(RayServeConfig(num_gpus=0))
+    manager.deploy_model(
+        ModelDeploymentConfig(
+            name="np-det",
+            capability="detection",
+            model_class="NumpyDetector",
+            resources=ResourceConfig(num_gpus=0.0, num_cpus=1.0),
+        )
+    )
+    try:
+        # White image with a red square from (10, 10) to (40, 40).
+        image = Image.new("RGB", (64, 64), (255, 255, 255))
+        for x in range(10, 41):
+            for y in range(10, 41):
+                image.putpixel((x, y), (255, 0, 0))
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+        data_uri = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
+
+        handle = manager.get_handle("np-det")
+        result = handle.predict.remote(DetectionInput(image=data_uri, classes=None)).result(timeout_s=30)
+        assert result.classes == ["object"]
+        x1, y1, x2, y2 = result.boxes[0]
+        assert 8 <= x1 <= 12 and 8 <= y1 <= 12 and 38 <= x2 <= 42 and 38 <= y2 <= 42
+    finally:
+        manager.undeploy_model("np-det")

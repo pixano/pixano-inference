@@ -4,4 +4,9 @@
 # License: CECILL-C
 # =================================
 
-"""Custom YOLOE model example for pixano-inference."""
+"""Ultralytics YOLO as an installable Pixano Inference custom-model plugin."""
+
+from .model import YOLOModel
+
+
+__all__ = ["YOLOModel"]

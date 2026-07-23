@@ -8,29 +8,34 @@
 
 # Custom Model Deployment: YOLO Detection
 
-This tutorial walks through deploying a third-party model (Ultralytics YOLO) as a custom detection service with Pixano Inference.
+This tutorial deploys a third-party model (Ultralytics YOLO) as a Pixano Inference custom
+detection service, packaged as an **installable plugin** — the recommended way to extend the
+server (see [../../docs/ray_serve/custom_models.md](../../docs/ray_serve/custom_models.md)).
+For a framework-free (numpy-only) starting point, see [`../numpy_detector`](../numpy_detector).
 
-## Prerequisites
+> **Licence note:** Ultralytics is AGPL-3.0. Deploying it as a network service carries
+> source-disclosure obligations (AGPL section 13). Review the licence before production use.
 
-Install pixano-inference with the `ultralytics` extra:
+## Install
+
+The example is a self-contained package that declares a `pixano_inference.models` entry
+point; installing it makes `YOLOModel` discoverable by name (and importable in every Ray
+Serve worker):
 
 ```bash
-uv sync --extra ultralytics
-```
-
-Or with pip:
-
-```bash
-pip install pixano-inference[ultralytics]
+uv pip install -e examples/yolo    # brings in ultralytics
 ```
 
 ## Project Structure
 
 ```
 examples/yolo/
-    model.py        # Model implementation (extends DetectionModel)
-    config.py       # Deployment configuration
-    test_yolo.py   # End-to-end test script
+    pyproject.toml                 # package metadata + the pixano_inference.models entry point
+    src/pixano_yolo/
+        __init__.py
+        model.py                   # YOLOModel (extends DetectionModel, @register_model)
+    config.py                      # deployment config, references "YOLOModel" by name
+    test_yolo.py                   # end-to-end client script
 ```
 
 ## Step 1: Implement the Model
@@ -103,22 +108,22 @@ Key points:
 
 ## Step 2: Write the Deployment Config
 
-Create a Python config file that defines a `models` list. Import your model class directly and pass it to `model_class`:
+Create a Python config file that defines a `models` list. Reference the model **by name** —
+the entry point already registered it, so no import is needed:
 
 ```python
 # config.py
-from yolo.model import YOLOModel
 from pixano_inference.configs import DeploymentConfig, ModelConfig
 
 models = [
     ModelConfig(
         name="yolo26s",
-        model_class=YOLOModel,
+        model_class="YOLOModel",
         model_params={"path": "yolo26s.pt"},  # Passed to model via config
         deployment=DeploymentConfig(
             num_gpus=1,          # GPUs per replica (set 0 for CPU-only)
             num_cpus=1,          # CPUs per replica
-            min_replicas=0,      # Scale to zero when idle
+            min_replicas=1,      # Keep a replica warm (0 enables scale-to-zero)
             max_replicas=2,      # Max concurrent replicas
         ),
     ),
@@ -127,10 +132,11 @@ models = [
 
 ## Step 3: Start the Server
 
+Because the package is installed, no `PYTHONPATH`/`--module-path` is needed — the model is
+discovered via its entry point and referenced by name in the config:
+
 ```bash
-PYTHONPATH=examples:$PYTHONPATH \
-  uv run pixano-inference \
-    --config examples/yolo/config.py
+uv run pixano-inference --config examples/yolo/config.py
 ```
 
 You should see:
@@ -244,8 +250,10 @@ The server deploys models synchronously before starting. If `num_gpus=1` but no 
 
 **`ModuleNotFoundError: No module named 'ultralytics'`**
 
-Install the ultralytics extra: `uv sync --extra ultralytics`
+The plugin package pulls in ultralytics. Reinstall it: `uv pip install -e examples/yolo`.
 
-**`ModuleNotFoundError: No module named 'yolo'`**
+**`Unknown model_class 'YOLOModel'`**
 
-Ensure the `examples` directory is on the Python path. Use `--module-path examples` or set `PYTHONPATH=examples:$PYTHONPATH`.
+The plugin package is not installed in the server's environment. Install it with
+`uv pip install -e examples/yolo` (or `pip install` your published package) so its entry
+point is discovered.

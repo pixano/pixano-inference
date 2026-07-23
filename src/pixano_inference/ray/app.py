@@ -370,8 +370,10 @@ def create_ray_serve_app(
     if config is None:
         config = RayServeConfig()
 
-    # Trigger model registration from installed backends
-    import pixano_inference.impls  # noqa: F401
+    # Register built-in backends and installed entry-point plugins.
+    from pixano_inference.plugins import ensure_models_loaded
+
+    ensure_models_loaded()
 
     server_settings = ServerSettings()
     warn_if_auth_disabled(server_settings, config.host)

@@ -4,17 +4,16 @@
 # License: CECILL-C
 # =================================
 
-"""YOLO as custom model example.
+"""YOLO custom-model plugin.
 
-Demonstrates how to wrap a third-party model (ultralytics YOLO) as a
-pixano-inference :class:`DetectionModel` and register it for deployment
-with Ray Serve.
+Wraps a third-party model (ultralytics YOLO) as a pixano-inference
+:class:`DetectionModel` and registers it for deployment with Ray Serve. This module is the
+target of the ``pixano_inference.models`` entry point declared in this package's
+``pyproject.toml``, so installing the package makes ``YOLOModel`` available by name.
 
-Requirements:
-    pip install ultralytics
+Install (note: ultralytics is AGPL-3.0)::
 
-Usage:
-    PYTHONPATH=examples:$PYTHONPATH pixano-inference --config examples/yolo/config.py
+    uv pip install -e examples/yolo
 """
 
 from __future__ import annotations
