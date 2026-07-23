@@ -4,60 +4,20 @@
 # License: CECILL-C
 # =================================
 
-"""Embedding model base class and I/O types.
+"""Embedding model base class.
 
 A single capability that embeds **either** an image **or** text into a shared vector space
-(CLIP-style), so image and text embeddings are directly comparable (text-to-image search).
+(CLIP-style), so image and text embeddings are directly comparable (text-to-image search). The
+I/O types live in :mod:`pixano_inference_client.embedding` and are re-exported here so
+``from pixano_inference.models.embedding import EmbeddingInput`` keeps working.
 """
 
 from abc import abstractmethod
-from pathlib import Path
 from typing import ClassVar
 
-from pydantic import model_validator
-
-from pixano_inference.schemas.base import CamelModel
-from pixano_inference.schemas.nd_array import NDArrayFloat
+from pixano_inference_client.embedding import EmbeddingInput, EmbeddingOutput  # noqa: F401
 
 from .base import InferenceModel
-
-
-class EmbeddingInput(CamelModel):
-    """Input for embedding computation.
-
-    Exactly one of ``image`` or ``text`` must be provided. Either may be a single value or a
-    list (batch). Images are passed by value (path/URL/base64/bytes) and resolved through the
-    media security policy.
-
-    Attributes:
-        image: Image(s) to embed (path, URL, base64, or raw bytes).
-        text: Text(s) to embed.
-        normalize: Whether to L2-normalize the output vectors (default True).
-    """
-
-    image: list[str | Path | bytes] | str | Path | bytes | None = None
-    text: list[str] | str | None = None
-    normalize: bool = True
-
-    @model_validator(mode="after")
-    def _check_exactly_one_modality(self) -> "EmbeddingInput":
-        has_image = self.image is not None
-        has_text = self.text is not None
-        if has_image == has_text:
-            raise ValueError("Provide exactly one of 'image' or 'text'.")
-        return self
-
-
-class EmbeddingOutput(CamelModel):
-    """Output for embedding computation.
-
-    Attributes:
-        embeddings: Embedding vectors as a ``[num_inputs, dim]`` array.
-        dim: Dimensionality of each embedding vector.
-    """
-
-    embeddings: NDArrayFloat
-    dim: int
 
 
 class EmbeddingModel(InferenceModel):

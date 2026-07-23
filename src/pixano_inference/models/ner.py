@@ -4,52 +4,18 @@
 # License: CECILL-C
 # =================================
 
-"""NER (Named Entity Recognition) model base class and I/O types."""
+"""NER (Named Entity Recognition) model base class.
+
+The I/O types live in :mod:`pixano_inference_client.ner` and are re-exported here so
+``from pixano_inference.models.ner import NERInput`` keeps working.
+"""
 
 from abc import abstractmethod
 from typing import ClassVar
 
-from pixano_inference.schemas.base import CamelModel
+from pixano_inference_client.ner import NEREntity, NERInput, NEROutput  # noqa: F401
 
 from .base import InferenceModel
-
-
-class NERInput(CamelModel):
-    """Input for named entity recognition.
-
-    Attributes:
-        text: Text to analyse.
-    """
-
-    text: str
-
-
-class NEREntity(CamelModel):
-    """A single recognized entity.
-
-    Attributes:
-        text: The entity text span.
-        label: The entity label.
-        start: Start character offset.
-        end: End character offset.
-        score: Confidence score.
-    """
-
-    text: str
-    label: str
-    start: int
-    end: int
-    score: float
-
-
-class NEROutput(CamelModel):
-    """Output for named entity recognition.
-
-    Attributes:
-        entities: List of recognised entities.
-    """
-
-    entities: list[NEREntity]
 
 
 class NERModel(InferenceModel):

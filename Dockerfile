@@ -54,6 +54,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     # for both and their CUDA builds stay ABI-coherent (torchvision is required by
     # transformers and sam-2).
     if [ -n "${TORCH_INDEX_URL}" ]; then uv pip install torch torchvision --index-url "${TORCH_INDEX_URL}"; fi; \
+    # The lightweight client is a hard core dependency; install it from the bundled source first
+    # (it is not on PyPI at build time) so the core install below resolves it locally.
+    uv pip install ./packages/pixano-inference-client; \
     if [ -n "${PIXANO_EXTRAS}" ]; then uv pip install ".[${PIXANO_EXTRAS}]"; else uv pip install .; fi; \
     if [ "${INSTALL_SAM}" = "true" ]; then \
         uv pip install ./packages/pixano-inference-sam "sam-2 @ git+https://github.com/facebookresearch/sam2.git@${SAM2_REF}"; \

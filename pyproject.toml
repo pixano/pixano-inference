@@ -38,9 +38,13 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
+  # The lightweight client + wire schemas ship as a standalone distribution so third-party
+  # callers can `pip install pixano-inference-client` without the server stack. The server
+  # depends on it (and its `masks` extra for pycocotools/Pillow) and re-exports it, so
+  # `from pixano_inference.client import ...` keeps working. It also provides httpx/pydantic/numpy.
+  "pixano-inference-client[masks]",
   "typer >= 0.9.0",
   "fastapi >= 0.100.0",
-  "httpx",
   "numpy < 2.0.0",
   "pydantic >= 2.0.0, < 3.0.0",
   "pydantic_settings",
@@ -138,6 +142,7 @@ ignore-init-module-imports = true
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D", "C408", "C901", "F401"]
+"packages/*/tests/*" = ["D", "C408", "C901", "F401"]
 "docs/*" = ["D", "F401"]
 
 [tool.ruff.lint.isort]
@@ -186,6 +191,7 @@ dev = [
 ]
 
 [tool.uv.sources]
+pixano-inference-client = { path = "packages/pixano-inference-client", editable = true }
 pixano-numpy-detector = { path = "examples/numpy_detector", editable = true }
 pixano-inference-sam = { path = "packages/pixano-inference-sam", editable = true }
 pixano-inference-clip = { path = "packages/pixano-inference-clip", editable = true }

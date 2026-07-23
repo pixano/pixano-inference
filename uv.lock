@@ -3600,9 +3600,9 @@ name = "pixano-inference"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
-    { name = "httpx", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "numpy", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "pillow", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "pixano-inference-client", extra = ["masks"], marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "pycocotools", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "pydantic", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
     { name = "pydantic-settings", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
@@ -3683,7 +3683,6 @@ requires-dist = [
     { name = "accelerate", marker = "extra == 'transformers'" },
     { name = "bitsandbytes", marker = "extra == 'transformers'" },
     { name = "fastapi", specifier = ">=0.100.0" },
-    { name = "httpx" },
     { name = "jax", marker = "extra == 'jax'", specifier = ">=0.4.0" },
     { name = "mike", marker = "extra == 'docs'", specifier = ">=2.1.0,<3.0.0" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6.0,<2.0.0" },
@@ -3695,6 +3694,7 @@ requires-dist = [
     { name = "mlx", marker = "sys_platform == 'darwin' and extra == 'mlx'", specifier = ">=0.1.0" },
     { name = "numpy", specifier = "<2.0.0" },
     { name = "pillow", specifier = ">=9.0.0" },
+    { name = "pixano-inference-client", extras = ["masks"], editable = "packages/pixano-inference-client" },
     { name = "pixano-inference-clip", marker = "extra == 'clip'", editable = "packages/pixano-inference-clip" },
     { name = "pixano-inference-sam", marker = "extra == 'sam'", editable = "packages/pixano-inference-sam" },
     { name = "pycocotools" },
@@ -3729,6 +3729,34 @@ dev = [
     { name = "pixano-numpy-detector", editable = "examples/numpy_detector" },
     { name = "sam-2", git = "https://github.com/facebookresearch/sam2.git" },
 ]
+
+[[package]]
+name = "pixano-inference-client"
+version = "0.1.0"
+source = { editable = "packages/pixano-inference-client" }
+dependencies = [
+    { name = "httpx", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "numpy", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "pydantic", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "typing-extensions", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+]
+
+[package.optional-dependencies]
+masks = [
+    { name = "pillow", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+    { name = "pycocotools", marker = "sys_platform == 'darwin' or sys_platform == 'linux'" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "httpx" },
+    { name = "numpy", specifier = "<2.0.0" },
+    { name = "pillow", marker = "extra == 'masks'", specifier = ">=9.0.0" },
+    { name = "pycocotools", marker = "extra == 'masks'" },
+    { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
+    { name = "typing-extensions" },
+]
+provides-extras = ["masks"]
 
 [[package]]
 name = "pixano-inference-clip"
