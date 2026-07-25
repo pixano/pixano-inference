@@ -76,7 +76,7 @@ my_detector = "my_pkg.model"        # or "my_pkg.model:MyDetector" to point at t
 ## 4. Install and deploy
 
 Install your package wherever the server runs. For local iteration, an **editable** install
-gives you live code changes *and* automatic discovery *and* worker-importability:
+gives you live code changes _and_ automatic discovery _and_ worker-importability:
 
 ```bash
 uv pip install -e .            # during development
@@ -110,14 +110,14 @@ Or deploy it at runtime through the admin API (`POST /v1/models`).
 
 `DeploymentConfig` controls how Ray Serve runs your model:
 
-| Field                    | Meaning                                                          |
-| ------------------------ | --------------------------------------------------------------- |
-| `num_gpus` / `num_cpus`  | Resources per replica.                                          |
-| `min_replicas`           | 0 enables scale-to-zero; ≥1 keeps replicas warm.                |
-| `max_replicas`           | Upper bound for autoscaling.                                    |
-| `max_ongoing_requests`   | Concurrent requests per replica before queueing / scaling up.   |
-| `max_batch_size`         | >1 enables batching (implement `predict_batch` to exploit it).  |
-| `timeout_s`              | Per-request inference timeout (else a per-capability default).  |
+| Field                   | Meaning                                                        |
+| ----------------------- | -------------------------------------------------------------- |
+| `num_gpus` / `num_cpus` | Resources per replica.                                         |
+| `min_replicas`          | 0 enables scale-to-zero; ≥1 keeps replicas warm.               |
+| `max_replicas`          | Upper bound for autoscaling.                                   |
+| `max_ongoing_requests`  | Concurrent requests per replica before queueing / scaling up.  |
+| `max_batch_size`        | >1 enables batching (implement `predict_batch` to exploit it). |
+| `timeout_s`             | Per-request inference timeout (else a per-capability default). |
 
 ## Notes
 

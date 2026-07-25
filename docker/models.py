@@ -10,8 +10,9 @@ Mounted at /config/models.py by docker-compose. Edit it (or mount your own) to d
 models you need. Weights are cached under /data/hf (the persistent volume).
 """
 
-from pixano_inference.configs import DeploymentConfig, ModelConfig
 from pixano_inference_sam import Sam2ImageParams
+
+from pixano_inference.configs import DeploymentConfig, ModelConfig
 
 
 models = [

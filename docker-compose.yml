@@ -31,7 +31,8 @@ services:
       # Optional: local images to serve by path (read-only). The host dir must exist and be
       # readable by uid 1000; also set PIXANO_INFERENCE_MEDIA_ROOTS above.
       # - ./media:/data/media:ro
-    command: ["--host", "0.0.0.0", "--port", "7463", "--config", "/config/models.py"]
+    command:
+      ["--host", "0.0.0.0", "--port", "7463", "--config", "/config/models.py"]
     # Reap Ray's child processes (Python is PID 1 and is not an init).
     init: true
     restart: unless-stopped

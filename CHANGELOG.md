@@ -21,7 +21,7 @@ and observability.
 
 > **Upgrading:** the HTTP API and the Python client are intentionally breaking. Server operators
 > install `pixano-inference` (optionally with `[sam]`, `[clip]`, `[transformers]`); apps that
-> only *call* a server should install the new lightweight **`pixano-inference-client`** instead.
+> only _call_ a server should install the new lightweight **`pixano-inference-client`** instead.
 
 ### ⚠️ Breaking changes
 

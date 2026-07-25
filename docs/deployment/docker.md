@@ -78,12 +78,12 @@ NVIDIA device, so the compose stack requires a GPU host. For CPU, use a config w
 
 Build args let you tailor the image:
 
-| Build arg          | Default                                             | Purpose                               |
-| ------------------ | --------------------------------------------------- | ------------------------------------- |
-| `TORCH_INDEX_URL`  | `https://download.pytorch.org/whl/cu124`            | torch wheels; empty skips torch       |
-| `PIXANO_EXTRAS`    | `transformers`                                      | core extras; empty for none           |
-| `INSTALL_SAM`      | `true`                                              | bundle the SAM2 plugin + `sam-2`      |
-| `INSTALL_EXAMPLE`  | `false`                                             | bundle the numpy example plugin       |
+| Build arg         | Default                                  | Purpose                          |
+| ----------------- | ---------------------------------------- | -------------------------------- |
+| `TORCH_INDEX_URL` | `https://download.pytorch.org/whl/cu124` | torch wheels; empty skips torch  |
+| `PIXANO_EXTRAS`   | `transformers`                           | core extras; empty for none      |
+| `INSTALL_SAM`     | `true`                                   | bundle the SAM2 plugin + `sam-2` |
+| `INSTALL_EXAMPLE` | `false`                                  | bundle the numpy example plugin  |
 
 ```bash
 # CPU-only image (torch CPU wheels, no GPU toolkit needed):

@@ -36,7 +36,11 @@ repos:
     rev: v1.13.0
     hooks:
       - id: mypy
-        exclude: ^(docs|tests)/
+        # deploy/ holds example deployment scripts (referencing optional plugin packages),
+        # not library code — linted like docs/tests are excluded.
+        exclude: ^(docs|tests|deploy)/
+        additional_dependencies:
+          - types-requests
   - repo: local
     hooks:
       - id: check_license_header

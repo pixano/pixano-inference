@@ -135,6 +135,10 @@ build-backend = "hatchling.build"
 
 [tool.ruff]
 line-length = 119
+# deploy/ holds example/scratch deployment scripts (referencing optional plugin packages), not
+# library code. force-exclude makes the pre-commit hook honor this too (it passes explicit paths).
+extend-exclude = ["deploy"]
+force-exclude = true
 
 [tool.ruff.lint]
 ignore=["C901"]

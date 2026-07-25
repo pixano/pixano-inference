@@ -48,12 +48,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
 
-      # Install PyTorch and TensorFlow CPU versions manually to prevent installing CUDA
-      # Install SAM and MobileSAM manually as they cannot be included in PyPI
+      # The pre-commit hooks (ruff, mypy via mirrors, license check) run in isolated
+      # environments and do not need the project installed — so we skip `pip install .`
+      # (which could not resolve the not-yet-published pixano-inference-client anyway).
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install .
           pip install pre-commit
 
       - name: Run pre-commit

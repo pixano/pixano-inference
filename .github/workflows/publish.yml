@@ -111,7 +111,9 @@ jobs:
             mkdocs-material-
 
       - name: Install dependencies
-        run: pip install .[docs]
+        run: |
+          pip install -e packages/pixano-inference-client  # hard core dep, not yet on PyPI
+          pip install .[docs]
 
       - name: Publish documentation website
         run: mike deploy --push --update-aliases ${{ env.VERSION }} stable

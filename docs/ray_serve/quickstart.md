@@ -241,11 +241,11 @@ Each `ModelConfig(...)` entry supports the following fields:
 
 ### Model fields
 
-| Field          | Type                      | Default    | Description                                                                                                                             |
-| -------------- | ------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`         | `str`                     | _required_ | Unique model name                                                                                                                       |
-| `model_class`  | `str \| type`             | _required_ | Registered model class name or class object                                                                                             |
-| `model_params` | `dict \| BaseModelParams` | `{}`       | Parameters passed to the model (e.g. `path`, `torch_dtype`)                                                                             |
+| Field          | Type                      | Default    | Description                                                 |
+| -------------- | ------------------------- | ---------- | ----------------------------------------------------------- |
+| `name`         | `str`                     | _required_ | Unique model name                                           |
+| `model_class`  | `str \| type`             | _required_ | Registered model class name or class object                 |
+| `model_params` | `dict \| BaseModelParams` | `{}`       | Parameters passed to the model (e.g. `path`, `torch_dtype`) |
 
 Capability is derived automatically from `model_class`. For example:
 `SegmentationModel` subclasses deploy behind `/inference/segmentation/`, while
