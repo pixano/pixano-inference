@@ -3752,7 +3752,7 @@ masks = [
 [package.metadata]
 requires-dist = [
     { name = "httpx" },
-    { name = "numpy", specifier = "<2.0.0" },
+    { name = "numpy", specifier = ">=1.26.0,<3.0.0" },
     { name = "pillow", marker = "extra == 'masks'", specifier = ">=9.0.0" },
     { name = "pycocotools", marker = "extra == 'masks'" },
     { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
