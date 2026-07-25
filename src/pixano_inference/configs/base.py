@@ -185,6 +185,13 @@ class ModelConfig(BaseModel):
         # Extract string name for registry lookup (model_class may be a type)
         class_name = model_class.__name__ if isinstance(model_class, type) else model_class
         if isinstance(raw_params, dict) and class_name is not None:
+            # This before-validator runs ahead of model_post_init, so plugin param schemas
+            # (@register_model_params) must be loaded here too — otherwise a plugin model
+            # referenced from a config file silently loses its param defaults (e.g. the CLIP
+            # plugin's checkpoint path), and the replica later fails with KeyError('path').
+            from pixano_inference.plugins import ensure_models_loaded
+
+            ensure_models_loaded()
             params_cls = ModelParamsRegistry.get(class_name)
             if params_cls is not None:
                 data["model_params"] = params_cls(**raw_params)

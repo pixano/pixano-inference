@@ -395,3 +395,31 @@ class TestConfigLoaderIntegration:
 
         with pytest.raises(ValidationError):
             ConfigLoader(config_file).load()
+
+
+class TestPluginParamDefaultsColdStart:
+    """Plugin param defaults must resolve even when ModelConfig is the first thing constructed.
+
+    Regression: ``_resolve_model_params`` is a before-validator and used to consult
+    ``ModelParamsRegistry`` before plugins were loaded (loading only happened later, in
+    ``model_post_init``) — so a plugin model referenced from a config file with no explicit
+    ``model_params`` lost its defaults and the replica failed with ``KeyError('path')``.
+    A fresh interpreter is the only faithful reproduction of that cold state.
+    """
+
+    def test_plugin_defaults_resolve_in_fresh_interpreter(self):
+        pytest.importorskip("pixano_inference_clip")
+        import subprocess
+        import sys
+
+        script = (
+            "from pixano_inference.configs import ModelConfig\n"
+            "c = ModelConfig(name='clip', model_class='OpenClipEmbeddingModel')\n"
+            "dep = c.to_deployment_config()\n"
+            "assert dep.model_params['path'] == 'MobileCLIP2-S2', dep.model_params\n"
+            "assert dep.model_params['pretrained'] == 'dfndr2b'\n"
+            "print('ok')\n"
+        )
+        result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "ok" in result.stdout
