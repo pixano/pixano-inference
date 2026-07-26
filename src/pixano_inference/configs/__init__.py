@@ -12,13 +12,17 @@ parameters, model capabilities, and deployment settings at creation time.
 Example:
     .. code-block:: python
 
-        from pixano_inference.configs import ModelConfig, Sam2ImageParams
+        from pixano_inference.configs import ModelConfig, DeploymentConfig
 
         config = ModelConfig(
-            name="sam2-image",
-            model_class="Sam2ImageModel",
-            model_params=Sam2ImageParams(path="facebook/sam2-hiera-base-plus"),
+            name="my-detector",
+            model_class="MyDetector",
+            model_params={"path": "/models/weights.pt"},
+            deployment=DeploymentConfig(num_gpus=1),
         )
+
+Backend-specific params (e.g. ``Sam2ImageParams``) are provided by the corresponding model
+plugin package (``pixano-inference-sam``) and registered when it is imported.
 """
 
 # ruff: noqa: F401
@@ -31,6 +35,5 @@ from .base import (
     ServerConfig,
     register_model_params,
 )
-from .sam2 import Sam2ImageParams, Sam2VideoParams
 from .transformers import GroundingDINOParams, TransformersVLMParams
 from .vllm import VLLMVLMParams

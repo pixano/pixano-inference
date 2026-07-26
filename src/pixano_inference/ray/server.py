@@ -11,16 +11,13 @@ from __future__ import annotations
 import logging
 import threading
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-import ray
 import uvicorn
-from ray import serve
 
 from .app import create_ray_serve_app
 from .config import RayServeConfig
 from .config_loader import ConfigLoader
-from .utils import build_runtime_env
 
 
 if TYPE_CHECKING:
@@ -111,78 +108,47 @@ class InferenceServer:
     ) -> None:
         """Start the inference server.
 
-        This method:
-        1. Initializes Ray for model deployment actors
-        2. Creates the FastAPI application with DeploymentManager
-        3. Deploys startup models from config via Ray Serve
-        4. Runs the FastAPI app via uvicorn
+        Builds the FastAPI application and runs it via uvicorn. Ray + Serve startup,
+        deployment of the configured models, and graceful drain on shutdown are all handled
+        by the app's lifespan (so SIGTERM triggers a clean ``serve.shutdown`` +
+        ``ray.shutdown`` after in-flight requests drain).
 
         Args:
             host: Host to bind to. Uses config value if not specified.
             port: Port to serve on. Uses config value if not specified.
-            blocking: Whether to block until server is stopped.
+            blocking: Whether to block until the server is stopped.
         """
         host = host or self._config.host
         port = port or self._config.port
 
-        # Build runtime environment
-        runtime_env = build_runtime_env(
-            pip_packages=self._config.pip_packages,
-            working_dir=self._config.working_dir,
-            auto_detect=False,
-        )
-
-        # Initialize Ray if not already running
-        if not ray.is_initialized():
-            init_kwargs: dict[str, Any] = {}
-            if runtime_env:
-                init_kwargs["runtime_env"] = runtime_env
-            if self._config.num_cpus is not None:
-                init_kwargs["num_cpus"] = self._config.num_cpus
-            if self._config.num_gpus is not None:
-                init_kwargs["num_gpus"] = self._config.num_gpus
-
-            ray.init(**init_kwargs)
-            logger.info(f"Ray initialized with runtime_env: {runtime_env}")
-
-        # Create FastAPI app and deployment manager
         fastapi_app, deployment_manager = create_ray_serve_app(self._config)
         self._deployment_manager = deployment_manager
-
-        # Deploy startup models
-        for model_config in self._config.models:
-            try:
-                deployment_manager.deploy_model(model_config)
-                logger.info(f"Startup model '{model_config.name}' deployed")
-            except Exception as e:
-                logger.error(f"Failed to deploy startup model '{model_config.name}': {e}")
-
         self._running = True
         logger.info(f"Inference server starting on {host}:{port}")
 
-        # Run FastAPI via uvicorn (model deployments run as Ray actors)
+        # Bound the graceful-shutdown drain so it (plus serve/ray teardown in the lifespan)
+        # completes before an orchestrator's stop grace period elapses and sends SIGKILL.
         if blocking:
-            uvicorn.run(fastapi_app, host=host, port=port)
+            uvicorn.run(fastapi_app, host=host, port=port, timeout_graceful_shutdown=self._config.graceful_shutdown_s)
         else:
-            uvicorn_config = uvicorn.Config(fastapi_app, host=host, port=port)
+            uvicorn_config = uvicorn.Config(
+                fastapi_app, host=host, port=port, timeout_graceful_shutdown=self._config.graceful_shutdown_s
+            )
             self._uvicorn_server = uvicorn.Server(uvicorn_config)
             thread = threading.Thread(target=self._uvicorn_server.run, daemon=True)
             thread.start()
 
     def stop(self) -> None:
-        """Stop the inference server."""
+        """Stop the inference server.
+
+        For a non-blocking server, signals uvicorn to exit; the app lifespan then drains
+        Serve and Ray. In blocking mode this is driven by SIGTERM/SIGINT instead.
+        """
         try:
             if hasattr(self, "_uvicorn_server"):
                 self._uvicorn_server.should_exit = True
-
-            if ray.is_initialized():
-                try:
-                    serve.shutdown()
-                except Exception:
-                    pass
-
             self._running = False
-            logger.info("Inference server stopped")
+            logger.info("Inference server stopping")
         except Exception as e:
             logger.error(f"Error stopping server: {e}")
 

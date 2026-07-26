@@ -6,7 +6,6 @@
 
 """CLI entrypoint for starting the Pixano Inference server."""
 
-import sys
 from pathlib import Path
 from typing import Annotated, Optional
 
@@ -23,32 +22,33 @@ def serve(
     config: Annotated[
         Optional[Path], typer.Option(exists=True, help="Path to Python config file (.py) for model deployments")
     ] = None,
-    module_path: Annotated[
-        Optional[list[Path]],
-        typer.Option(help="Directory to add to Python path for custom model modules. Can be repeated."),
-    ] = None,
+    strict_startup: Annotated[
+        bool,
+        typer.Option(help="Fail startup if any configured model cannot be deployed (recommended for production)."),
+    ] = True,
 ):
     """Start the Pixano Inference server.
+
+    Custom models are installable packages discovered via the ``pixano_inference.models``
+    entry point (``pip install`` / ``uv pip install -e`` your model package, then reference
+    it by name in the config). See the custom-models docs.
 
     Examples:
         # Start the server
         pixano-inference --host 0.0.0.0 --port 7463
 
-        # Start with Python config
+        # Start with a Python config declaring the models to deploy
         pixano-inference --host 0.0.0.0 --port 7463 --config models.py
-
-        # Start with custom model modules
-        pixano-inference --module-path /path/to/my-models --config my_config.py
     """
-    if module_path:
-        for p in module_path:
-            resolved = str(p.resolve())
-            if resolved not in sys.path:
-                sys.path.insert(0, resolved)
-
+    from .observability import configure_logging
     from .ray import InferenceServer, RayServeConfig
+    from .server_settings import ServerSettings
 
-    ray_config = RayServeConfig(host=host, port=port)
+    # Structured, request-id-aware logging driven by PIXANO_INFERENCE_LOG_LEVEL / _LOG_JSON.
+    settings = ServerSettings()
+    configure_logging(level=settings.log_level, json_logs=settings.log_json)
+
+    ray_config = RayServeConfig(host=host, port=port, strict_startup=strict_startup)
     server = InferenceServer(config=ray_config)
 
     if config is not None:

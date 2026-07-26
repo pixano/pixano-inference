@@ -4,21 +4,23 @@
 # License: CECILL-C
 # =================================
 
-"""YOLOE deployment configuration.
+"""YOLO deployment configuration.
+
+Install the plugin package first (``uv pip install -e examples/yolo``); the model is then
+discovered via its entry point and referenced here by name — no import needed.
 
 Usage::
-    PYTHONPATH=examples:$PYTHONPATH uv run pixano-inference --config examples/custom_yoloe/config.py
+    uv run pixano-inference --config examples/yolo/config.py
 """
 
 from pixano_inference.configs import DeploymentConfig, ModelConfig
-from yolo.model import YOLOModel
 
 
 models = [
     ModelConfig(
         name="yolo26s",
-        model_class=YOLOModel,
+        model_class="YOLOModel",
         model_params={"path": "yolo26s.pt"},
-        deployment=DeploymentConfig(num_gpus=1, num_cpus=1, min_replicas=0, max_replicas=2),
+        deployment=DeploymentConfig(num_gpus=1, num_cpus=1, min_replicas=1, max_replicas=2),
     ),
 ]

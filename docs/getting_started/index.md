@@ -41,13 +41,13 @@ Install the extras for the model backends you need:
 === "uv"
 
     ```bash
-    uv sync --extra sam2 --extra transformers --extra vllm
+    uv sync --extra sam --extra transformers --extra vllm
     ```
 
 === "pip"
 
     ```bash
-    pip install pixano-inference[sam2,transformers,vllm]
+    pip install pixano-inference[sam,transformers,vllm]
     ```
 
 ## Usage

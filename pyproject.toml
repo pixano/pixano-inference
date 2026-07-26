@@ -14,6 +14,7 @@ authors = [
   { name="Julien Denize", email="julien.denize@cea.fr" },
 ]
 requires-python = ">=3.10,<3.14"
+license = { file = "LICENSE" }
 classifiers = [
   "Development Status :: 4 - Beta",
   "Environment :: Console",
@@ -23,7 +24,8 @@ classifiers = [
   "Intended Audience :: Information Technology",
   "Intended Audience :: Science/Research",
   "Natural Language :: English",
-  "Operating System :: OS Independent",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: MacOS",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
@@ -36,9 +38,13 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
+  # The lightweight client + wire schemas ship as a standalone distribution so third-party
+  # callers can `pip install pixano-inference-client` without the server stack. The server
+  # depends on it (and its `masks` extra for pycocotools/Pillow) and re-exports it, so
+  # `from pixano_inference.client import ...` keeps working. It also provides httpx/pydantic/numpy.
+  "pixano-inference-client[masks]",
   "typer >= 0.9.0",
   "fastapi >= 0.100.0",
-  "httpx",
   "numpy < 2.0.0",
   "pydantic >= 2.0.0, < 3.0.0",
   "pydantic_settings",
@@ -48,8 +54,9 @@ dependencies = [
   "python-multipart",
   "requests",
   "uvicorn >= 0.31.0",
-  "ray[serve] >= 2.0.0, < 3.0.0",
+  "ray[serve] >= 2.53.0, < 3.0.0",
   "pyyaml >= 6.0.0",
+  "prometheus-client >= 0.16.0",
 ]
 readme = "README.md"
 
@@ -63,14 +70,33 @@ docs=[
   "mkdocs-literate-nav >= 0.6.0",
   "mkdocs-redirects >= 1.2.1",
 ]
-sam2 = [
-  "sam-2 @ git+https://github.com/facebookresearch/sam2.git",
-  "torch >= 2.3.0, < 3.0.0",
+# SAM2 ships as a separate first-party plugin package (packages/pixano-inference-sam). This
+# extra pulls it in. The upstream `sam-2` library is git-only (not on PyPI), so install it
+# alongside:
+#   pip install pixano-inference[sam]
+#   pip install "sam-2 @ git+https://github.com/facebookresearch/sam2.git"
+# (The dev dependency-group below wires both up automatically for local development.)
+sam = [
+  "pixano-inference-sam",
 ]
-# Placeholder for future SAM3 integration
-sam3 = []
+# CLIP-style image/text embeddings (default MobileCLIP2), a separate plugin package.
+clip = [
+  "pixano-inference-clip",
+]
+# --- ML framework runtimes (optional). The core depends on none of these; a custom model
+# is written against exactly one of them. Model-backend extras below (sam, transformers,
+# vllm, ultralytics) pull in the framework they need. ---
 torch=[
   "torch >= 2.3.0, < 3.0.0",
+]
+jax=[
+  "jax >= 0.4.0",
+]
+tensorflow=[
+  "tensorflow >= 2.13.0",
+]
+mlx=[
+  "mlx >= 0.1.0; sys_platform == 'darwin'",
 ]
 transformers=[
   "accelerate",
@@ -81,9 +107,8 @@ transformers=[
 ]
 test=[
   "pytest",
-  "pytest.asyncio",
+  "pytest-asyncio",
   "pytest-cov",
-  "pytest-coverage",
   "pytest_httpx",
   "pytest-mock",
   "responses",
@@ -99,10 +124,10 @@ vllm=[
 pixano-inference = "pixano_inference.main:app"
 
 [project.urls]
-"Bug Tracker" = "http://is154588.intra.cea.fr/pixano/pixano-inference/issues"
-"Download" = "http://is154588.intra.cea.fr/pixano/pixano-inference"
-"Homepage" = "http://is154588.intra.cea.fr/pixano/pixano-inference"
-"Source Code" = "http://is154588.intra.cea.fr/pixano/pixano-inference"
+"Homepage" = "https://github.com/pixano/pixano-inference"
+"Documentation" = "https://pixano.github.io/pixano-inference/"
+"Source Code" = "https://github.com/pixano/pixano-inference"
+"Bug Tracker" = "https://github.com/pixano/pixano-inference/issues"
 
 [build-system]
 requires = ["hatchling"]
@@ -110,6 +135,10 @@ build-backend = "hatchling.build"
 
 [tool.ruff]
 line-length = 119
+# deploy/ holds example/scratch deployment scripts (referencing optional plugin packages), not
+# library code. force-exclude makes the pre-commit hook honor this too (it passes explicit paths).
+extend-exclude = ["deploy"]
+force-exclude = true
 
 [tool.ruff.lint]
 ignore=["C901"]
@@ -118,6 +147,7 @@ ignore-init-module-imports = true
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D", "C408", "C901", "F401"]
+"packages/*/tests/*" = ["D", "C408", "C901", "F401"]
 "docs/*" = ["D", "F401"]
 
 [tool.ruff.lint.isort]
@@ -132,6 +162,14 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-ra"
+markers = [
+  "integration: end-to-end tests that start a real Ray/Serve runtime (deselect with '-m \"not integration\"')",
+]
 
 [tool.hatch.version]
 path = "src/pixano_inference/__version__.py"
@@ -149,5 +187,16 @@ environments = [
 
 [dependency-groups]
 dev = [
-  "pixano-inference[test,docs,transformers,sam2]",
+  "pixano-inference[test,docs,transformers,sam,clip]",
+  # The upstream sam-2 library (git-only) lives here — a dependency-group is never published
+  # to PyPI, so the published wheel carries no direct/VCS reference.
+  "sam-2 @ git+https://github.com/facebookresearch/sam2.git",
+  # The example plugin package, installed editable so the entry-point discovery tests run.
+  "pixano-numpy-detector",
 ]
+
+[tool.uv.sources]
+pixano-inference-client = { path = "packages/pixano-inference-client", editable = true }
+pixano-numpy-detector = { path = "examples/numpy_detector", editable = true }
+pixano-inference-sam = { path = "packages/pixano-inference-sam", editable = true }
+pixano-inference-clip = { path = "packages/pixano-inference-clip", editable = true }

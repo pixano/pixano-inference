@@ -1,0 +1,58 @@
+# =================================
+# Copyright: CEA-LIST/DIASI/SIALV
+# Author : pixano@cea.fr
+# License: CECILL-C
+# =================================
+
+services:
+  pixano-inference:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pixano-inference:latest
+    # Bound to localhost by default (secure default). To expose the server off-host, change
+    # this to "7463:7463" AND set PIXANO_INFERENCE_API_KEYS. Other services on this compose
+    # network reach it as http://pixano-inference:7463 regardless of this mapping.
+    ports:
+      - "127.0.0.1:7463:7463"
+    environment:
+      # Set an API key to require auth on inference/admin routes. REQUIRED before exposing the
+      # server off-host; without it every route is open.
+      PIXANO_INFERENCE_API_KEYS: ${PIXANO_INFERENCE_API_KEYS:-}
+      # HuggingFace token for gated model weights (optional).
+      HF_TOKEN: ${HF_TOKEN:-}
+      # To serve local images by path, uncomment the media mount below and set:
+      # PIXANO_INFERENCE_MEDIA_ROOTS: /data/media
+    volumes:
+      # Persistent HuggingFace weight cache (survives restarts/rebuilds).
+      - pixano-weights:/data
+      # Your deployment config, mounted read-only.
+      - ./docker/models.py:/config/models.py:ro
+      # Optional: local images to serve by path (read-only). The host dir must exist and be
+      # readable by uid 1000; also set PIXANO_INFERENCE_MEDIA_ROOTS above.
+      # - ./media:/data/media:ro
+    command:
+      ["--host", "0.0.0.0", "--port", "7463", "--config", "/config/models.py"]
+    # Reap Ray's child processes (Python is PID 1 and is not an init).
+    init: true
+    restart: unless-stopped
+    # Ray's object store lives in /dev/shm; the 64MB default is too small.
+    shm_size: "8gb"
+    # Long enough for uvicorn's bounded graceful drain plus serve/ray teardown.
+    stop_grace_period: 90s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:7463/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 600s
+      retries: 3
+
+volumes:
+  pixano-weights:

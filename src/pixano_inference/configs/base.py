@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from typing import Any
 
@@ -16,6 +17,9 @@ from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from pixano_inference.models import ModelClassRegistry, infer_http_capability
 
 from ..ray.config import AutoscalingConfig, ModelDeploymentConfig, RayServeConfig, ResourceConfig
+
+
+logger = logging.getLogger(__name__)
 
 
 class ModelParamsRegistry:
@@ -122,20 +126,26 @@ class DeploymentConfig(BaseModel):
         target_num_ongoing_requests_per_replica: Target ongoing requests per replica before scaling up.
         downscale_delay_s: Delay in seconds before scaling down.
         upscale_delay_s: Delay in seconds before scaling up.
-        max_batch_size: Maximum batch size for inference.
+        max_batch_size: Maximum batch size for inference (1 disables batching).
         batch_wait_timeout_s: Timeout for waiting to fill batch.
+        max_ongoing_requests: Max concurrent requests per replica before queueing/scaling.
+        health_check_period_s: How often Serve calls the replica health check.
+        timeout_s: Per-request inference timeout. None uses the capability default.
     """
 
     num_gpus: float = Field(default=0.0, ge=0)
     num_cpus: float = Field(default=1.0, ge=0)
     memory_mb: int | None = Field(default=None, ge=0)
-    min_replicas: int = Field(default=0, ge=0)
+    min_replicas: int = Field(default=1, ge=0)
     max_replicas: int = Field(default=4, ge=1)
     target_num_ongoing_requests_per_replica: int = Field(default=2, ge=1)
     downscale_delay_s: float = Field(default=60.0, gt=0)
     upscale_delay_s: float = Field(default=5.0, gt=0)
-    max_batch_size: int = Field(default=8, ge=1)
+    max_batch_size: int = Field(default=1, ge=1)
     batch_wait_timeout_s: float = Field(default=0.1, ge=0)
+    max_ongoing_requests: int = Field(default=2, ge=1)
+    health_check_period_s: float = Field(default=10.0, gt=0)
+    timeout_s: float | None = Field(default=None, gt=0)
 
 
 class ModelConfig(BaseModel):
@@ -175,6 +185,13 @@ class ModelConfig(BaseModel):
         # Extract string name for registry lookup (model_class may be a type)
         class_name = model_class.__name__ if isinstance(model_class, type) else model_class
         if isinstance(raw_params, dict) and class_name is not None:
+            # This before-validator runs ahead of model_post_init, so plugin param schemas
+            # (@register_model_params) must be loaded here too — otherwise a plugin model
+            # referenced from a config file silently loses its param defaults (e.g. the CLIP
+            # plugin's checkpoint path), and the replica later fails with KeyError('path').
+            from pixano_inference.plugins import ensure_models_loaded
+
+            ensure_models_loaded()
             params_cls = ModelParamsRegistry.get(class_name)
             if params_cls is not None:
                 data["model_params"] = params_cls(**raw_params)
@@ -220,13 +237,22 @@ class ModelConfig(BaseModel):
 
     def _resolve_model_class(self) -> type:
         """Resolve ``model_class`` to a Python type and validate support."""
-        import pixano_inference.impls  # noqa: F401
         from pixano_inference.models.base import InferenceModel
+        from pixano_inference.plugins import ensure_models_loaded
+
+        # Register built-in backends and installed entry-point plugins before resolving.
+        ensure_models_loaded()
 
         if isinstance(self.model_class, type):
             if not issubclass(self.model_class, InferenceModel):
                 raise ValueError(
                     f"Configured model_class '{self.model_class.__name__}' must inherit from InferenceModel."
+                )
+            if self.model_class.__module__ == "__main__":
+                logger.warning(
+                    "Model class '%s' is defined in __main__. Package it as an installable plugin "
+                    "(pixano_inference.models entry point) so Ray Serve workers can import it.",
+                    self.model_class.__name__,
                 )
             ModelClassRegistry.ensure_registered(self.model_class)
             return self.model_class
@@ -237,8 +263,8 @@ class ModelConfig(BaseModel):
             pass
 
         raise ValueError(
-            f"Unknown model_class '{self.model_class}'. Register the class with @register_model "
-            "or pass the class type directly."
+            f"Unknown model_class '{self.model_class}'. Install a model plugin that provides it "
+            "(pixano_inference.models entry point) or pass the class type directly."
         )
 
     def to_deployment_config(self) -> ModelDeploymentConfig:
@@ -271,6 +297,9 @@ class ModelConfig(BaseModel):
             ),
             max_batch_size=dep.max_batch_size,
             batch_wait_timeout_s=dep.batch_wait_timeout_s,
+            max_ongoing_requests=dep.max_ongoing_requests,
+            health_check_period_s=dep.health_check_period_s,
+            timeout_s=dep.timeout_s,
         )
 
 

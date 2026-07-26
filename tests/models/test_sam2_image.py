@@ -13,10 +13,14 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from pixano_inference.impls.sam2.image import Sam2ImageModel
-from pixano_inference.models.segmentation import SegmentationInput
-from pixano_inference.ray.config import ModelDeploymentConfig
-from pixano_inference.schemas.rle import CompressedRLE
+
+pytest.importorskip("pixano_inference_sam")
+
+from pixano_inference_sam.image import Sam2ImageModel  # noqa: E402
+
+from pixano_inference.models.segmentation import SegmentationInput  # noqa: E402
+from pixano_inference.ray.config import ModelDeploymentConfig  # noqa: E402
+from pixano_inference.schemas.rle import CompressedRLE  # noqa: E402
 
 
 class FakePredictor:
@@ -87,7 +91,7 @@ def test_predict_keeps_binary_masks_while_returning_low_res_logits(
     assert predictor.predict_calls[0]["return_logits"] is False
     assert output.masks[0][0] == CompressedRLE.from_mask(np.array([[1, 0], [0, 1]], dtype=np.uint8))
     assert output.mask_logits is not None
-    assert output.mask_logits.values == pytest.approx([0.1, 0.2, 0.3, 0.4])
+    assert output.mask_logits.to_numpy().flatten().tolist() == pytest.approx([0.1, 0.2, 0.3, 0.4])
     assert output.mask_logits.shape == [1, 2, 2]
 
 

@@ -1,0 +1,30 @@
+[project]
+name = "pixano-inference-client"
+version = "0.1.0"
+description = "Lightweight client and wire schemas for the Pixano Inference /v1 API (no server deps)."
+requires-python = ">=3.10,<3.14"
+license = { file = "../../LICENSE" }
+readme = "README.md"
+dependencies = [
+  "httpx",
+  "pydantic >= 2.0.0, < 3.0.0",
+  # Deliberately wider than the server's `numpy < 2.0.0` pin: the NDArray wire code is
+  # numpy-2-compatible, and consumers (e.g. the Pixano app) already run numpy 2.x.
+  "numpy >= 1.26.0, < 3.0.0",
+  "typing_extensions",
+]
+
+[project.optional-dependencies]
+# Only needed to encode/decode segmentation masks (CompressedRLE.from_mask/to_mask and
+# numeric-array RLE); parsing a normal compressed-bytes response does not require these.
+masks = [
+  "Pillow >= 9.0.0",
+  "pycocotools",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pixano_inference_client"]

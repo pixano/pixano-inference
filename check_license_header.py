@@ -52,10 +52,26 @@ EXCLUDE_FILES: set[str] = {
     "PULL_REQUEST_TEMPLATE.md",
     "bug_report.md",
     "feature_request.md",
+    "CLAUDE.md",  # local, gitignored Claude Code guidance — not shipped source
 }
 
-# Files to exclude
-EXCLUDE_PATHS: set[str] = set()
+# Directories to exclude (virtualenvs, build artifacts, caches, generated sites).
+EXCLUDE_PATHS: set[str] = {
+    ".venv",
+    "venv",
+    ".git",
+    "__pycache__",
+    "node_modules",
+    "dist",
+    "build",
+    "site",
+    "plans",
+    ".ray",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    "egg-info",
+}
 
 
 def check_header(file_path: Path, header: str):
@@ -69,7 +85,7 @@ def main():
     """Check if all files contain the required headers."""
     missing_headers = []
     for file_path in ROOT.rglob("*"):
-        if not any(part.name in EXCLUDE_PATHS for part in file_path.parents):
+        if not any(part.name in EXCLUDE_PATHS or part.name.endswith(".egg-info") for part in file_path.parents):
             ext = file_path.suffix
             if ext in HEADERS and file_path.name not in EXCLUDE_FILES:
                 if not check_header(file_path, HEADERS[ext]):

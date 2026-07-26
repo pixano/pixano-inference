@@ -16,7 +16,7 @@ from pixano_inference.models.detection import DetectionInput, DetectionModel, De
 from pixano_inference.models.registry import register_model
 from pixano_inference.ray.config import ModelDeploymentConfig
 
-from .._helpers import resolve_device
+from .._helpers import resolve_device, should_compile
 
 
 logger = logging.getLogger(__name__)
@@ -31,6 +31,7 @@ class GroundingDINOModel(DetectionModel):
     - ``path`` (str, required): HuggingFace model ID or local checkpoint path.
     - ``processor_config`` (dict, optional): Kwargs for ``AutoProcessor.from_pretrained``.
     - ``config`` (dict, optional): Kwargs for ``AutoModelForZeroShotObjectDetection.from_pretrained``.
+    - ``compile`` (bool, optional): ``torch.compile`` the model. Default auto (GPU only).
     """
 
     def __init__(self, config: ModelDeploymentConfig) -> None:
@@ -56,13 +57,15 @@ class GroundingDINOModel(DetectionModel):
         path = params.pop("path")
         processor_config = params.pop("processor_config", {})
         model_config = params.pop("config", {})
+        compile_model = params.pop("compile", None)
 
         device = resolve_device(self._config)
 
         self._processor = AutoProcessor.from_pretrained(path, **processor_config)
         self._model = AutoModelForZeroShotObjectDetection.from_pretrained(path, device_map=device, **model_config)
         self._model = self._model.eval()
-        self._model = torch.compile(self._model)
+        if should_compile(device, compile_model):
+            self._model = torch.compile(self._model)
 
         logger.info("GroundingDINOModel '%s' loaded on %s", self.model_name, device)
 

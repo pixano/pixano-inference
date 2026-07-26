@@ -4,59 +4,18 @@
 # License: CECILL-C
 # =================================
 
-"""VLM (Vision-Language Model) base class and I/O types."""
+"""VLM (Vision-Language Model) base class.
+
+The I/O types live in :mod:`pixano_inference_client.vlm` and are re-exported here so
+``from pixano_inference.models.vlm import VLMInput`` keeps working.
+"""
 
 from abc import abstractmethod
-from pathlib import Path
-from typing import Any, ClassVar
+from typing import ClassVar
 
-from pydantic import BaseModel
+from pixano_inference_client.vlm import UsageInfo, VLMInput, VLMOutput  # noqa: F401
 
 from .base import InferenceModel
-
-
-class UsageInfo(BaseModel):
-    """Usage metadata for generation.
-
-    Attributes:
-        prompt_tokens: Number of tokens in the prompt.
-        completion_tokens: Number of tokens in the completion.
-        total_tokens: Total number of tokens.
-    """
-
-    prompt_tokens: int
-    completion_tokens: int
-    total_tokens: int
-
-
-class VLMInput(BaseModel):
-    """Input for vision-language model generation.
-
-    Attributes:
-        prompt: Prompt for the generation. Can be a string or a list of dicts for chat templates.
-        images: Images for the generation. Can be None if images are passed in the prompt.
-        max_new_tokens: Maximum number of new tokens to generate.
-        temperature: Temperature for the generation.
-    """
-
-    prompt: str | list[dict[str, Any]]
-    images: list[str | Path] | None = None
-    max_new_tokens: int
-    temperature: float = 1.0
-
-
-class VLMOutput(BaseModel):
-    """Output for vision-language model generation.
-
-    Attributes:
-        generated_text: Generated text.
-        usage: Usage metadata.
-        generation_config: Configuration used for the generation.
-    """
-
-    generated_text: str
-    usage: UsageInfo
-    generation_config: dict[str, Any] = {}
 
 
 class VLMModel(InferenceModel):

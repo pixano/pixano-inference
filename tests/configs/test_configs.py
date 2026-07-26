@@ -11,24 +11,31 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from pixano_inference.configs import (
+
+# SAM2 is a plugin package; these tests exercise the config machinery through it.
+pytest.importorskip("pixano_inference_sam")
+
+from pixano_inference_sam import Sam2ImageModel, Sam2ImageParams, Sam2VideoModel, Sam2VideoParams  # noqa: E402
+
+from pixano_inference.configs import (  # noqa: E402
     BaseModelParams,
     DeploymentConfig,
     GroundingDINOParams,
     ModelConfig,
     ModelParamsRegistry,
-    Sam2ImageParams,
-    Sam2VideoParams,
     ServerConfig,
     TransformersVLMParams,
     VLLMVLMParams,
 )
-from pixano_inference.impls.sam2.image import Sam2ImageModel
-from pixano_inference.impls.sam2.video import Sam2VideoModel
-from pixano_inference.impls.transformers.grounding_dino import GroundingDINOModel
-from pixano_inference.impls.transformers.vlm import TransformersVLMModel
-from pixano_inference.models import InferenceModel
-from pixano_inference.ray.config import ModelDeploymentConfig
+from pixano_inference.impls.transformers.grounding_dino import GroundingDINOModel  # noqa: E402
+from pixano_inference.impls.transformers.vlm import TransformersVLMModel  # noqa: E402
+from pixano_inference.models import InferenceModel  # noqa: E402
+from pixano_inference.plugins import ensure_models_loaded  # noqa: E402
+from pixano_inference.ray.config import ModelDeploymentConfig  # noqa: E402
+
+
+# Register built-in + plugin params (Sam2*Params) into the registry for the assertions below.
+ensure_models_loaded()
 
 
 class TestModelParamsRegistry:
@@ -268,9 +275,10 @@ class TestModelConfig:
         dc = config.to_deployment_config()
         assert dc.resources.num_gpus == 0.0
         assert dc.resources.num_cpus == 1.0
-        assert dc.autoscaling.min_replicas == 0
+        assert dc.autoscaling.min_replicas == 1
         assert dc.autoscaling.max_replicas == 4
-        assert dc.max_batch_size == 8
+        assert dc.max_batch_size == 1
+        assert dc.max_ongoing_requests == 2
 
 
 class TestDeploymentConfig:
@@ -278,9 +286,10 @@ class TestDeploymentConfig:
         dep = DeploymentConfig()
         assert dep.num_gpus == 0.0
         assert dep.num_cpus == 1.0
-        assert dep.min_replicas == 0
+        assert dep.min_replicas == 1
         assert dep.max_replicas == 4
-        assert dep.max_batch_size == 8
+        assert dep.max_batch_size == 1
+        assert dep.max_ongoing_requests == 2
 
     def test_custom_values(self):
         dep = DeploymentConfig(
@@ -386,3 +395,31 @@ class TestConfigLoaderIntegration:
 
         with pytest.raises(ValidationError):
             ConfigLoader(config_file).load()
+
+
+class TestPluginParamDefaultsColdStart:
+    """Plugin param defaults must resolve even when ModelConfig is the first thing constructed.
+
+    Regression: ``_resolve_model_params`` is a before-validator and used to consult
+    ``ModelParamsRegistry`` before plugins were loaded (loading only happened later, in
+    ``model_post_init``) — so a plugin model referenced from a config file with no explicit
+    ``model_params`` lost its defaults and the replica failed with ``KeyError('path')``.
+    A fresh interpreter is the only faithful reproduction of that cold state.
+    """
+
+    def test_plugin_defaults_resolve_in_fresh_interpreter(self):
+        pytest.importorskip("pixano_inference_clip")
+        import subprocess
+        import sys
+
+        script = (
+            "from pixano_inference.configs import ModelConfig\n"
+            "c = ModelConfig(name='clip', model_class='OpenClipEmbeddingModel')\n"
+            "dep = c.to_deployment_config()\n"
+            "assert dep.model_params['path'] == 'MobileCLIP2-S2', dep.model_params\n"
+            "assert dep.model_params['pretrained'] == 'dfndr2b'\n"
+            "print('ok')\n"
+        )
+        result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "ok" in result.stdout

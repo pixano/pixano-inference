@@ -14,9 +14,43 @@ permissions:
   contents: write
 
 jobs:
+  # The lightweight client is a separate PyPI distribution (pixano-inference-client) and a hard
+  # dependency of the root package, so it must be published FIRST — the root job `needs` it.
+  # Requires a trusted-publisher / PyPI project set up for `pixano-inference-client`.
+  deploy_pypi_client:
+    name: Build and publish the client to PyPI
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install hatch
+
+      - name: Build the client package
+        working-directory: packages/pixano-inference-client
+        run: hatch build
+
+      - name: Publish the client package
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/pixano-inference-client/dist
+
   deploy_pypi:
     name: Build and publish to PyPI
     runs-on: ubuntu-latest
+    needs: deploy_pypi_client
     permissions:
       id-token: write
 
@@ -77,7 +111,9 @@ jobs:
             mkdocs-material-
 
       - name: Install dependencies
-        run: pip install .[docs]
+        run: |
+          pip install -e packages/pixano-inference-client  # hard core dep, not yet on PyPI
+          pip install .[docs]
 
       - name: Publish documentation website
         run: mike deploy --push --update-aliases ${{ env.VERSION }} stable

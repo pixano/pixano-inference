@@ -4,55 +4,36 @@
 # License: CECILL-C
 # =================================
 
-"""NER (Named Entity Recognition) model base class and I/O types (stub)."""
+"""NER (Named Entity Recognition) model base class.
+
+The I/O types live in :mod:`pixano_inference_client.ner` and are re-exported here so
+``from pixano_inference.models.ner import NERInput`` keeps working.
+"""
 
 from abc import abstractmethod
+from typing import ClassVar
 
-from pydantic import BaseModel
+from pixano_inference_client.ner import NEREntity, NERInput, NEROutput  # noqa: F401
 
 from .base import InferenceModel
 
 
-class NERInput(BaseModel):
-    """Input for named entity recognition.
-
-    Attributes:
-        text: Text to analyse.
-    """
-
-    text: str
-
-
-class NEREntity(BaseModel):
-    """A single recognized entity.
-
-    Attributes:
-        text: The entity text span.
-        label: The entity label.
-        start: Start character offset.
-        end: End character offset.
-        score: Confidence score.
-    """
-
-    text: str
-    label: str
-    start: int
-    end: int
-    score: float
-
-
-class NEROutput(BaseModel):
-    """Output for named entity recognition.
-
-    Attributes:
-        entities: List of recognised entities.
-    """
-
-    entities: list[NEREntity]
-
-
 class NERModel(InferenceModel):
-    """Base class for named entity recognition models (stub)."""
+    """Base class for named entity recognition models.
+
+    Example:
+        ```python
+        @register_model("my-ner")
+        class MyNER(NERModel):
+            def load_model(self):
+                self.model = load_weights(self.config.model_params["path"])
+
+            def predict(self, input: NERInput) -> NEROutput:
+                return NEROutput(entities=[...])
+        ```
+    """
+
+    capability_name: ClassVar[str] = "ner"
 
     @abstractmethod
     def predict(self, input: NERInput) -> NEROutput:
