@@ -59,6 +59,47 @@ def extract_media_from_base64(string: str) -> str:
     return string[len(match.group(1)) :]
 
 
+def _decode_image_under_policy(source: Any, policy: Any) -> Image.Image:
+    """Open an image and enforce the format allowlist and pixel cap before decoding it.
+
+    ``Image.open`` only reads the header, so both checks run before any pixel data is
+    decoded. This is deliberately independent of Pillow's own ``MAX_IMAGE_PIXELS`` guard:
+    several Pillow advisories are bypasses of that check in specific decoders, and the
+    allowlist keeps request bytes away from the rarely-used decoders where most of its
+    memory-safety bugs live. The byte caps elsewhere in the policy do not help here -- a
+    few-KB file can decode to gigapixels.
+
+    Args:
+        source: Anything ``Image.open`` accepts (a path or a file-like object).
+        policy: The active :class:`~.media_security.MediaPolicy`.
+
+    Returns:
+        The opened image, still undecoded.
+
+    Raises:
+        ValueError: If the format is not allowed or the image exceeds the pixel cap.
+    """
+    image = Image.open(source)
+    allowed = getattr(policy, "allowed_image_formats", frozenset())
+    fmt = (image.format or "").upper()
+    if allowed and fmt not in allowed:
+        image.close()
+        raise ValueError(
+            f"Image format {fmt or 'unknown'!s} is not allowed. Allowed formats: {', '.join(sorted(allowed))}."
+        )
+
+    max_pixels = getattr(policy, "max_image_pixels", 0)
+    if max_pixels:
+        width, height = image.size
+        if width * height > max_pixels:
+            image.close()
+            raise ValueError(
+                f"Image is too large to decode: {width}x{height} = {width * height} pixels "
+                f"exceeds the {max_pixels}-pixel limit."
+            )
+    return image
+
+
 def convert_string_to_image(str_image: str | Path | bytes) -> Image.Image:
     """Convert a string, path, or bytes reference to an image, under the media policy.
 
@@ -71,21 +112,25 @@ def convert_string_to_image(str_image: str | Path | bytes) -> Image.Image:
 
     Returns:
         The RGB image.
+
+    Raises:
+        ValueError: If the reference is invalid, the image format is not in the policy's
+            allowlist, or the image exceeds the policy's pixel cap.
     """
     policy = get_media_policy()
     if isinstance(str_image, str):
         if is_http_url(str_image):
             image_bytes = fetch_url_bytes(str_image, max_bytes=policy.max_image_bytes, policy=policy)
-            image_pil = Image.open(BytesIO(image_bytes))
+            image_pil = _decode_image_under_policy(BytesIO(image_bytes), policy)
         elif is_base64_image(str_image):
             image_bytes = base64.b64decode(extract_media_from_base64(str_image))
-            image_pil = Image.open(BytesIO(image_bytes))
+            image_pil = _decode_image_under_policy(BytesIO(image_bytes), policy)
         else:
-            image_pil = Image.open(resolve_local_path(str_image, policy))
+            image_pil = _decode_image_under_policy(resolve_local_path(str_image, policy), policy)
     elif isinstance(str_image, bytes):
-        image_pil = Image.open(BytesIO(str_image))
+        image_pil = _decode_image_under_policy(BytesIO(str_image), policy)
     elif isinstance(str_image, Path):
-        image_pil = Image.open(resolve_local_path(str_image, policy))
+        image_pil = _decode_image_under_policy(resolve_local_path(str_image, policy), policy)
     else:
         raise ValueError("The image is not a valid path, URL or base64 string.")
     image_converted = image_pil.convert("RGB")

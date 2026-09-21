@@ -59,6 +59,13 @@ class ServerSettings(BaseSettings):
         media_max_redirects: Maximum number of HTTP redirects followed (each re-validated).
         media_max_image_bytes: Maximum decoded size for a fetched image.
         media_max_video_bytes: Maximum size for a fetched video.
+        media_max_image_pixels: Decompression-bomb cap, in pixels, applied to decoded images.
+            The byte caps above do not bound this: a few-KB file can decode to gigapixels.
+            0 disables the check.
+        media_allowed_image_formats: Pillow format names (e.g. ``JPEG``, ``PNG``) accepted when
+            decoding. Restricting this keeps request bytes away from Pillow's rarely-used
+            decoders, which is where most of its memory-safety advisories land. Empty means
+            allow every format Pillow supports.
         cors_allow_origins: Allowed CORS origins. Empty disables CORS.
         max_request_body_bytes: Maximum accepted request body size.
         log_level: Root log level applied at startup.
@@ -80,6 +87,10 @@ class ServerSettings(BaseSettings):
     media_max_redirects: int = Field(default=3, ge=0)
     media_max_image_bytes: int = Field(default=50 * _MB, ge=0)
     media_max_video_bytes: int = Field(default=512 * _MB, ge=0)
+    media_max_image_pixels: int = Field(default=100_000_000, ge=0)
+    media_allowed_image_formats: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: ["JPEG", "JPEG2000", "PNG", "BMP", "GIF", "TIFF", "WEBP"]
+    )
 
     cors_allow_origins: Annotated[list[str], NoDecode] = Field(default_factory=list)
     max_request_body_bytes: int = Field(default=100 * _MB, ge=0)
@@ -91,6 +102,7 @@ class ServerSettings(BaseSettings):
         "api_keys",
         "media_url_host_allowlist",
         "media_roots",
+        "media_allowed_image_formats",
         "cors_allow_origins",
         mode="before",
     )
