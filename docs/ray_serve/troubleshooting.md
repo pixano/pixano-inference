@@ -59,21 +59,17 @@ The symptom is a deployment that fails its preflight check with
 import ray; ray.init(); print(ray.cluster_resources())
 ```
 
-Set the count explicitly so nothing is autodetected. From Python:
-
-```python
-config = RayServeConfig(num_gpus=1)
-```
-
-The CLI does not expose this, so for `pixano-inference --config ...` override Ray's detection
-through the environment instead:
+Set the count explicitly so nothing is autodetected:
 
 ```bash
-RAY_OVERRIDE_RESOURCES='{"GPU":1}' pixano-inference --config deploy/sam2.py
+pixano-inference --config deploy/sam2.py --num-gpus 1
 ```
 
-Confirmed against Ray 2.55.1: without it, a single-GPU host reported a GPU on roughly one run
-in four.
+or, from Python, `RayServeConfig(num_gpus=1)`. Both go straight to `ray.init()`, which skips
+autodetection for that resource.
+
+Measured against Ray 2.55.1 on a single-GPU host: autodetection reported the GPU in 1 run out of
+4, while `--num-gpus 1` reported it in 5 out of 5.
 
 ## Running under `uv run`
 
