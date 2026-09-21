@@ -52,6 +52,10 @@ uploads the entire project tree (including ``.git``, ``.venv``, and
 present) sees the ``pyproject.toml`` and creates a fresh virtual
 environment—often with a different Python version—causing workers to
 hang during startup.
+
+Because these excludes strip the project metadata, Ray must not relaunch workers
+through ``uv run`` either — see ``pixano_inference.ray.app._disable_ray_uv_run_hook``,
+which turns off Ray's ``uv run`` runtime-env hook before ``ray.init``.
 """
 
 

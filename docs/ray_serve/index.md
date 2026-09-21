@@ -56,3 +56,4 @@ uvicorn and routes inference requests to the appropriate actor.
 
 - **[Quickstart](quickstart.md)** -- Deploy built-in models in 5 minutes.
 - **[Custom Models Guide](custom_models.md)** -- Write and deploy your own models.
+- **[Troubleshooting](troubleshooting.md)** -- Startup hangs, Ray port collisions, GPU detection.

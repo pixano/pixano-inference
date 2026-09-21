@@ -89,6 +89,10 @@ class RayServeConfig(BaseModel):
         models: List of models to deploy at startup.
         default_resources: Default resource configuration for deployments.
         default_autoscaling: Default autoscaling configuration for deployments.
+        serve_start_timeout_s: How long to wait for Ray Serve's controller to come up before
+            aborting startup. Ray's own ``serve.start()`` waits forever, so this is the only
+            bound on a cluster that can never schedule the controller actor.
+        deploy_timeout_s: How long to wait for a model's Serve application to reach RUNNING.
     """
 
     host: str = Field(default="127.0.0.1")
@@ -104,3 +108,5 @@ class RayServeConfig(BaseModel):
     ray_address: str | None = Field(default=None)
     ray_namespace: str = Field(default="pixano-inference")
     graceful_shutdown_s: float = Field(default=30.0, gt=0)
+    serve_start_timeout_s: float = Field(default=120.0, gt=0)
+    deploy_timeout_s: float = Field(default=600.0, gt=0)
