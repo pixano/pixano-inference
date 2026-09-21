@@ -45,7 +45,8 @@ dependencies = [
   "pixano-inference-client[masks]",
   "typer >= 0.9.0",
   "fastapi >= 0.100.0",
-  "numpy < 2.0.0",
+  # Matches the range pixano-inference-client already allows.
+  "numpy >= 1.26.0, < 3.0.0",
   "pydantic >= 2.0.0, < 3.0.0",
   "pydantic_settings",
   # Floor at 12.3.0: earlier releases carry heap out-of-bounds writes and
@@ -121,16 +122,10 @@ ultralytics=[
   "ultralytics",
 ]
 vllm=[
-  # The old `>= 0.6.0` floor let aarch64 resolve all the way back to vllm 0.6.5
-  # (Dec 2024), which carries six criticals including CVE-2024-9052, for which no fix
-  # exists. Excluding aarch64 keeps that release out of the lock entirely.
-  #
-  # The floor cannot go higher while the core pins `numpy < 2.0.0`: vllm >= 0.16
-  # requires opencv-python-headless >= 4.13, which requires numpy >= 2 (and >= 0.14.0
-  # additionally conflicts with the `tensorflow` extra). So the video-processing RCE
-  # (fixed in 0.14.1) and the OpenAI auth bypass (fixed in 0.22.0) stay open here.
-  # Raising this floor means dropping `numpy < 2.0.0` or dropping this extra.
-  "vllm >= 0.13.0; sys_platform == 'linux' and platform_machine != 'aarch64'",
+  # Floor at 0.22.0: it is the first release clear of the known criticals
+  # (malicious-model RCE, the Mooncake/PyNcclPipe RCEs, the video-processing RCE and
+  # the OpenAI auth bypass). Anything older drags in an unfixable CVE-2024-9052.
+  "vllm >= 0.22.0; sys_platform == 'linux'",
 ]
 
 [project.scripts]
