@@ -126,3 +126,18 @@ def test_generic_fallback_uses_image_text_to_text(monkeypatch: pytest.MonkeyPatc
     monkeypatch.setattr(transformers, "AutoModelForImageTextToText", _FakeAuto)
     assert TransformersVLMModel._load_vlm_model("org/smolvlm", None, "cpu", {}) == "model"
     assert loaded["path"] == "org/smolvlm"
+
+
+def test_discovery_does_not_import_the_framework():
+    """Importing the package (what plugin discovery does at startup) must not load torch/transformers."""
+    import subprocess
+    import sys
+
+    code = (
+        "import sys\n"
+        "import pixano_inference_transformers_vlm\n"
+        "print(','.join(m for m in ('torch', 'transformers') if m in sys.modules))\n"
+    )
+    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "", f"discovery imported: {result.stdout.strip()}"

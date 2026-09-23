@@ -15,6 +15,7 @@ from __future__ import annotations
 import sys
 import types
 from types import SimpleNamespace
+from typing import Any
 
 import msgspec
 import pytest
@@ -53,7 +54,7 @@ class _FakeLLM:
 
 @pytest.fixture
 def fake_vllm(monkeypatch: pytest.MonkeyPatch):
-    module = types.ModuleType("vllm")
+    module: Any = types.ModuleType("vllm")
     module.LLM = _FakeLLM
     module.SamplingParams = _SamplingParams
     monkeypatch.setitem(sys.modules, "vllm", module)
@@ -111,3 +112,18 @@ def test_predict_rejects_string_prompt_and_separate_images(fake_vllm):
         model.predict(VLMInput(prompt="hi", max_new_tokens=4))
     with pytest.raises(ValueError, match="images should be passed in the prompt"):
         model.predict(VLMInput(prompt=[{"role": "user", "content": []}], images=["x"], max_new_tokens=4))
+
+
+def test_discovery_does_not_import_the_framework():
+    """Importing the package (what plugin discovery does at startup) must not load torch/vllm."""
+    import subprocess
+    import sys
+
+    code = (
+        "import sys\n"
+        "import pixano_inference_vllm\n"
+        "print(','.join(m for m in ('torch', 'vllm') if m in sys.modules))\n"
+    )
+    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "", f"discovery imported: {result.stdout.strip()}"

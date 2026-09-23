@@ -1714,6 +1714,7 @@ dependencies = [
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and sys_platform != 'linux') or (python_full_version >= '3.13' and sys_platform == 'linux')" },
     { name = "pillow" },
     { name = "pixano-inference" },
+    { name = "pydantic" },
 ]
 
 [package.metadata]
@@ -1721,6 +1722,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=1.26.0,<3.0.0" },
     { name = "pillow", specifier = ">=9.0.0" },
     { name = "pixano-inference", editable = "." },
+    { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
 ]
 
 [package.metadata.requires-dev]

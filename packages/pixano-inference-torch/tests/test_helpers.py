@@ -78,3 +78,16 @@ def test_vector_to_tensor():
     assert vector_to_tensor(t) is t
     with pytest.raises(ValueError):
         vector_to_tensor([1.0, 2.0])  # type: ignore[arg-type]
+
+
+def test_discovery_does_not_import_the_framework():
+    """Importing the package (what plugin discovery does at startup) must not load torch."""
+    import subprocess
+    import sys
+
+    code = (
+        "import sys\n" "import pixano_inference_torch\n" "print(','.join(m for m in ('torch',) if m in sys.modules))\n"
+    )
+    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "", f"discovery imported: {result.stdout.strip()}"

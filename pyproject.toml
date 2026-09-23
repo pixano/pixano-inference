@@ -135,6 +135,9 @@ path = "src/pixano_inference/__version__.py"
 [tool.hatch.metadata]
 allow-direct-references = true
 
+[tool.hatch.build.targets.sdist]
+only-include = ["src"]
+
 [tool.uv]
 default-groups = ["dev"]
 

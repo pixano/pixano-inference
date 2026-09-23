@@ -3,11 +3,13 @@ name = "pixano-numpy-detector"
 version = "0.1.0"
 description = "Example framework-free (numpy-only) custom detection model for Pixano Inference."
 requires-python = ">=3.10,<3.14"
-license = { file = "../../LICENSE" }
+license = { file = "LICENSE" }
+readme = "README.md"
 dependencies = [
   "pixano-inference",
   "numpy >= 1.26.0, < 3.0.0",
   "Pillow >= 9.0.0",
+  "pydantic >= 2.0.0, < 3.0.0",
 ]
 
 # This is what makes the model discoverable: Pixano Inference loads every entry point in the

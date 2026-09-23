@@ -53,3 +53,18 @@ def test_model_config_resolves_params_by_name():
         "torch_dtype": "float32",
         "compile": True,
     }
+
+
+def test_discovery_does_not_import_the_framework():
+    """Importing the package (what plugin discovery does at startup) must not load torch/sam2."""
+    import subprocess
+    import sys
+
+    code = (
+        "import sys\n"
+        "import pixano_inference_sam\n"
+        "print(','.join(m for m in ('torch', 'sam2') if m in sys.modules))\n"
+    )
+    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "", f"discovery imported: {result.stdout.strip()}"

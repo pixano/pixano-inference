@@ -3,11 +3,12 @@ name = "pixano-inference-vllm"
 version = "0.1.0"
 description = "vLLM-served vision-language models, packaged as a Pixano Inference plugin."
 requires-python = ">=3.10,<3.14"
-license = { file = "../../LICENSE" }
+license = { file = "LICENSE" }
 readme = "README.md"
 dependencies = [
   "pixano-inference",
   "msgspec",
+  "pydantic >= 2.0.0, < 3.0.0",
   "torch >= 2.3.0, < 3.0.0",
   "vllm >= 0.28.0; sys_platform == 'linux'",
 ]

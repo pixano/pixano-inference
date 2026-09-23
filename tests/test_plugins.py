@@ -46,3 +46,20 @@ def test_broken_plugin_is_skipped_not_fatal(monkeypatch):
     result = load_plugin_models()
     assert result["failed"] == ["broken"]
     assert result["loaded"] == []
+
+    # A config naming a class the broken plugin should have provided says why it is missing.
+    from pydantic import ValidationError
+
+    from pixano_inference.configs import ModelConfig
+
+    with pytest.raises(ValidationError, match=r"broken \(ImportError: no such module\)"):
+        ModelConfig(name="x", model_class="ClassFromBrokenPlugin")
+
+    monkeypatch.undo()
+    load_plugin_models()  # restore the real discovery state for the other tests
+
+
+def test_describe_plugins_names_loaded_entry_points():
+    pytest.importorskip("pixano_numpy_detector")
+    load_plugin_models()
+    assert "numpy_detector" in plugins.describe_plugins()

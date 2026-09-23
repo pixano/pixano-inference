@@ -3,12 +3,14 @@ name = "pixano-inference-sam"
 version = "0.1.0"
 description = "SAM2 image segmentation and video tracking models, packaged as a Pixano Inference plugin."
 requires-python = ">=3.10,<3.14"
-license = { file = "../../LICENSE" }
+license = { file = "LICENSE" }
+readme = "README.md"
 dependencies = [
   "pixano-inference",
   "pixano-inference-torch",
   # sam-2 downloads Hugging Face checkpoints with huggingface_hub but does not declare it.
   "huggingface_hub",
+  "numpy >= 1.26.0, < 3.0.0",
   "torch >= 2.3.0, < 3.0.0",
 ]
 

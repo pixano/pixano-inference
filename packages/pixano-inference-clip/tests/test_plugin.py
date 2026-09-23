@@ -34,3 +34,18 @@ def test_plugin_defaults_resolve_in_fresh_interpreter():
     result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)
     assert result.returncode == 0, result.stdout + result.stderr
     assert "ok" in result.stdout
+
+
+def test_discovery_does_not_import_the_framework():
+    """Importing the package (what plugin discovery does at startup) must not load torch/open_clip."""
+    import subprocess
+    import sys
+
+    code = (
+        "import sys\n"
+        "import pixano_inference_clip\n"
+        "print(','.join(m for m in ('torch', 'open_clip') if m in sys.modules))\n"
+    )
+    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "", f"discovery imported: {result.stdout.strip()}"

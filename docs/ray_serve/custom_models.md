@@ -63,6 +63,16 @@ class MyDetector(DetectionModel):
 `load_model()` runs once per replica; `unload()` (optional) runs when the replica is torn
 down. Weights are resolved from `self.config.model_params` (e.g. a HuggingFace id or a path).
 
+Two rules keep a model package self-contained and cheap to discover:
+
+- **Declare every dependency you import** (your framework included) in your own
+  `pyproject.toml`. The core brings none of the ML stack, and nothing should rely on what
+  another package happens to install.
+- **Import the framework lazily**, inside `load_model()` / `predict()` rather than at module
+  level. The server imports every installed model package at startup to discover its models;
+  a lazy import keeps that cheap and means a broken framework install surfaces when the model
+  is deployed, with a clear error, instead of hiding the whole package from discovery.
+
 ## 3. Declare the entry point
 
 In your package's `pyproject.toml`, advertise the model under the `pixano_inference.models`
@@ -71,7 +81,7 @@ group. The value is the module to import (importing it runs `@register_model`):
 ```toml
 [project]
 name = "my-pkg"
-dependencies = ["pixano-inference"]
+dependencies = ["pixano-inference", "torch"]  # the core plus whatever the model imports
 
 [project.entry-points."pixano_inference.models"]
 my_detector = "my_pkg.model"        # or "my_pkg.model:MyDetector" to point at the class

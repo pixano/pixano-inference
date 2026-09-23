@@ -1693,6 +1693,9 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "huggingface-hub" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "pixano-inference" },
     { name = "pixano-inference-torch" },
     { name = "torch" },
@@ -1707,6 +1710,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "huggingface-hub" },
+    { name = "numpy", specifier = ">=1.26.0,<3.0.0" },
     { name = "pixano-inference", editable = "../../" },
     { name = "pixano-inference-torch", editable = "../pixano-inference-torch" },
     { name = "torch", specifier = ">=2.3.0,<3.0.0" },

@@ -3,12 +3,13 @@ name = "pixano-inference-grounding-dino"
 version = "0.1.0"
 description = "Grounding DINO zero-shot detection (Hugging Face Transformers), packaged as a Pixano Inference plugin."
 requires-python = ">=3.10,<3.14"
-license = { file = "../../LICENSE" }
+license = { file = "LICENSE" }
 readme = "README.md"
 dependencies = [
   "pixano-inference",
   "pixano-inference-torch",
   "accelerate >= 1.15.0",
+  "pydantic >= 2.0.0, < 3.0.0",
   "torch >= 2.3.0, < 3.0.0",
   "torchvision",
   "transformers >= 5.10.0, < 6.0.0",

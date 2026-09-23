@@ -42,8 +42,8 @@ Example:
         register_model,
     )
 
-    @register_model("my_sam2")
-    class MySam2Model(SegmentationModel):
+    @register_model("MySegmenter")
+    class MySegmenter(SegmentationModel):
         def load_model(self) -> None:
             ...
 

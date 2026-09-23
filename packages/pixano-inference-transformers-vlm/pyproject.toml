@@ -3,13 +3,14 @@ name = "pixano-inference-transformers-vlm"
 version = "0.1.0"
 description = "Hugging Face Transformers vision-language models, packaged as a Pixano Inference plugin."
 requires-python = ">=3.10,<3.14"
-license = { file = "../../LICENSE" }
+license = { file = "LICENSE" }
 readme = "README.md"
 dependencies = [
   "pixano-inference",
   "pixano-inference-torch",
   "accelerate >= 1.15.0",
   "bitsandbytes",
+  "pydantic >= 2.0.0, < 3.0.0",
   "torch >= 2.3.0, < 3.0.0",
   "torchvision",
   "transformers >= 5.10.0, < 6.0.0",

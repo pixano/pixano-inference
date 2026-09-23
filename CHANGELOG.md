@@ -42,6 +42,16 @@ framework, not even through extras. Every model is a self-contained package with
 
 ### Fixed
 
+- The client, model and example packages could not be built or installed from their sdist:
+  their `pyproject.toml` pointed at a license file outside the package. Each package now
+  carries its own `LICENSE`.
+- The core sdist bundled the whole repository (model packages, docs, examples); it now
+  contains the core sources only.
+- The model packages declare every dependency they import (`pydantic`, `numpy`, `torch`)
+  instead of relying on what the core or their framework pulls in.
+- An unknown `model_class` error now lists the registered model classes and the model
+  plugins that were discovered or failed to load (with the reason), and discovery logs that
+  summary at startup.
 - `GroundingDINOModel` called `post_process_grounded_object_detection` with `box_threshold`,
   which transformers no longer accepts (every detection raised `TypeError`).
 - `TransformersVLMModel` passed the prompt where processors expect images, and its generic

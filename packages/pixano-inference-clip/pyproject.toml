@@ -3,7 +3,8 @@ name = "pixano-inference-clip"
 version = "0.1.0"
 description = "CLIP-style image/text embedding models (default MobileCLIP2), packaged as a Pixano Inference plugin."
 requires-python = ">=3.10,<3.14"
-license = { file = "../../LICENSE" }
+license = { file = "LICENSE" }
+readme = "README.md"
 dependencies = [
   "pixano-inference",
   "pixano-inference-torch",

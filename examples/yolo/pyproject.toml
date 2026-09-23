@@ -3,16 +3,23 @@ name = "pixano-yolo-detector"
 version = "0.1.0"
 description = "Ultralytics YOLO as a Pixano Inference custom-model plugin."
 requires-python = ">=3.10,<3.14"
-license = { file = "../../LICENSE" }
+license = { file = "LICENSE" }
+readme = "README.md"
 dependencies = [
   "pixano-inference",
   # NOTE: ultralytics is AGPL-3.0. Deploying it as a network service carries source-disclosure
   # obligations (AGPL section 13). Review the licence before using it in production.
+  "torch >= 2.3.0, < 3.0.0",
   "ultralytics",
 ]
 
 [project.entry-points."pixano_inference.models"]
 yolo_detector = "pixano_yolo.model"
+
+[dependency-groups]
+dev = [
+  "pytest",
+]
 
 [tool.uv]
 environments = [
@@ -22,6 +29,9 @@ environments = [
 
 [tool.uv.sources]
 pixano-inference = { path = "../..", editable = true }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [build-system]
 requires = ["hatchling"]
