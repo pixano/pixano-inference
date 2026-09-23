@@ -9,6 +9,12 @@ name: Publish
 on:
   release:
     types: [published]
+  # Re-publish a tag with the current workflow file, e.g. after bringing PyPI projects online.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish (e.g. v0.6.0)"
+        required: true
 
 permissions:
   contents: write
@@ -17,7 +23,9 @@ permissions:
 # dependency of the core), then the torch helpers and the model packages (they depend on the
 # core by name only, resolved at install time), and the core last, so a run that fails midway
 # never leaves a core on PyPI whose extras cannot resolve. Each PyPI project needs a trusted
-# publisher for this workflow (repository pixano/pixano-inference, workflow publish.yml).
+# publisher for this workflow (repository pixano/pixano-inference, workflow publish.yml) --
+# unless the repository secret PYPI_API_TOKEN holds an account-scoped PyPI token, which the
+# jobs then use instead; that token can also create projects that do not exist yet.
 jobs:
   check_version:
     name: Release tag matches the package version
@@ -25,11 +33,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Compare the tag with src/pixano_inference/__version__.py
         run: |
           version=$(grep -oP '__version__\s*=\s*"\K[^"]+' src/pixano_inference/__version__.py)
-          tag="${{ github.event.release.tag_name }}"
+          tag="${{ github.event.release.tag_name || inputs.tag }}"
           if [ "${tag#v}" != "$version" ]; then
             echo "release tag '$tag' does not match __version__ '$version'"
             exit 1
@@ -45,6 +55,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
@@ -68,6 +80,7 @@ jobs:
         with:
           packages-dir: packages/pixano-inference-client/dist
           skip-existing: true
+          password: ${{ secrets.PYPI_API_TOKEN }}
 
   publish_packages:
     name: Publish ${{ matrix.package }}
@@ -89,6 +102,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
@@ -116,6 +131,7 @@ jobs:
         with:
           packages-dir: packages/${{ matrix.package }}/dist
           skip-existing: true
+          password: ${{ secrets.PYPI_API_TOKEN }}
 
   publish_core:
     name: Publish pixano-inference
@@ -127,6 +143,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
@@ -148,10 +166,12 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           skip-existing: true
+          password: ${{ secrets.PYPI_API_TOKEN }}
 
   deploy_docs:
     name: Publish documentation website
     runs-on: ubuntu-latest
+    if: github.event_name == 'release'
 
     steps:
       - name: Checkout repository
