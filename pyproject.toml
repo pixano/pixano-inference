@@ -41,7 +41,7 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-  "pixano-inference-client[masks]",
+  "pixano-inference-client[masks] >= 0.1.0, < 0.2.0",
   "typer >= 0.9.0",
   "fastapi >= 0.100.0",
   "numpy >= 1.26.0, < 3.0.0",

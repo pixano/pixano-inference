@@ -14,7 +14,8 @@ A release publishes nine distributions to PyPI and the versioned documentation, 
 1. Set the core version in `src/pixano_inference/__version__.py`, and bump the version of any
    package under `packages/` whose contents changed (`pixano-inference-client`,
    `pixano-inference-torch`, the model packages). An unchanged package keeps its version and
-   its upload is skipped.
+   its upload is skipped. When the core's minor version changes, update the
+   `pixano-inference >= X, < Y` pin in every package under `packages/` and `examples/`.
 2. Turn the `[Unreleased]` section of `CHANGELOG.md` into `[<version>] - <date>`.
 3. Merge, then publish a GitHub release whose tag is `v<version>`. The workflow refuses a tag
    that does not match `__version__`.
