@@ -30,67 +30,98 @@
 
 # Pixano-Inference
 
-## Context
+A [Ray Serve](https://docs.ray.io/en/latest/serve/index.html) inference server built for the
+[Pixano](https://pixano.github.io/pixano/latest/) annotation tool: typed model configs, a REST
+API and a Python client. The core ships no model and depends on no ML framework. Each model is
+a separate package that brings its own framework, and the server discovers every installed one.
 
-This library provides a Ray Serve-based inference server for multimodal AI
-tasks. It was first built to support the
-[Pixano](https://pixano.github.io/pixano/latest/) AI-powered annotation tool
-and exposes typed deployment configs, a Python client, and a REST API for
-running deployed models.
+| Package                             | Models                                                             |
+| ----------------------------------- | ------------------------------------------------------------------ |
+| `pixano-inference-sam`              | SAM2 image segmentation and video tracking (plus `sam-2` from git) |
+| `pixano-inference-clip`             | CLIP-style image/text embeddings (MobileCLIP2)                     |
+| `pixano-inference-grounding-dino`   | Grounding DINO zero-shot detection                                 |
+| `pixano-inference-transformers-vlm` | Vision-language models through Hugging Face                        |
+| `pixano-inference-vllm`             | Vision-language models served by vLLM (Linux, GPU)                 |
 
-## Installation
+## Install
 
-To install the library, simply execute the following command
-
-```bash
-pip install pixano-inference
-```
-
-The core is framework-free: it ships no model and depends on no ML framework. Models are
-separate packages, each bringing its own framework, and the server discovers every installed
-one automatically. Install the ones you need alongside the core. The packages are not on PyPI yet; from a clone
-of the repository, `uv` installs a package and the core it depends on from the clone:
+The packages are not on PyPI yet. Build the wheels from a clone (needs
+[uv](https://docs.astral.sh/uv/)):
 
 ```bash
-uv pip install ./packages/pixano-inference-sam ./packages/pixano-inference-grounding-dino
+for p in . packages/pixano-inference-client packages/pixano-inference-torch packages/pixano-inference-grounding-dino; do
+  uv build --wheel --out-dir dist "$p"
+done
 ```
 
-or, without cloning, straight from the repository (add `@v0.7.0` after the URL to pin a
-release):
+Copy `dist/` to the production host (Python 3.10–3.13; no clone, no uv) and install into a
+fresh environment. Add other model packages the same way.
 
 ```bash
-uv pip install "pixano-inference-sam @ git+https://github.com/pixano/pixano-inference#subdirectory=packages/pixano-inference-sam"
+python -m venv pixano && source pixano/bin/activate
+pip install --find-links dist pixano-inference pixano-inference-grounding-dino
 ```
 
-Once published: `pip install pixano-inference-sam`.
+On Linux the default torch wheels are CUDA builds; on a CPU-only host, install torch first from
+`https://download.pytorch.org/whl/cpu`.
 
-| Package                             | Models                                             |
-| ----------------------------------- | -------------------------------------------------- |
-| `pixano-inference-sam`              | SAM2 image segmentation and video tracking         |
-| `pixano-inference-clip`             | CLIP-style image/text embeddings (MobileCLIP2)     |
-| `pixano-inference-grounding-dino`   | Grounding DINO zero-shot detection                 |
-| `pixano-inference-transformers-vlm` | Vision-language models through Hugging Face        |
-| `pixano-inference-vllm`             | Vision-language models served by vLLM (Linux, GPU) |
+## First model
 
-Each package under `packages/` is self-contained, with its own `pyproject.toml` and `uv.lock`.
-Its environment holds the core plus that model, so from a clone the server runs from it:
+`models.py`:
+
+```python
+from pixano_inference.configs import DeploymentConfig, ModelConfig
+from pixano_inference_grounding_dino import GroundingDINOParams
+
+models = [
+    ModelConfig(
+        name="grounding-dino",
+        model_class="GroundingDINOModel",
+        model_params=GroundingDINOParams(path="IDEA-Research/grounding-dino-tiny"),
+        deployment=DeploymentConfig(num_gpus=1),  # 0 on a CPU-only host
+    )
+]
+```
 
 ```bash
-cd packages/pixano-inference-sam
-uv sync
-uv run pixano-inference --config models.py
+pixano-inference --host 0.0.0.0 --port 7463 --config models.py
+curl http://localhost:7463/v1/ready   # {"ready":true,"models":{"grounding-dino":"RUNNING"},...}
 ```
 
-If you want to dynamically make changes to the library to develop and test, make a dev install by cloning the repo and executing the following commands
+The first start downloads the weights. `--config` is optional: models can also be deployed
+later with `POST /v1/models`.
+
+```python
+from pixano_inference_client import DetectionRequest, SyncPixanoInferenceClient
+
+client = SyncPixanoInferenceClient("http://localhost:7463")
+result = client.detection(
+    DetectionRequest(
+        model="grounding-dino",
+        image="https://raw.githubusercontent.com/pixano/pixano-inference/main/docs/assets/examples/sam2/bedroom/00000.jpg",
+        classes=["bed", "lamp"],
+        box_threshold=0.3,
+        text_threshold=0.25,
+    )
+)
+print(result.data.classes, result.data.boxes, result.data.scores)
+```
+
+Applications that only call a server install `pixano-inference-client` alone (httpx, pydantic,
+numpy). Docker images, autoscaling and the API: see the
+[documentation](https://pixano.github.io/pixano-inference/latest/).
+
+## Development
 
 ```bash
-cd pixano-inference
-pip install -e .
+uv sync && uv run pytest -m "not integration"                                        # the framework-free core
+uv run --project packages/pixano-inference-sam pytest packages/pixano-inference-sam/tests  # one model, in its own environment
+uv run --project packages/pixano-inference-sam pixano-inference --config models.py
 ```
 
-## Usage
-
-Look at the [documentation](https://pixano.github.io/pixano-inference/latest/) to use Pixano-Inference.
+Every package under `packages/` and `examples/` has its own `pyproject.toml`, `uv.lock` and
+tests. Your own model is a package like these and can stay private: see the
+[custom models guide](docs/ray_serve/custom_models.md).
 
 ## License
 
