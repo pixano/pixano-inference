@@ -9,7 +9,8 @@
 # Docker deployment
 
 The repository ships a production-oriented `Dockerfile` and `docker-compose.yml`. The default
-image is a GPU-capable server bundling PyTorch, the transformers backend, and the SAM2 plugin.
+image is a GPU-capable server bundling PyTorch and the SAM2, Grounding DINO and Transformers
+VLM model packages.
 
 ## Prerequisites
 
@@ -78,12 +79,11 @@ NVIDIA device, so the compose stack requires a GPU host. For CPU, use a config w
 
 Build args let you tailor the image:
 
-| Build arg         | Default                                  | Purpose                          |
-| ----------------- | ---------------------------------------- | -------------------------------- |
-| `TORCH_INDEX_URL` | `https://download.pytorch.org/whl/cu124` | torch wheels; empty skips torch  |
-| `PIXANO_EXTRAS`   | `transformers`                           | core extras; empty for none      |
-| `INSTALL_SAM`     | `true`                                   | bundle the SAM2 plugin + `sam-2` |
-| `INSTALL_EXAMPLE` | `false`                                  | bundle the numpy example plugin  |
+| Build arg         | Default                                                                                  | Purpose                                                                                    |
+| ----------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `TORCH_INDEX_URL` | `https://download.pytorch.org/whl/cu124`                                                 | torch wheels; empty skips the index                                                        |
+| `MODEL_PACKAGES`  | `pixano-inference-sam pixano-inference-grounding-dino pixano-inference-transformers-vlm` | model packages to bundle (directories under `packages/`); empty for a framework-free image |
+| `INSTALL_EXAMPLE` | `false`                                                                                  | bundle the numpy example plugin                                                            |
 
 ```bash
 # CPU-only image (torch CPU wheels, no GPU toolkit needed):
@@ -92,8 +92,7 @@ docker build --build-arg TORCH_INDEX_URL=https://download.pytorch.org/whl/cpu -t
 # Minimal, framework-free image with the numpy example plugin:
 docker build \
   --build-arg TORCH_INDEX_URL= \
-  --build-arg PIXANO_EXTRAS= \
-  --build-arg INSTALL_SAM=false \
+  --build-arg MODEL_PACKAGES= \
   --build-arg INSTALL_EXAMPLE=true \
   -t pixano-inference:numpy .
 docker run --rm -p 7463:7463 --shm-size=2g \

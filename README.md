@@ -46,6 +46,31 @@ To install the library, simply execute the following command
 pip install pixano-inference
 ```
 
+The core is framework-free: it ships no model and depends on no ML framework. Models are
+separate packages, each bringing its own framework, and the server discovers every installed
+one automatically — install those you need alongside the core:
+
+```bash
+pip install pixano-inference-sam pixano-inference-grounding-dino
+```
+
+| Package                             | Models                                             |
+| ----------------------------------- | -------------------------------------------------- |
+| `pixano-inference-sam`              | SAM2 image segmentation and video tracking         |
+| `pixano-inference-clip`             | CLIP-style image/text embeddings (MobileCLIP2)     |
+| `pixano-inference-grounding-dino`   | Grounding DINO zero-shot detection                 |
+| `pixano-inference-transformers-vlm` | Vision-language models through Hugging Face        |
+| `pixano-inference-vllm`             | Vision-language models served by vLLM (Linux, GPU) |
+
+Each package under `packages/` is self-contained, with its own `pyproject.toml` and `uv.lock`.
+Its environment holds the core plus that model, so from a clone the server runs from it:
+
+```bash
+cd packages/pixano-inference-sam
+uv sync
+uv run pixano-inference --config models.py
+```
+
 If you want to dynamically make changes to the library to develop and test, make a dev install by cloning the repo and executing the following commands
 
 ```bash

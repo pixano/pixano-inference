@@ -13,8 +13,7 @@ Demonstrates how to:
 
 Prerequisites:
 - Start the server with the YOLO config:
-    uv pip install -e examples/yolo
-    pixano-inference --config examples/yolo/config.py
+    uv run --project examples/yolo pixano-inference --config examples/yolo/config.py
 Usage:
     python examples/yolo/test_yolo.py \
         [--server-url URL] [--image PATH] [--model-name NAME] \
@@ -109,7 +108,7 @@ async def main() -> None:
     except PixanoInferenceError:
         print("\nERROR: Server is not running!")
         print("Start the server with:")
-        print("  uv pip install -e examples/yolo && pixano-inference --config examples/yolo/config.py")
+        print("  uv run --project examples/yolo pixano-inference --config examples/yolo/config.py")
         sys.exit(1)
     print(f"Connected! GPUs: {info.get('numGpus')}")
 

@@ -29,10 +29,12 @@ it takes to make a model available by name.
 
 ## Try it
 
-Install the package (editable, for live iteration):
+The package is self-contained (its own `pyproject.toml` and `uv.lock`), and its environment
+holds the Pixano Inference core plus the model, installed editable for live iteration:
 
 ```bash
-uv pip install -e examples/numpy_detector
+uv sync --project examples/numpy_detector
+uv run --project examples/numpy_detector pytest examples/numpy_detector/tests
 # or, from your own model repo:  pip install pixano-numpy-detector
 ```
 
@@ -55,7 +57,7 @@ models = [
 Start the server and call it:
 
 ```bash
-pixano-inference --host 0.0.0.0 --port 7463 --config models.py
+uv run --project examples/numpy_detector pixano-inference --host 0.0.0.0 --port 7463 --config models.py
 ```
 
 ```python

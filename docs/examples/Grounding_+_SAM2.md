@@ -55,15 +55,14 @@ def show_box(box, ax):
 
 ## Python config
 
+Requires the `pixano-inference-grounding-dino` and `pixano-inference-sam` model packages.
+
 Deploy both Grounding DINO and SAM2 Video in a single config:
 
 ```python
-from pixano_inference.configs import (
-    DeploymentConfig,
-    GroundingDINOParams,
-    ModelConfig,
-    Sam2VideoParams,
-)
+from pixano_inference.configs import DeploymentConfig, ModelConfig
+from pixano_inference_grounding_dino import GroundingDINOParams
+from pixano_inference_sam import Sam2VideoParams
 
 
 models = [

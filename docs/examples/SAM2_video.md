@@ -49,10 +49,13 @@ def show_box(box, ax):
 
 ## Python config
 
+Requires the `pixano-inference-sam` model package.
+
 Deploy SAM2 for video segmentation:
 
 ```python
-from pixano_inference.configs import DeploymentConfig, ModelConfig, Sam2VideoParams
+from pixano_inference.configs import DeploymentConfig, ModelConfig
+from pixano_inference_sam import Sam2VideoParams
 
 
 models = [

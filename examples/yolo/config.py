@@ -6,11 +6,12 @@
 
 """YOLO deployment configuration.
 
-Install the plugin package first (``uv pip install -e examples/yolo``); the model is then
-discovered via its entry point and referenced here by name — no import needed.
+Run the server from the plugin package's own environment, which holds the core plus
+ultralytics; the model is discovered via its entry point and referenced here by name — no
+import needed.
 
 Usage::
-    uv run pixano-inference --config examples/yolo/config.py
+    uv run --project examples/yolo pixano-inference --config examples/yolo/config.py
 """
 
 from pixano_inference.configs import DeploymentConfig, ModelConfig

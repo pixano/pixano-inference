@@ -10,10 +10,13 @@
 
 ## Python config
 
+Requires the `pixano-inference-grounding-dino` model package.
+
 Deploy Grounding DINO for zero-shot object detection:
 
 ```python
-from pixano_inference.configs import DeploymentConfig, GroundingDINOParams, ModelConfig
+from pixano_inference.configs import DeploymentConfig, ModelConfig
+from pixano_inference_grounding_dino import GroundingDINOParams
 
 
 models = [

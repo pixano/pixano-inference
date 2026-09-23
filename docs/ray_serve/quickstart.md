@@ -18,43 +18,31 @@ inference requests.
 
 ## Installation
 
-Install Pixano-Inference with the model-specific extras you need:
+Install Pixano-Inference with the model packages you need. The core is framework-free; each
+model package brings its own framework, and installed model packages are discovered
+automatically:
 
-=== "SAM2 (segmentation)"
-
-    ```bash
-    uv sync --extra sam
-    ```
-
-    or with `pip`:
+=== "SAM2 (segmentation, tracking)"
 
     ```bash
-    pip install pixano-inference[sam]
+    pip install pixano-inference-sam
+    pip install "sam-2 @ git+https://github.com/facebookresearch/sam2.git"
     ```
 
-=== "Transformers (detection, VQA)"
+=== "Grounding DINO (detection)"
 
     ```bash
-    uv sync --extra transformers
+    pip install pixano-inference-grounding-dino
     ```
 
-    or with `pip`:
+=== "VLM (VQA, captioning)"
 
     ```bash
-    pip install pixano-inference[transformers]
+    pip install pixano-inference-transformers-vlm  # or pixano-inference-vllm on a Linux GPU host
     ```
 
-=== "All extras"
-
-    ```bash
-    uv sync --extra sam --extra transformers --extra vllm
-    ```
-
-    or with `pip`:
-
-    ```bash
-    pip install pixano-inference[sam,transformers,vllm]
-    ```
+From a clone, run the server from the model package's own environment:
+`cd packages/pixano-inference-sam && uv sync && uv run pixano-inference --config models.py`.
 
 ## Write a Python config
 
@@ -62,7 +50,8 @@ Create a file called `models.py` that declares which models to deploy.
 Here is a minimal example deploying SAM2 for image segmentation:
 
 ```python
-from pixano_inference.configs import DeploymentConfig, ModelConfig, Sam2ImageParams
+from pixano_inference.configs import DeploymentConfig, ModelConfig
+from pixano_inference_sam import Sam2ImageParams
 
 
 models = [
@@ -181,17 +170,18 @@ async def main():
 asyncio.run(main())
 ```
 
-## Built-in models
+## First-party models
 
-The following model classes are available out of the box:
+Each first-party model ships in its own package (under `packages/`):
 
-| Model class            | Capability     | Extra required | Example `model_params`                    |
-| ---------------------- | -------------- | -------------- | ----------------------------------------- |
-| `Sam2ImageModel`       | `segmentation` | `sam2`         | `path: facebook/sam2-hiera-base-plus`     |
-| `Sam2VideoModel`       | `tracking`     | `sam2`         | `path: facebook/sam2-hiera-large`         |
-| `GroundingDINOModel`   | `detection`    | `transformers` | `path: IDEA-Research/grounding-dino-base` |
-| `TransformersVLMModel` | `vlm`          | `transformers` | `path: llava-hf/llava-1.5-7b-hf`          |
-| `VLLMVLMModel`         | `vlm`          | `vllm`         | `path: Qwen/Qwen2-VL-7B-Instruct`         |
+| Model class              | Capability     | Package                             | Example `model_params`                    |
+| ------------------------ | -------------- | ----------------------------------- | ----------------------------------------- |
+| `Sam2ImageModel`         | `segmentation` | `pixano-inference-sam`              | `path: facebook/sam2-hiera-base-plus`     |
+| `Sam2VideoModel`         | `tracking`     | `pixano-inference-sam`              | `path: facebook/sam2-hiera-large`         |
+| `OpenClipEmbeddingModel` | `embedding`    | `pixano-inference-clip`             | `path: MobileCLIP2-S2`                    |
+| `GroundingDINOModel`     | `detection`    | `pixano-inference-grounding-dino`   | `path: IDEA-Research/grounding-dino-base` |
+| `TransformersVLMModel`   | `vlm`          | `pixano-inference-transformers-vlm` | `path: llava-hf/llava-1.5-7b-hf`          |
+| `VLLMVLMModel`           | `vlm`          | `pixano-inference-vllm`             | `path: Qwen/Qwen2-VL-7B-Instruct`         |
 
 ## Multi-model config
 
@@ -199,13 +189,9 @@ You can deploy multiple models in a single config file. Each model gets its own
 Ray actor with dedicated resources:
 
 ```python
-from pixano_inference.configs import (
-    DeploymentConfig,
-    GroundingDINOParams,
-    ModelConfig,
-    Sam2ImageParams,
-    Sam2VideoParams,
-)
+from pixano_inference.configs import DeploymentConfig, ModelConfig
+from pixano_inference_grounding_dino import GroundingDINOParams
+from pixano_inference_sam import Sam2ImageParams, Sam2VideoParams
 
 
 models = [

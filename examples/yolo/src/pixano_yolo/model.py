@@ -13,7 +13,7 @@ target of the ``pixano_inference.models`` entry point declared in this package's
 
 Install (note: ultralytics is AGPL-3.0)::
 
-    uv pip install -e examples/yolo
+    uv sync --project examples/yolo
 """
 
 from __future__ import annotations

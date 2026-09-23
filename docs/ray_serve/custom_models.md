@@ -16,7 +16,9 @@ every Ray Serve worker with no extra plumbing.
 
 This is the foundation for a shared **model store**: teams keep each model in its own
 repository, version and publish it like any package, and install the ones they need. The
-built-in SOTA models can be distributed the same way.
+first-party models (SAM2, CLIP, Grounding DINO, VLMs) are distributed exactly this way: each is
+a self-contained package under
+[`packages/`](https://github.com/pixano/pixano-inference/tree/main/packages).
 
 A complete, runnable example lives in
 [`examples/numpy_detector`](https://github.com/pixano/pixano-inference/tree/main/examples/numpy_detector)
@@ -38,8 +40,10 @@ The capability is inferred from the base class, so your model is served on the m
 ## 2. Write the model
 
 Any framework works (PyTorch, JAX, TensorFlow, MLX, or plain numpy) — the core contract is
-framework-agnostic. Subclass a base class, implement `load_model()` and `predict()`, and
-register it with `@register_model`.
+framework-agnostic and the core depends on no ML framework, so your package declares the one it
+uses. PyTorch models can reuse the device/dtype/tensor helpers of `pixano-inference-torch`.
+Subclass a base class, implement `load_model()` and `predict()`, and register it with
+`@register_model`.
 
 ```python
 # src/my_pkg/model.py
@@ -82,6 +86,10 @@ gives you live code changes _and_ automatic discovery _and_ worker-importability
 uv pip install -e .            # during development
 # pip install my-pkg           # from PyPI / a private index / a git URL
 ```
+
+Since your package depends on `pixano-inference`, its own environment already contains the
+server: `uv sync && uv run pixano-inference --config models.py` runs it with exactly your
+package's locked dependencies. The first-party packages under `packages/` work this way.
 
 Reference the model **by name** in a config file — no import needed, because the entry point
 already registered it:

@@ -15,13 +15,13 @@ server discovers it automatically through the `pixano_inference.models` entry po
 ## Install
 
 ```bash
-pip install pixano-inference[sam]
+pip install pixano-inference-sam
 # the upstream SAM2 library is only on git, so install it too:
 pip install "sam-2 @ git+https://github.com/facebookresearch/sam2.git"
 ```
 
-`pip install pixano-inference[sam]` pulls in this package and PyTorch; the second command
-installs Facebook's `sam-2` library (not available on PyPI).
+The first command pulls in the Pixano Inference core and PyTorch; the second installs
+Facebook's `sam-2` library (not available on PyPI).
 
 ## Models
 
@@ -46,4 +46,14 @@ models = [
         deployment=DeploymentConfig(num_gpus=1, num_cpus=2),
     ),
 ]
+```
+
+## Development
+
+The package is self-contained, with its own lock file:
+
+```bash
+cd packages/pixano-inference-sam
+uv sync          # the dev group includes the git-only sam-2 library
+uv run pytest
 ```
