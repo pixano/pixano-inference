@@ -19,10 +19,10 @@ LLaVA, LLaVA-NeXT and LLaVA-NeXT-Video checkpoints are loaded with their dedicat
 ## Install
 
 ```bash
-pip install pixano-inference-transformers-vlm
+pip install pixano-inference[transformers-vlm]   # or: pip install pixano-inference-transformers-vlm
 ```
 
-Not on PyPI yet: install from the repository (`uv` also installs the core from it):
+From the repository (`uv` also installs the core from it):
 
 ```bash
 uv pip install "pixano-inference-transformers-vlm @ git+https://github.com/pixano/pixano-inference#subdirectory=packages/pixano-inference-transformers-vlm"

@@ -74,7 +74,7 @@ def test_each_core_module_is_framework_free():
 
 
 def test_core_distribution_declares_no_ml_framework():
-    """No requirement of the core -- in any extra -- may pull an ML framework or model backend."""
+    """No requirement of the core, in any extra, names a framework; extras name pixano-inference-* packages."""
     banned = set(_FRAMEWORKS) | {"transformers", "vllm", "ultralytics", "keras", "torchvision", "open-clip-torch"}
     declared = {Requirement(r).name.lower().replace("_", "-") for r in requires("pixano-inference") or []}
     assert not declared & banned, f"Core declares framework dependencies: {sorted(declared & banned)}"

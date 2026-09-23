@@ -15,10 +15,10 @@ package built on Hugging Face Transformers. It serves the `detection` capability
 ## Install
 
 ```bash
-pip install pixano-inference-grounding-dino
+pip install pixano-inference[grounding-dino]   # or: pip install pixano-inference-grounding-dino
 ```
 
-Not on PyPI yet: install from the repository (`uv` also installs the core from it):
+From the repository (`uv` also installs the core from it):
 
 ```bash
 uv pip install "pixano-inference-grounding-dino @ git+https://github.com/pixano/pixano-inference#subdirectory=packages/pixano-inference-grounding-dino"

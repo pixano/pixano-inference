@@ -61,6 +61,13 @@ dependencies = [
 readme = "README.md"
 
 [project.optional-dependencies]
+# One extra per model package: a separate distribution that brings its own framework.
+sam = ["pixano-inference-sam"]
+clip = ["pixano-inference-clip"]
+grounding-dino = ["pixano-inference-grounding-dino"]
+transformers-vlm = ["pixano-inference-transformers-vlm"]
+vllm = ["pixano-inference-vllm"]
+torch = ["pixano-inference-torch"]
 docs=[
   "mike >= 2.1.0, < 3.0.0",
   "mkdocs >= 1.6.0, < 2.0.0",
@@ -154,4 +161,10 @@ dev = [
 
 [tool.uv.sources]
 pixano-inference-client = { path = "packages/pixano-inference-client", editable = true }
+pixano-inference-torch = { path = "packages/pixano-inference-torch", editable = true }
+pixano-inference-sam = { path = "packages/pixano-inference-sam", editable = true }
+pixano-inference-clip = { path = "packages/pixano-inference-clip", editable = true }
+pixano-inference-grounding-dino = { path = "packages/pixano-inference-grounding-dino", editable = true }
+pixano-inference-transformers-vlm = { path = "packages/pixano-inference-transformers-vlm", editable = true }
+pixano-inference-vllm = { path = "packages/pixano-inference-vllm", editable = true }
 pixano-numpy-detector = { path = "examples/numpy_detector", editable = true }

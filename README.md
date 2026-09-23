@@ -35,35 +35,23 @@ A [Ray Serve](https://docs.ray.io/en/latest/serve/index.html) inference server b
 API and a Python client. The core ships no model and depends on no ML framework. Each model is
 a separate package that brings its own framework, and the server discovers every installed one.
 
-| Package                             | Models                                                             |
-| ----------------------------------- | ------------------------------------------------------------------ |
-| `pixano-inference-sam`              | SAM2 image segmentation and video tracking (plus `sam-2` from git) |
-| `pixano-inference-clip`             | CLIP-style image/text embeddings (MobileCLIP2)                     |
-| `pixano-inference-grounding-dino`   | Grounding DINO zero-shot detection                                 |
-| `pixano-inference-transformers-vlm` | Vision-language models through Hugging Face                        |
-| `pixano-inference-vllm`             | Vision-language models served by vLLM (Linux, GPU)                 |
-
 ## Install
 
-The packages are not on PyPI yet. Build the wheels from a clone (needs
-[uv](https://docs.astral.sh/uv/)):
-
 ```bash
-for p in . packages/pixano-inference-client packages/pixano-inference-torch packages/pixano-inference-grounding-dino; do
-  uv build --wheel --out-dir dist "$p"
-done
+pip install pixano-inference                    # the server; ships no model
+pip install pixano-inference[grounding-dino]    # add a model
 ```
 
-Copy `dist/` to the production host (Python 3.10–3.13; no clone, no uv) and install into a
-fresh environment. Add other model packages the same way.
+Each extra installs one model package, a separate distribution with its own framework:
 
-```bash
-python -m venv pixano && source pixano/bin/activate
-pip install --find-links dist pixano-inference pixano-inference-grounding-dino
-```
-
-On Linux the default torch wheels are CUDA builds; on a CPU-only host, install torch first from
-`https://download.pytorch.org/whl/cpu`.
+| Extra              | Models                                                             |
+| ------------------ | ------------------------------------------------------------------ |
+| `sam`              | SAM2 image segmentation and video tracking (plus `sam-2` from git) |
+| `clip`             | CLIP-style image/text embeddings (MobileCLIP2)                     |
+| `grounding-dino`   | Grounding DINO zero-shot detection                                 |
+| `transformers-vlm` | Vision-language models through Hugging Face                        |
+| `vllm`             | Vision-language models served by vLLM (Linux, GPU)                 |
+| `torch`            | PyTorch helpers for your own model                                 |
 
 ## First model
 

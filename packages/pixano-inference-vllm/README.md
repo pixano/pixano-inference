@@ -17,10 +17,10 @@ tests run everywhere), but the model cannot be loaded.
 ## Install
 
 ```bash
-pip install pixano-inference-vllm
+pip install pixano-inference[vllm]   # or: pip install pixano-inference-vllm
 ```
 
-Not on PyPI yet: install from the repository (`uv` also installs the core from it):
+From the repository (`uv` also installs the core from it):
 
 ```bash
 uv pip install "pixano-inference-vllm @ git+https://github.com/pixano/pixano-inference#subdirectory=packages/pixano-inference-vllm"

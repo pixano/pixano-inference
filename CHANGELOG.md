@@ -20,10 +20,11 @@ framework, not even through extras. Every model is a self-contained package with
 
 ### ⚠️ Breaking changes
 
-- **Model extras removed.** `pixano-inference[sam|clip|transformers|vllm|torch|jax|tensorflow|mlx|ultralytics]`
-  no longer exist. Install the model packages instead: `pixano-inference-sam`,
-  `pixano-inference-clip`, `pixano-inference-grounding-dino`,
-  `pixano-inference-transformers-vlm`, `pixano-inference-vllm`.
+- **Extras map to model packages.** `pixano-inference[sam|clip|grounding-dino|transformers-vlm|vllm]`
+  each install one model package (`pixano-inference-sam`, ...), and `[torch]` installs the
+  `pixano-inference-torch` helpers; the core itself depends on no framework. The
+  `transformers` extra is split into `grounding-dino` and `transformers-vlm`; `jax`,
+  `tensorflow`, `mlx` and `ultralytics` are gone.
 - **Grounding DINO, the Transformers VLM and the vLLM VLM moved out of the core** into
   `pixano-inference-grounding-dino`, `pixano-inference-transformers-vlm` and
   `pixano-inference-vllm`. Their params are imported from those packages

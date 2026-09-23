@@ -38,29 +38,24 @@
 
 The core is framework-free: it ships no model and depends on no ML framework. Each model is a
 separate package that brings its own framework, and the server discovers every installed model
-package automatically. Install the ones you need alongside the core. The packages are not on PyPI yet; from a clone
-of the repository, `uv` installs a package and the core it depends on from the clone:
+package automatically. Each extra of the core installs one model package:
 
 ```bash
-uv pip install ./packages/pixano-inference-sam ./packages/pixano-inference-grounding-dino
+pip install pixano-inference[sam,grounding-dino]
 ```
 
-or, without cloning, straight from the repository (add `@v0.7.0` after the URL to pin a
-release):
+To install a model package from the repository instead (a clone, or a git URL such as
+`"pixano-inference-sam @ git+https://github.com/pixano/pixano-inference#subdirectory=packages/pixano-inference-sam"`),
+use `uv pip install`, which also resolves the core from the repository.
 
-```bash
-uv pip install "pixano-inference-sam @ git+https://github.com/pixano/pixano-inference#subdirectory=packages/pixano-inference-sam"
-```
-
-Once published: `pip install pixano-inference-sam`.
-
-| Package                             | Models                             | Framework             |
-| ----------------------------------- | ---------------------------------- | --------------------- |
-| `pixano-inference-sam`              | `Sam2ImageModel`, `Sam2VideoModel` | PyTorch (+ `sam-2`)   |
-| `pixano-inference-clip`             | `OpenClipEmbeddingModel`           | PyTorch, open_clip    |
-| `pixano-inference-grounding-dino`   | `GroundingDINOModel`               | PyTorch, Transformers |
-| `pixano-inference-transformers-vlm` | `TransformersVLMModel`             | PyTorch, Transformers |
-| `pixano-inference-vllm`             | `VLLMVLMModel`                     | vLLM (Linux, GPU)     |
+| Extra              | Package                             | Models                             | Framework             |
+| ------------------ | ----------------------------------- | ---------------------------------- | --------------------- |
+| `sam`              | `pixano-inference-sam`              | `Sam2ImageModel`, `Sam2VideoModel` | PyTorch (+ `sam-2`)   |
+| `clip`             | `pixano-inference-clip`             | `OpenClipEmbeddingModel`           | PyTorch, open_clip    |
+| `grounding-dino`   | `pixano-inference-grounding-dino`   | `GroundingDINOModel`               | PyTorch, Transformers |
+| `transformers-vlm` | `pixano-inference-transformers-vlm` | `TransformersVLMModel`             | PyTorch, Transformers |
+| `vllm`             | `pixano-inference-vllm`             | `VLLMVLMModel`                     | vLLM (Linux, GPU)     |
+| `torch`            | `pixano-inference-torch`            | helpers for your own PyTorch model | PyTorch               |
 
 From a clone, each package under `packages/` is self-contained, with its own `pyproject.toml`
 and `uv.lock`; its environment holds the core plus that model, so the server runs from it:

@@ -25,26 +25,24 @@ automatically:
 === "SAM2 (segmentation, tracking)"
 
     ```bash
-    pip install pixano-inference-sam
+    pip install pixano-inference[sam]
     pip install "sam-2 @ git+https://github.com/facebookresearch/sam2.git"
     ```
 
 === "Grounding DINO (detection)"
 
     ```bash
-    pip install pixano-inference-grounding-dino
+    pip install pixano-inference[grounding-dino]
     ```
 
 === "VLM (VQA, captioning)"
 
     ```bash
-    pip install pixano-inference-transformers-vlm  # or pixano-inference-vllm on a Linux GPU host
+    pip install pixano-inference[transformers-vlm]  # or [vllm] on a Linux GPU host
     ```
 
-The packages are not on PyPI yet. Install them from the repository instead, for example
-`uv pip install "pixano-inference-sam @ git+https://github.com/pixano/pixano-inference#subdirectory=packages/pixano-inference-sam"`
-(or `uv pip install ./packages/pixano-inference-sam` from a clone), or run the server from the
-model package's own environment:
+From a clone, a model package also installs with `uv pip install ./packages/pixano-inference-sam`
+(the core comes from the clone too), or the server runs from the package's own environment:
 `cd packages/pixano-inference-sam && uv sync && uv run pixano-inference --config models.py`.
 
 ## Write a Python config

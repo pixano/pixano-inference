@@ -20,10 +20,10 @@ performant, and CPU-friendly (no big GPU needed).
 ## Install
 
 ```bash
-pip install pixano-inference-clip
+pip install pixano-inference[clip]   # or: pip install pixano-inference-clip
 ```
 
-Not on PyPI yet: install from the repository (`uv` also installs the core from it):
+From the repository (`uv` also installs the core from it):
 
 ```bash
 uv pip install "pixano-inference-clip @ git+https://github.com/pixano/pixano-inference#subdirectory=packages/pixano-inference-clip"
