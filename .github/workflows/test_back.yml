@@ -11,6 +11,7 @@ on:
     paths:
       - "src/**"
       - "packages/**"
+      - "examples/**"
       - "tests/**"
       - ".github/workflows/test_back.yml"
       - "pyproject.toml"
@@ -21,6 +22,7 @@ on:
     paths:
       - "src/**"
       - "packages/**"
+      - "examples/**"
       - "tests/**"
       - ".github/workflows/test_back.yml"
       - "pyproject.toml"
@@ -49,21 +51,23 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
 
-      # Install the CPU torch build so the model code paths (sam2/transformers) are
-      # actually exercised instead of silently skipped via importorskip.
+      # The core is framework-free: it is tested with no ML framework installed. Every model
+      # lives in its own package, tested by the `model_packages` job below.
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # Install torch AND torchvision from the same CPU index so their compiled ops stay
-          # ABI-coherent (open_clip / transformers pull torchvision; a PyPI torchvision against
-          # a CPU-index torch breaks with "operator torchvision::nms does not exist").
-          python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
           # The client is a hard core dep not yet on PyPI, so install it editable BEFORE `pip install .`.
           python -m pip install -e packages/pixano-inference-client
-          python -m pip install .[test,transformers]
-          python -m pip install -e examples/numpy_detector       # example entry-point plugin
-          python -m pip install -e packages/pixano-inference-sam  # SAM2 plugin (fake predictor in tests; sam-2 lib not needed)
-          python -m pip install -e packages/pixano-inference-clip # CLIP embedding plugin (open_clip only needed for the integration test)
+          python -m pip install .[test]
+          python -m pip install -e examples/numpy_detector  # framework-free example entry-point plugin
+
+      - name: Assert no ML framework is installed
+        run: |
+          python - <<'PY'
+          import importlib.util
+          present = [m for m in ("torch", "tensorflow", "jax", "mlx", "transformers", "vllm") if importlib.util.find_spec(m)]
+          assert not present, f"the core must not pull ML frameworks: {present}"
+          PY
 
       # Fast unit tests (the Ray Serve integration suite runs in its own job below).
       - name: Test with pytest
@@ -92,16 +96,71 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # torch + torchvision from the same index (open_clip needs matching torchvision ops).
-          python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
           python -m pip install -e packages/pixano-inference-client  # hard core dep, not yet on PyPI
           python -m pip install .[test]
-          python -m pip install -e examples/numpy_detector       # example entry-point plugin
-          python -m pip install -e packages/pixano-inference-clip # CLIP plugin: real MobileCLIP2 deploy+embed test
+          python -m pip install -e examples/numpy_detector  # example entry-point plugin
 
       - name: Run integration tests
         run: |
           pytest -m integration tests/integration/
+
+  model_packages:
+    name: Model package ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - packages/pixano-inference-torch
+          - packages/pixano-inference-sam
+          - packages/pixano-inference-clip
+          - packages/pixano-inference-grounding-dino
+          - packages/pixano-inference-transformers-vlm
+          - packages/pixano-inference-vllm
+          - examples/numpy_detector
+          - examples/yolo
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Each package is self-contained: its own pyproject.toml and uv.lock. Fail if the lock
+      # is stale with respect to the pyproject.
+      - name: Check the lock file is up to date
+        run: uv lock --check
+
+      # Install from the package's own metadata with CPU torch (the locked CUDA wheels are
+      # several GB), then run its tests. vLLM needs a GPU, so its tests fake the `vllm` module
+      # and everything but vllm itself is installed.
+      - name: Install the package
+        if: ${{ hashFiles(format('{0}/tests/**', matrix.package)) != '' }}
+        run: |
+          uv venv
+          if [ "${{ matrix.package }}" = "packages/pixano-inference-vllm" ]; then
+            uv pip install --torch-backend=cpu -e ../.. msgspec torch pytest
+            uv pip install --no-deps -e .
+          else
+            uv pip install --torch-backend=cpu -e . pytest
+          fi
+
+      - name: Run the package tests
+        if: ${{ hashFiles(format('{0}/tests/**', matrix.package)) != '' }}
+        run: uv run --no-sync pytest -m "not integration"
+
+      # The CLIP package's end-to-end test deploys MobileCLIP2 on a real (CPU) Ray Serve runtime.
+      - name: Run the package integration tests
+        if: ${{ matrix.package == 'packages/pixano-inference-clip' }}
+        run: uv run --no-sync pytest -m integration
 
   docker_smoke:
     name: Docker build & smoke (CPU, framework-free)
@@ -117,8 +176,7 @@ jobs:
         run: |
           docker build \
             --build-arg TORCH_INDEX_URL= \
-            --build-arg PIXANO_EXTRAS= \
-            --build-arg INSTALL_SAM=false \
+            --build-arg MODEL_PACKAGES= \
             --build-arg INSTALL_EXAMPLE=true \
             -t pixano-inference:smoke .
 
@@ -135,42 +193,6 @@ jobs:
             | python3 -c "import sys, json; d = json.load(sys.stdin); print(d); sys.exit(0 if d['ready'] else 1)" \
             || (docker logs pi; exit 1)
           docker rm -f pi
-
-  framework_free_core:
-    name: Framework-free core
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10", "3.13"]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: "pip"
-
-      # Deliberately install NO ML framework (no torch/jax/tensorflow/mlx). The core
-      # must import and the guardrail tests must pass with numpy only.
-      - name: Install core only
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e packages/pixano-inference-client  # hard core dep, not yet on PyPI
-          python -m pip install .[test]
-
-      - name: Assert core imports pull no ML framework
-        run: |
-          pytest tests/test_core_framework_free.py -v
-
-      # A framework-free custom model, installed as a plugin package and discovered via its
-      # entry point — the recommended extension path, exercised here with no ML framework.
-      - name: Install and discover the example plugin (no ML framework)
-        run: |
-          python -m pip install -e examples/numpy_detector
-          pytest tests/test_plugins.py -v
 
   openapi:
     name: OpenAPI schema in sync
