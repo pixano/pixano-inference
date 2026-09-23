@@ -40,6 +40,15 @@ framework, not even through extras. Every model is a self-contained package with
 - **Docker build args.** `PIXANO_EXTRAS` and `INSTALL_SAM` are replaced by `MODEL_PACKAGES`
   (space-separated package directories under `packages/`).
 
+### Added
+
+- Model packages install from their source, without publishing: a local directory, a
+  (private) git repository, a `#subdirectory=` of a monorepo, or a directory of wheels. `uv`
+  follows a package's `[tool.uv.sources]` to the core it depends on in every case; CI
+  verifies the three install paths. The Docker build takes `EXTRA_PACKAGES` (requirement
+  specs such as a private git URL), and the runtime image ships `git` so a derived image can
+  `pip install` a private model.
+
 ### Fixed
 
 - The client, model and example packages could not be built or installed from their sdist:

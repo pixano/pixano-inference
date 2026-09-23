@@ -41,7 +41,10 @@ automatically:
     pip install pixano-inference-transformers-vlm  # or pixano-inference-vllm on a Linux GPU host
     ```
 
-From a clone, run the server from the model package's own environment:
+The packages are not on PyPI yet. Install them from the repository instead, for example
+`uv pip install "pixano-inference-sam @ git+https://github.com/pixano/pixano-inference#subdirectory=packages/pixano-inference-sam"`
+(or `uv pip install ./packages/pixano-inference-sam` from a clone), or run the server from the
+model package's own environment:
 `cd packages/pixano-inference-sam && uv sync && uv run pixano-inference --config models.py`.
 
 ## Write a Python config

@@ -89,17 +89,37 @@ my_detector = "my_pkg.model"        # or "my_pkg.model:MyDetector" to point at t
 
 ## 4. Install and deploy
 
-Install your package wherever the server runs. For local iteration, an **editable** install
-gives you live code changes _and_ automatic discovery _and_ worker-importability:
+Publishing is optional: a model package can stay private and install straight from its
+source. Any of these puts it in the server's environment, where it is discovered:
 
 ```bash
-uv pip install -e .            # during development
-# pip install my-pkg           # from PyPI / a private index / a git URL
+uv pip install ./my-pkg                                        # a local directory
+uv pip install -e ./my-pkg                                     # editable, for live iteration
+uv pip install "my-pkg @ git+ssh://git@github.com/acme/my-pkg.git"          # a private repository
+uv pip install "my-pkg @ git+https://github.com/acme/models.git#subdirectory=my-pkg"  # a subdirectory
+uv build && uv pip install --find-links dist my-pkg            # wheels copied to the server
+# pip install my-pkg                                           # from PyPI or a private index
 ```
 
 Since your package depends on `pixano-inference`, its own environment already contains the
 server: `uv sync && uv run pixano-inference --config models.py` runs it with exactly your
 package's locked dependencies. The first-party packages under `packages/` work this way.
+
+### Depending on the core
+
+`dependencies = ["pixano-inference"]` resolves the core from PyPI. To build against a
+specific commit, a fork, or a core version that is not published, point `uv` at git:
+
+```toml
+[tool.uv.sources]
+pixano-inference = { git = "https://github.com/pixano/pixano-inference", tag = "v0.7.0" }  # or branch = / rev =
+```
+
+`uv` follows that source wherever the package is installed from (a path, a git URL, an sdist).
+Plain `pip` ignores `[tool.uv.sources]`; a private package can instead declare the core as a
+direct reference (`"pixano-inference @ git+https://github.com/pixano/pixano-inference@v0.7.0"`), which PyPI would
+reject but a private index or git install accepts. A PyTorch model that uses
+`pixano-inference-torch` declares it the same way.
 
 Reference the model **by name** in a config file — no import needed, because the entry point
 already registered it:

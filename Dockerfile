@@ -15,6 +15,10 @@
 #   MODEL_PACKAGES    model packages to bundle: space-separated directory names under packages/;
 #                     empty for a framework-free image. pixano-inference-sam also brings the
 #                     git-only sam-2 library.
+#   EXTRA_PACKAGES    extra requirement specs installed alongside: private model packages
+#                     from a git URL or an index, e.g. "my-model @ git+https://…". They
+#                     resolve pixano-inference from this build; add
+#                     ./packages/pixano-inference-torch if they need the torch helpers.
 #   INSTALL_EXAMPLE   "true" to bundle the framework-free numpy example plugin.
 #
 # Examples:
@@ -29,6 +33,7 @@ FROM python:${PYTHON_VERSION}-slim AS builder
 
 ARG TORCH_INDEX_URL=https://download.pytorch.org/whl/cu124
 ARG MODEL_PACKAGES="pixano-inference-sam pixano-inference-grounding-dino pixano-inference-transformers-vlm"
+ARG EXTRA_PACKAGES=""
 ARG INSTALL_EXAMPLE=false
 
 RUN apt-get update \
@@ -69,15 +74,16 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         *" pixano-inference-sam "*) reqs="${reqs} sam-2@git+https://github.com/facebookresearch/sam2.git@${SAM2_REF}";; \
     esac; \
     if [ "${INSTALL_EXAMPLE}" = "true" ]; then reqs="${reqs} ./examples/numpy_detector"; fi; \
-    uv pip install --no-sources ${reqs}
+    uv pip install --no-sources ${reqs} ${EXTRA_PACKAGES}
 
 # --- Runtime ----------------------------------------------------------------------------
 FROM python:${PYTHON_VERSION}-slim AS runtime
 
 # curl for the healthcheck; libgl/libglib for image/vision libraries; g++ so torch.compile
-# (TorchInductor) can build its host glue at inference time.
+# (TorchInductor) can build its host glue at inference time; git so a derived image can
+# `pip install` a model package from a (private) repository.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl libgl1 libglib2.0-0 gcc g++ \
+    && apt-get install -y --no-install-recommends curl git libgl1 libglib2.0-0 gcc g++ \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --create-home --uid 1000 pixano \
     && mkdir -p /data/hf \

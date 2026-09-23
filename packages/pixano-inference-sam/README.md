@@ -23,6 +23,13 @@ pip install "sam-2 @ git+https://github.com/facebookresearch/sam2.git"
 The first command pulls in the Pixano Inference core and PyTorch; the second installs
 Facebook's `sam-2` library (not available on PyPI).
 
+Not on PyPI yet: install from the repository (`uv` also installs the core from it):
+
+```bash
+uv pip install "pixano-inference-sam @ git+https://github.com/pixano/pixano-inference#subdirectory=packages/pixano-inference-sam"
+# or, from a clone:  uv pip install ./packages/pixano-inference-sam
+```
+
 ## Models
 
 | Registered name  | Capability     | Params class      | Default checkpoint                |

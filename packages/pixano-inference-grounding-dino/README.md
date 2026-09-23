@@ -18,6 +18,13 @@ package built on Hugging Face Transformers. It serves the `detection` capability
 pip install pixano-inference-grounding-dino
 ```
 
+Not on PyPI yet: install from the repository (`uv` also installs the core from it):
+
+```bash
+uv pip install "pixano-inference-grounding-dino @ git+https://github.com/pixano/pixano-inference#subdirectory=packages/pixano-inference-grounding-dino"
+# or, from a clone:  uv pip install ./packages/pixano-inference-grounding-dino
+```
+
 Installing the package is enough: the server discovers `GroundingDINOModel` through its
 `pixano_inference.models` entry point.
 

@@ -162,6 +162,46 @@ jobs:
         if: ${{ matrix.package == 'packages/pixano-inference-clip' }}
         run: uv run --no-sync pytest -m integration
 
+  install_from_source:
+    name: Install a model package from source
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # A model package never has to be published: it installs from its source, and `uv`
+      # follows its [tool.uv.sources] to the core (and torch helpers) it depends on. Each
+      # environment below ends with the server discovering the model through its entry point.
+      - name: From a local directory
+        run: |
+          uv venv .venv-path
+          VIRTUAL_ENV=$PWD/.venv-path uv pip install --torch-backend=cpu ./packages/pixano-inference-sam
+          .venv-path/bin/python -c "from pixano_inference.plugins import load_plugin_models as l; r = l(); assert r == {'loaded': ['sam2'], 'failed': []}, r"
+
+      # git+file:// stands in for a private repository; the subdirectory form is what a
+      # monorepo of models needs.
+      - name: From a git URL with a subdirectory
+        run: |
+          uv venv .venv-git
+          VIRTUAL_ENV=$PWD/.venv-git uv pip install --torch-backend=cpu "pixano-inference-sam @ git+file://$PWD#subdirectory=packages/pixano-inference-sam"
+          .venv-git/bin/python -c "from pixano_inference.plugins import load_plugin_models as l; r = l(); assert r == {'loaded': ['sam2'], 'failed': []}, r"
+
+      # Plain pip ignores uv sources, so every local package goes on the command line.
+      - name: With pip, from local paths
+        run: |
+          python -m venv .venv-pip
+          .venv-pip/bin/pip install --quiet torch --index-url https://download.pytorch.org/whl/cpu
+          .venv-pip/bin/pip install --quiet ./packages/pixano-inference-client . ./packages/pixano-inference-torch ./packages/pixano-inference-sam
+          .venv-pip/bin/python -c "from pixano_inference.plugins import load_plugin_models as l; r = l(); assert r == {'loaded': ['sam2'], 'failed': []}, r"
+
   docker_smoke:
     name: Docker build & smoke (CPU, framework-free)
     runs-on: ubuntu-latest

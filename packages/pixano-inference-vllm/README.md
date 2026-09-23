@@ -20,6 +20,13 @@ tests run everywhere), but the model cannot be loaded.
 pip install pixano-inference-vllm
 ```
 
+Not on PyPI yet: install from the repository (`uv` also installs the core from it):
+
+```bash
+uv pip install "pixano-inference-vllm @ git+https://github.com/pixano/pixano-inference#subdirectory=packages/pixano-inference-vllm"
+# or, from a clone:  uv pip install ./packages/pixano-inference-vllm
+```
+
 ## Use
 
 ```python

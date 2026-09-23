@@ -48,11 +48,21 @@ pip install pixano-inference
 
 The core is framework-free: it ships no model and depends on no ML framework. Models are
 separate packages, each bringing its own framework, and the server discovers every installed
-one automatically — install those you need alongside the core:
+one automatically. Install the ones you need alongside the core. The packages are not on PyPI yet; from a clone
+of the repository, `uv` installs a package and the core it depends on from the clone:
 
 ```bash
-pip install pixano-inference-sam pixano-inference-grounding-dino
+uv pip install ./packages/pixano-inference-sam ./packages/pixano-inference-grounding-dino
 ```
+
+or, without cloning, straight from the repository (add `@v0.7.0` after the URL to pin a
+release):
+
+```bash
+uv pip install "pixano-inference-sam @ git+https://github.com/pixano/pixano-inference#subdirectory=packages/pixano-inference-sam"
+```
+
+Once published: `pip install pixano-inference-sam`.
 
 | Package                             | Models                                             |
 | ----------------------------------- | -------------------------------------------------- |

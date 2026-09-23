@@ -23,6 +23,13 @@ performant, and CPU-friendly (no big GPU needed).
 pip install pixano-inference-clip
 ```
 
+Not on PyPI yet: install from the repository (`uv` also installs the core from it):
+
+```bash
+uv pip install "pixano-inference-clip @ git+https://github.com/pixano/pixano-inference#subdirectory=packages/pixano-inference-clip"
+# or, from a clone:  uv pip install ./packages/pixano-inference-clip
+```
+
 ## Use
 
 Reference the model by name in a config (the default checkpoint is `MobileCLIP2-S2` with the
