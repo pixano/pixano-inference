@@ -13,13 +13,32 @@ on:
 permissions:
   contents: write
 
+# Every distribution of this repository goes to PyPI, in dependency order: the client (a hard
+# dependency of the core), then the torch helpers and the model packages (they depend on the
+# core by name only, resolved at install time), and the core last, so a run that fails midway
+# never leaves a core on PyPI whose extras cannot resolve. Each PyPI project needs a trusted
+# publisher for this workflow (repository pixano/pixano-inference, workflow publish.yml).
 jobs:
-  # The lightweight client is a separate PyPI distribution (pixano-inference-client) and a hard
-  # dependency of the root package, so it must be published FIRST — the root job `needs` it.
-  # Requires a trusted-publisher / PyPI project set up for `pixano-inference-client`.
-  deploy_pypi_client:
-    name: Build and publish the client to PyPI
+  check_version:
+    name: Release tag matches the package version
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Compare the tag with src/pixano_inference/__version__.py
+        run: |
+          version=$(grep -oP '__version__\s*=\s*"\K[^"]+' src/pixano_inference/__version__.py)
+          tag="${{ github.event.release.tag_name }}"
+          if [ "${tag#v}" != "$version" ]; then
+            echo "release tag '$tag' does not match __version__ '$version'"
+            exit 1
+          fi
+
+  publish_client:
+    name: Publish pixano-inference-client
+    runs-on: ubuntu-latest
+    needs: check_version
     permissions:
       id-token: write
 
@@ -33,24 +52,70 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Install dependencies
+      - name: Install hatch
         run: |
           python -m pip install --upgrade pip
           python -m pip install hatch
 
-      - name: Build the client package
+      - name: Build
         working-directory: packages/pixano-inference-client
         run: hatch build
 
-      - name: Publish the client package
+      # The client keeps its own version; a release of the core that does not change it
+      # skips the upload instead of failing on the existing files.
+      - name: Publish
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: packages/pixano-inference-client/dist
+          skip-existing: true
 
-  deploy_pypi:
-    name: Build and publish to PyPI
+  publish_packages:
+    name: Publish ${{ matrix.package }}
     runs-on: ubuntu-latest
-    needs: deploy_pypi_client
+    needs: publish_client
+    permissions:
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - pixano-inference-torch
+          - pixano-inference-sam
+          - pixano-inference-clip
+          - pixano-inference-grounding-dino
+          - pixano-inference-transformers-vlm
+          - pixano-inference-vllm
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install hatch
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install hatch
+
+      - name: Build
+        working-directory: packages/${{ matrix.package }}
+        run: hatch build
+
+      # Model packages are versioned on their own; unchanged ones are skipped, not failed.
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/${{ matrix.package }}/dist
+          skip-existing: true
+
+  publish_core:
+    name: Publish pixano-inference
+    runs-on: ubuntu-latest
+    needs: publish_packages
     permissions:
       id-token: write
 
@@ -64,15 +129,16 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Install dependencies
+      - name: Install hatch
         run: |
           python -m pip install --upgrade pip
           python -m pip install hatch
 
-      - name: Build package
+      - name: Build
         run: hatch build
 
-      - name: Publish package
+      # No skip-existing here: a release must carry a new core version.
+      - name: Publish
         uses: pypa/gh-action-pypi-publish@release/v1
 
   deploy_docs:
