@@ -7,6 +7,8 @@
 from __future__ import annotations
 
 import asyncio
+import os
+import time
 from types import SimpleNamespace
 
 import numpy as np
@@ -145,3 +147,114 @@ class TestServiceRoutes:
         assert body["gpusUsed"] == 2.5
         assert body["numNodes"] == 2
         assert body["modelsStatus"] == {"sam2-image": "RUNNING"}
+
+
+class TestStartupWatchdog:
+    """Startup must stay interruptible and bounded (see _run_with_node_watchdog)."""
+
+    def test_returns_value_and_propagates_errors(self):
+        assert ray_app_module._run_with_node_watchdog(lambda: 42, timeout_s=5, what="x") == 42
+
+        def _boom():
+            raise KeyError("nope")
+
+        with pytest.raises(KeyError):
+            ray_app_module._run_with_node_watchdog(_boom, timeout_s=5, what="x")
+
+    def test_dead_node_aborts_with_log_pointer(self, monkeypatch: pytest.MonkeyPatch):
+        """A raylet that dies mid-call must surface the log, not block forever."""
+        seen = {"polls": 0}
+
+        def _liveness():
+            seen["polls"] += 1
+            return seen["polls"] < 2  # alive once, then dead
+
+        monkeypatch.setattr(ray_app_module, "_has_live_ray_node", _liveness)
+        monkeypatch.setattr(ray_app_module, "_ray_session_log_hint", lambda: "/tmp/ray/x/raylet.err")
+
+        with pytest.raises(RuntimeError, match=r"raylet\.err") as excinfo:
+            ray_app_module._run_with_node_watchdog(lambda: time.sleep(30), timeout_s=30, what="Ray Serve startup")
+        assert "the Ray node died" in str(excinfo.value)
+
+    def test_times_out(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr(ray_app_module, "_has_live_ray_node", lambda: True)
+        with pytest.raises(TimeoutError, match="did not complete within"):
+            ray_app_module._run_with_node_watchdog(lambda: time.sleep(30), timeout_s=0.5, what="Ray Serve startup")
+
+    def test_should_abort_cuts_the_wait_short(self, monkeypatch: pytest.MonkeyPatch):
+        """Ctrl-C reaches uvicorn as a flag; the watchdog must honour it."""
+        monkeypatch.setattr(ray_app_module, "_has_live_ray_node", lambda: True)
+        with pytest.raises(ray_app_module.StartupAborted, match="shutdown was requested"):
+            ray_app_module._run_with_node_watchdog(
+                lambda: time.sleep(30), timeout_s=30, what="Ray Serve startup", should_abort=lambda: True
+            )
+
+    def test_on_poll_can_abort_early(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setattr(ray_app_module, "_has_live_ray_node", lambda: True)
+
+        def _bad_status():
+            raise RuntimeError("Serve deployment 'm' status is DEPLOY_FAILED.")
+
+        with pytest.raises(RuntimeError, match="DEPLOY_FAILED"):
+            ray_app_module._run_with_node_watchdog(
+                lambda: time.sleep(30), timeout_s=30, what="Serve deployment 'm'", on_poll=_bad_status
+            )
+
+    def test_disables_rays_uv_run_hook(self):
+        """Ray would otherwise relaunch workers via `uv run` in a tree stripped of pyproject.toml."""
+        from ray._private import ray_constants
+
+        original = ray_constants.RAY_ENABLE_UV_RUN_RUNTIME_ENV
+        try:
+            ray_constants.RAY_ENABLE_UV_RUN_RUNTIME_ENV = True
+            ray_app_module._disable_ray_uv_run_hook()
+            assert ray_constants.RAY_ENABLE_UV_RUN_RUNTIME_ENV is False
+            assert os.environ["RAY_ENABLE_UV_RUN_RUNTIME_ENV"] == "0"
+        finally:
+            ray_constants.RAY_ENABLE_UV_RUN_RUNTIME_ENV = original
+
+
+class TestLifespanStartup:
+    """The lifespan must not block the event loop, or Ctrl-C is inert during startup."""
+
+    @staticmethod
+    def _patch(monkeypatch: pytest.MonkeyPatch, start):
+        monkeypatch.setattr(ray_app_module, "_start_ray_and_serve", start)
+
+        async def _no_drain(config, timeout_s=None):
+            return None
+
+        monkeypatch.setattr(ray_app_module, "_drain_ray_and_serve", _no_drain)
+
+    async def test_event_loop_stays_responsive_during_startup(self, monkeypatch: pytest.MonkeyPatch):
+        self._patch(monkeypatch, lambda config, should_abort=None: time.sleep(0.6))
+
+        ticks = 0
+
+        async def _tick():
+            nonlocal ticks
+            while True:
+                ticks += 1
+                await asyncio.sleep(0.02)
+
+        app, _ = create_ray_serve_app(RayServeConfig(num_gpus=0))
+        ticker = asyncio.create_task(_tick())
+        async with app.router.lifespan_context(app):
+            pass
+        ticker.cancel()
+
+        # Blocking the loop (the original bug) would leave this at ~1.
+        assert ticks > 5, f"event loop was blocked during startup (ticks={ticks})"
+
+    async def test_abort_flag_stops_startup_before_deploying(self, monkeypatch: pytest.MonkeyPatch):
+        self._patch(monkeypatch, lambda config, should_abort=None: None)
+
+        deployed = []
+        config = RayServeConfig(num_gpus=0, models=[_make_tracking_config("m1")])
+        app, manager = create_ray_serve_app(config, should_abort=lambda: True)
+        monkeypatch.setattr(manager, "deploy_model", lambda cfg: deployed.append(cfg.name))
+
+        with pytest.raises(ray_app_module.StartupAborted):
+            async with app.router.lifespan_context(app):
+                pass
+        assert deployed == []

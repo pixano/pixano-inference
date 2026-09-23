@@ -202,3 +202,75 @@ def test_inference_routes_open_when_no_keys(monkeypatch):
 
     resp = client.post("/v1/inference/detection", json={"model": "nope", "image": "https://example.com/x.jpg"})
     assert resp.status_code not in (401, 403)
+
+
+# --- Image decode hardening ---------------------------------------------------------
+
+
+def _png_bytes(size=(4, 4)):
+    from io import BytesIO
+
+    from PIL import Image
+
+    buf = BytesIO()
+    Image.new("RGB", size, (1, 2, 3)).save(buf, format="PNG")
+    return buf.getvalue()
+
+
+def _set_policy(monkeypatch, **kwargs):
+    from pixano_inference.utils import media_security
+
+    policy = MediaPolicy(**kwargs)
+    monkeypatch.setattr(media_security, "get_media_policy", lambda: policy)
+    monkeypatch.setattr("pixano_inference.utils.media.get_media_policy", lambda: policy)
+    return policy
+
+
+def test_allowed_image_format_decodes(monkeypatch):
+    from pixano_inference.utils.media import convert_string_to_image
+
+    _set_policy(monkeypatch, allowed_image_formats=frozenset({"PNG"}))
+    image = convert_string_to_image(_png_bytes())
+    assert image.size == (4, 4)
+
+
+def test_disallowed_image_format_is_rejected(monkeypatch):
+    """Keeps request bytes away from Pillow's rarely-used (and buggier) decoders."""
+    from pixano_inference.utils.media import convert_string_to_image
+
+    _set_policy(monkeypatch, allowed_image_formats=frozenset({"JPEG"}))
+    with pytest.raises(ValueError, match="format PNG is not allowed"):
+        convert_string_to_image(_png_bytes())
+
+
+def test_empty_allowlist_permits_any_format(monkeypatch):
+    from pixano_inference.utils.media import convert_string_to_image
+
+    _set_policy(monkeypatch, allowed_image_formats=frozenset())
+    assert convert_string_to_image(_png_bytes()).size == (4, 4)
+
+
+def test_pixel_cap_rejects_decompression_bomb(monkeypatch):
+    """A small file can decode to a huge image, so the byte caps do not cover this."""
+    from pixano_inference.utils.media import convert_string_to_image
+
+    payload = _png_bytes((2000, 2000))
+    assert len(payload) < 100_000, "test payload should be small relative to its pixel count"
+    _set_policy(monkeypatch, max_image_pixels=1000, allowed_image_formats=frozenset({"PNG"}))
+    with pytest.raises(ValueError, match="too large to decode"):
+        convert_string_to_image(payload)
+
+
+def test_pixel_cap_of_zero_disables_the_check(monkeypatch):
+    from pixano_inference.utils.media import convert_string_to_image
+
+    _set_policy(monkeypatch, max_image_pixels=0, allowed_image_formats=frozenset({"PNG"}))
+    assert convert_string_to_image(_png_bytes((50, 50))).size == (50, 50)
+
+
+def test_media_settings_reach_the_policy(monkeypatch):
+    monkeypatch.setenv("PIXANO_INFERENCE_MEDIA_MAX_IMAGE_PIXELS", "4242")
+    monkeypatch.setenv("PIXANO_INFERENCE_MEDIA_ALLOWED_IMAGE_FORMATS", "png, jpeg")
+    policy = MediaPolicy.from_settings(ServerSettings())
+    assert policy.max_image_pixels == 4242
+    assert policy.allowed_image_formats == frozenset({"PNG", "JPEG"})

@@ -16,8 +16,6 @@ from pixano_inference.models.registry import register_model
 from pixano_inference.models.vlm import UsageInfo, VLMInput, VLMModel, VLMOutput
 from pixano_inference.ray.config import ModelDeploymentConfig
 
-from .._helpers import resolve_device
-
 
 logger = logging.getLogger(__name__)
 
@@ -55,11 +53,9 @@ class VLLMVLMModel(VLMModel):
         model_config = params.pop("config", {})
         processor_config = params.pop("processor_config", {})
 
-        device = resolve_device(self._config)
+        self._llm = LLM(model=path, **model_config, **processor_config, tensor_parallel_size=1)
 
-        self._llm = LLM(model=path, **model_config, **processor_config, device=str(device), tensor_parallel_size=1)
-
-        logger.info("VLLMVLMModel '%s' loaded on %s", self.model_name, device)
+        logger.info("VLLMVLMModel '%s' loaded", self.model_name)
 
     @property
     def metadata(self) -> dict[str, Any]:

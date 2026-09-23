@@ -54,6 +54,8 @@ class MediaPolicy:
     max_redirects: int = 3
     max_image_bytes: int = 50 * 1024 * 1024
     max_video_bytes: int = 512 * 1024 * 1024
+    max_image_pixels: int = 100_000_000
+    allowed_image_formats: frozenset[str] = frozenset({"JPEG", "JPEG2000", "PNG", "BMP", "GIF", "TIFF", "WEBP"})
 
     @classmethod
     def from_settings(cls, settings: ServerSettings) -> MediaPolicy:
@@ -68,6 +70,8 @@ class MediaPolicy:
             max_redirects=settings.media_max_redirects,
             max_image_bytes=settings.media_max_image_bytes,
             max_video_bytes=settings.media_max_video_bytes,
+            max_image_pixels=settings.media_max_image_pixels,
+            allowed_image_formats=frozenset(f.strip().upper() for f in settings.media_allowed_image_formats),
         )
 
     @classmethod

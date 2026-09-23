@@ -63,6 +63,7 @@ class InferenceServer:
         self._config = config or RayServeConfig()
         self._running = False
         self._deployment_manager: DeploymentManager | None = None
+        self._uvicorn_server: uvicorn.Server | None = None
 
     @property
     def config(self) -> RayServeConfig:
@@ -121,22 +122,33 @@ class InferenceServer:
         host = host or self._config.host
         port = port or self._config.port
 
-        fastapi_app, deployment_manager = create_ray_serve_app(self._config)
+        fastapi_app, deployment_manager = create_ray_serve_app(self._config, should_abort=self.shutdown_requested)
         self._deployment_manager = deployment_manager
         self._running = True
         logger.info(f"Inference server starting on {host}:{port}")
 
         # Bound the graceful-shutdown drain so it (plus serve/ray teardown in the lifespan)
         # completes before an orchestrator's stop grace period elapses and sends SIGKILL.
+        uvicorn_config = uvicorn.Config(
+            fastapi_app, host=host, port=port, timeout_graceful_shutdown=self._config.graceful_shutdown_s
+        )
+        # Own the Server (rather than uvicorn.run) so startup can observe its exit flags.
+        self._uvicorn_server = uvicorn.Server(uvicorn_config)
         if blocking:
-            uvicorn.run(fastapi_app, host=host, port=port, timeout_graceful_shutdown=self._config.graceful_shutdown_s)
+            self._uvicorn_server.run()
         else:
-            uvicorn_config = uvicorn.Config(
-                fastapi_app, host=host, port=port, timeout_graceful_shutdown=self._config.graceful_shutdown_s
-            )
-            self._uvicorn_server = uvicorn.Server(uvicorn_config)
             thread = threading.Thread(target=self._uvicorn_server.run, daemon=True)
             thread.start()
+
+    def shutdown_requested(self) -> bool:
+        """Whether uvicorn has been asked to exit (Ctrl-C, SIGTERM, or :meth:`stop`).
+
+        uvicorn's signal handlers only set these flags, and nothing in uvicorn aborts an
+        in-flight lifespan startup, so the startup path polls this to cut itself short instead of
+        making the user wait out a long model load.
+        """
+        server = self._uvicorn_server
+        return bool(server is not None and (server.should_exit or server.force_exit))
 
     def stop(self) -> None:
         """Stop the inference server.
@@ -145,7 +157,7 @@ class InferenceServer:
         Serve and Ray. In blocking mode this is driven by SIGTERM/SIGINT instead.
         """
         try:
-            if hasattr(self, "_uvicorn_server"):
+            if self._uvicorn_server is not None:
                 self._uvicorn_server.should_exit = True
             self._running = False
             logger.info("Inference server stopping")

@@ -55,7 +55,16 @@ _cloudpickle.register_pickle_by_value(sys.modules[__name__])
 @pytest.fixture(scope="module")
 def serve_runtime():
     """Start a local Ray + Serve runtime (HTTP proxy disabled) for the module."""
-    ray.init(namespace="pixano-inference-test", num_cpus=4, ignore_reinit_error=True, include_dashboard=False)
+    # Pin num_gpus=0: the tests below assert on a GPU-less cluster, and Ray's accelerator
+    # autodetection is not dependable (it reports a TPU for a bare /dev/accel directory, and
+    # which manager wins varies per process), which made this module flaky on GPU machines.
+    ray.init(
+        namespace="pixano-inference-test",
+        num_cpus=4,
+        num_gpus=0,
+        ignore_reinit_error=True,
+        include_dashboard=False,
+    )
     serve.start(proxy_location="Disabled")
     try:
         yield

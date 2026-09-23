@@ -22,7 +22,7 @@ models = [
         model_class="TransformersVLMModel",
         model_params=TransformersVLMParams(
             path="llava-hf/llava-onevision-qwen2-0.5b-ov-hf",
-            config={"torch_dtype": "bfloat16"},
+            config={"dtype": "bfloat16"},
         ),
         deployment=DeploymentConfig(num_gpus=1),
     )
