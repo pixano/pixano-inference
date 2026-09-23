@@ -61,6 +61,13 @@ dependencies = [
 readme = "README.md"
 
 [project.optional-dependencies]
+# One extra per model package: a separate distribution that brings its own framework.
+sam = ["pixano-inference-sam"]
+clip = ["pixano-inference-clip"]
+grounding-dino = ["pixano-inference-grounding-dino"]
+transformers-vlm = ["pixano-inference-transformers-vlm"]
+vllm = ["pixano-inference-vllm"]
+torch = ["pixano-inference-torch"]
 docs=[
   "mike >= 2.1.0, < 3.0.0",
   "mkdocs >= 1.6.0, < 2.0.0",
@@ -70,33 +77,6 @@ docs=[
   "mkdocs-literate-nav >= 0.6.0",
   "mkdocs-redirects >= 1.2.1",
 ]
-# SAM2 ships as a separate first-party plugin package (packages/pixano-inference-sam).
-sam = [
-  "pixano-inference-sam",
-]
-# CLIP-style image/text embeddings (default MobileCLIP2), a separate plugin package.
-clip = [
-  "pixano-inference-clip",
-]
-torch=[
-  "torch >= 2.3.0, < 3.0.0",
-]
-jax=[
-  "jax >= 0.4.0",
-]
-tensorflow=[
-  "tensorflow >= 2.13.0",
-]
-mlx=[
-  "mlx >= 0.1.0; sys_platform == 'darwin'",
-]
-transformers=[
-  "accelerate >= 1.15.0",
-  "bitsandbytes",
-  "torch >= 2.3.0, < 3.0.0",
-  "torchvision",
-  "transformers >= 5.10.0, < 6.0.0",
-]
 test=[
   "pytest",
   "pytest-asyncio",
@@ -104,12 +84,6 @@ test=[
   "pytest_httpx",
   "pytest-mock",
   "responses",
-]
-ultralytics=[
-  "ultralytics",
-]
-vllm=[
-  "vllm >= 0.28.0; sys_platform == 'linux'",
 ]
 
 [project.scripts]
@@ -138,6 +112,7 @@ ignore-init-module-imports = true
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D", "C408", "C901", "F401"]
 "packages/*/tests/*" = ["D", "C408", "C901", "F401"]
+"examples/*/tests/*" = ["D", "C408", "C901", "F401"]
 "docs/*" = ["D", "F401"]
 
 [tool.ruff.lint.isort]
@@ -167,6 +142,9 @@ path = "src/pixano_inference/__version__.py"
 [tool.hatch.metadata]
 allow-direct-references = true
 
+[tool.hatch.build.targets.sdist]
+only-include = ["src"]
+
 [tool.uv]
 default-groups = ["dev"]
 
@@ -177,13 +155,16 @@ environments = [
 
 [dependency-groups]
 dev = [
-  "pixano-inference[test,docs,transformers,sam,clip]",
-  "sam-2 @ git+https://github.com/facebookresearch/sam2.git",
+  "pixano-inference[test,docs]",
   "pixano-numpy-detector",
 ]
 
 [tool.uv.sources]
 pixano-inference-client = { path = "packages/pixano-inference-client", editable = true }
-pixano-numpy-detector = { path = "examples/numpy_detector", editable = true }
+pixano-inference-torch = { path = "packages/pixano-inference-torch", editable = true }
 pixano-inference-sam = { path = "packages/pixano-inference-sam", editable = true }
 pixano-inference-clip = { path = "packages/pixano-inference-clip", editable = true }
+pixano-inference-grounding-dino = { path = "packages/pixano-inference-grounding-dino", editable = true }
+pixano-inference-transformers-vlm = { path = "packages/pixano-inference-transformers-vlm", editable = true }
+pixano-inference-vllm = { path = "packages/pixano-inference-vllm", editable = true }
+pixano-numpy-detector = { path = "examples/numpy_detector", editable = true }

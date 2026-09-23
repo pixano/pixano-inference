@@ -36,19 +36,35 @@
     pip install -e .
     ```
 
-Install the extras for the model backends you need:
+The core is framework-free: it ships no model and depends on no ML framework. Each model is a
+separate package that brings its own framework, and the server discovers every installed model
+package automatically. Each extra of the core installs one model package:
 
-=== "uv"
+```bash
+pip install pixano-inference[sam,grounding-dino]
+```
 
-    ```bash
-    uv sync --extra sam --extra transformers --extra vllm
-    ```
+To install a model package from the repository instead (a clone, or a git URL such as
+`"pixano-inference-sam @ git+https://github.com/pixano/pixano-inference#subdirectory=packages/pixano-inference-sam"`),
+use `uv pip install`, which also resolves the core from the repository.
 
-=== "pip"
+| Extra              | Package                             | Models                             | Framework             |
+| ------------------ | ----------------------------------- | ---------------------------------- | --------------------- |
+| `sam`              | `pixano-inference-sam`              | `Sam2ImageModel`, `Sam2VideoModel` | PyTorch (+ `sam-2`)   |
+| `clip`             | `pixano-inference-clip`             | `OpenClipEmbeddingModel`           | PyTorch, open_clip    |
+| `grounding-dino`   | `pixano-inference-grounding-dino`   | `GroundingDINOModel`               | PyTorch, Transformers |
+| `transformers-vlm` | `pixano-inference-transformers-vlm` | `TransformersVLMModel`             | PyTorch, Transformers |
+| `vllm`             | `pixano-inference-vllm`             | `VLLMVLMModel`                     | vLLM (Linux, GPU)     |
+| `torch`            | `pixano-inference-torch`            | helpers for your own PyTorch model | PyTorch               |
 
-    ```bash
-    pip install pixano-inference[sam,transformers,vllm]
-    ```
+From a clone, each package under `packages/` is self-contained, with its own `pyproject.toml`
+and `uv.lock`; its environment holds the core plus that model, so the server runs from it:
+
+```bash
+cd packages/pixano-inference-grounding-dino
+uv sync
+uv run pixano-inference --config models.py
+```
 
 ## Usage
 
@@ -71,7 +87,8 @@ Create a file called `models.py` that declares which models to deploy.
 Here is an example deploying Grounding DINO for zero-shot detection:
 
 ```python
-from pixano_inference.configs import DeploymentConfig, GroundingDINOParams, ModelConfig
+from pixano_inference.configs import DeploymentConfig, ModelConfig
+from pixano_inference_grounding_dino import GroundingDINOParams
 
 
 models = [
@@ -85,7 +102,7 @@ models = [
 ```
 
 See the [Server Deployment documentation](../ray_serve/index.md) for all configuration
-options, deploying built-in and custom models, and configuring autoscaling.
+options, deploying first-party and custom models, and configuring autoscaling.
 
 ### Step 2: Start the server
 

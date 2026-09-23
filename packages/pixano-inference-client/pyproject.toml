@@ -3,7 +3,7 @@ name = "pixano-inference-client"
 version = "0.1.0"
 description = "Lightweight client and wire schemas for the Pixano Inference /v1 API (no server deps)."
 requires-python = ">=3.10,<3.14"
-license = { file = "../../LICENSE" }
+license = { file = "LICENSE" }
 readme = "README.md"
 dependencies = [
   "httpx",

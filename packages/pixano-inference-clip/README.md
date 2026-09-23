@@ -20,7 +20,14 @@ performant, and CPU-friendly (no big GPU needed).
 ## Install
 
 ```bash
-pip install pixano-inference[clip]
+pip install pixano-inference[clip]   # or: pip install pixano-inference-clip
+```
+
+From the repository (`uv` also installs the core from it):
+
+```bash
+uv pip install "pixano-inference-clip @ git+https://github.com/pixano/pixano-inference#subdirectory=packages/pixano-inference-clip"
+# or, from a clone:  uv pip install ./packages/pixano-inference-clip
 ```
 
 ## Use
@@ -63,3 +70,14 @@ L2-normalized by default (`normalize=False` to disable).
 Any open_clip spec works — e.g. another size like `path="MobileCLIP2-S0"` (`pretrained="dfndr2b"`),
 `path="ViT-B-32"` with `pretrained="laion2b_s34b_b79k"`, or an `hf-hub:<repo>` reference to an
 open_clip-format repo (leave `pretrained=None` for those).
+
+## Development
+
+The package is self-contained, with its own lock file:
+
+```bash
+cd packages/pixano-inference-clip
+uv sync
+uv run pytest                    # unit tests
+uv run pytest -m integration     # deploys MobileCLIP2 on a local Ray Serve runtime
+```

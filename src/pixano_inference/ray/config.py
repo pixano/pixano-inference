@@ -50,7 +50,7 @@ class ModelDeploymentConfig(BaseModel):
     Attributes:
         name: Unique model name. Optional for HuggingFace models (auto-derived from path).
         capability: Capability string (e.g. "segmentation").
-        model_class: Registered class name (e.g. "Sam2ImageModel").
+        model_class: Registered class name (e.g. "MyDetector"), provided by an installed model package.
         model_params: Parameters passed to model __init__ via config.
         resources: Resource configuration for the deployment.
         autoscaling: Autoscaling configuration for the deployment.

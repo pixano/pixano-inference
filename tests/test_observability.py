@@ -12,7 +12,6 @@ import pytest
 from fastapi import FastAPI, Request, Response
 from fastapi.testclient import TestClient
 
-from pixano_inference.impls._helpers import should_compile
 from pixano_inference.observability import (
     REQUEST_ID_HEADER,
     RequestIdFilter,
@@ -82,18 +81,3 @@ def test_configure_logging_is_idempotent_and_safe():
     configure_logging(level="WARNING", json_logs=False)
     configure_logging(level="INFO", json_logs=True)
     logging.getLogger("pixano_inference.test").info("hello")
-
-
-def test_should_compile_auto_and_explicit():
-    class _Dev:
-        def __init__(self, t):
-            self.type = t
-
-    # Auto (None): compile only on CUDA.
-    assert should_compile(_Dev("cuda"), None) is True
-    assert should_compile(_Dev("cpu"), None) is False
-    assert should_compile("cuda:0", None) is True
-    assert should_compile("cpu", None) is False
-    # Explicit flag always wins.
-    assert should_compile(_Dev("cpu"), True) is True
-    assert should_compile(_Dev("cuda"), False) is False

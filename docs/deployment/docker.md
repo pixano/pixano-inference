@@ -9,7 +9,8 @@
 # Docker deployment
 
 The repository ships a production-oriented `Dockerfile` and `docker-compose.yml`. The default
-image is a GPU-capable server bundling PyTorch, the transformers backend, and the SAM2 plugin.
+image is a GPU-capable server bundling PyTorch and the SAM2, Grounding DINO and Transformers
+VLM model packages.
 
 ## Prerequisites
 
@@ -74,16 +75,42 @@ The default `docker/models.py` requests a GPU (`num_gpus=1`) and the compose fil
 NVIDIA device, so the compose stack requires a GPU host. For CPU, use a config with
 `num_gpus=0` (like `docker/models.numpy.py`) and `docker run` without `--gpus`.
 
+## Your own model in the image
+
+A model package does not have to be published: bake it in from wherever it lives.
+
+```bash
+# From a git repository (public, or private with credentials in the URL / a private index):
+docker build --build-arg EXTRA_PACKAGES="my-model @ git+https://github.com/acme/my-model.git" -t pixano-inference:acme .
+```
+
+`EXTRA_PACKAGES` are installed together with the core built from this repository, so a
+package that depends on `pixano-inference` resolves it from the build, not from PyPI. Add
+`./packages/pixano-inference-torch` to the list if the model uses the torch helpers.
+
+For a private repository over SSH, or a model that lives in a local directory, derive from the
+image instead (it ships `git` and `pip`):
+
+```dockerfile
+FROM pixano-inference:latest
+USER root
+# private repository, with the host's SSH agent forwarded by `docker build --ssh default`
+RUN --mount=type=ssh pip install "my-model @ git+ssh://git@github.com/acme/my-model.git"
+# or a local directory copied into the build context
+# COPY my-model /tmp/my-model && pip install /tmp/my-model
+USER pixano
+```
+
 ## Image variants
 
 Build args let you tailor the image:
 
-| Build arg         | Default                                  | Purpose                          |
-| ----------------- | ---------------------------------------- | -------------------------------- |
-| `TORCH_INDEX_URL` | `https://download.pytorch.org/whl/cu124` | torch wheels; empty skips torch  |
-| `PIXANO_EXTRAS`   | `transformers`                           | core extras; empty for none      |
-| `INSTALL_SAM`     | `true`                                   | bundle the SAM2 plugin + `sam-2` |
-| `INSTALL_EXAMPLE` | `false`                                  | bundle the numpy example plugin  |
+| Build arg         | Default                                                                                  | Purpose                                                                                    |
+| ----------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `TORCH_INDEX_URL` | `https://download.pytorch.org/whl/cu124`                                                 | torch wheels; empty skips the index                                                        |
+| `MODEL_PACKAGES`  | `pixano-inference-sam pixano-inference-grounding-dino pixano-inference-transformers-vlm` | model packages to bundle (directories under `packages/`); empty for a framework-free image |
+| `EXTRA_PACKAGES`  | _(empty)_                                                                                | extra requirement specs to install, e.g. a private model from a git URL or a private index |
+| `INSTALL_EXAMPLE` | `false`                                                                                  | bundle the numpy example plugin                                                            |
 
 ```bash
 # CPU-only image (torch CPU wheels, no GPU toolkit needed):
@@ -92,8 +119,7 @@ docker build --build-arg TORCH_INDEX_URL=https://download.pytorch.org/whl/cpu -t
 # Minimal, framework-free image with the numpy example plugin:
 docker build \
   --build-arg TORCH_INDEX_URL= \
-  --build-arg PIXANO_EXTRAS= \
-  --build-arg INSTALL_SAM=false \
+  --build-arg MODEL_PACKAGES= \
   --build-arg INSTALL_EXAMPLE=true \
   -t pixano-inference:numpy .
 docker run --rm -p 7463:7463 --shm-size=2g \

@@ -21,8 +21,8 @@ Example:
             deployment=DeploymentConfig(num_gpus=1),
         )
 
-Backend-specific params (e.g. ``Sam2ImageParams``) are provided by the corresponding model
-plugin package (``pixano-inference-sam``) and registered when it is imported.
+Model-specific params (e.g. ``Sam2ImageParams``) are provided by the corresponding model
+package (``pixano-inference-sam``) and registered when it is imported.
 """
 
 # ruff: noqa: F401
@@ -35,5 +35,3 @@ from .base import (
     ServerConfig,
     register_model_params,
 )
-from .transformers import GroundingDINOParams, TransformersVLMParams
-from .vllm import VLLMVLMParams

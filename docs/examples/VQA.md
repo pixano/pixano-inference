@@ -10,10 +10,13 @@
 
 ## Python config
 
+Requires the `pixano-inference-transformers-vlm` model package.
+
 Deploy a Transformers-backed vision-language model:
 
 ```python
-from pixano_inference.configs import DeploymentConfig, ModelConfig, TransformersVLMParams
+from pixano_inference.configs import DeploymentConfig, ModelConfig
+from pixano_inference_transformers_vlm import TransformersVLMParams
 
 
 models = [

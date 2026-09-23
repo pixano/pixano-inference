@@ -70,10 +70,13 @@ def show_masks(image, masks, scores, point_coords=None, box_coords=None, input_l
 
 ## Python config
 
+Requires the `pixano-inference-sam` model package.
+
 Deploy SAM2 for image segmentation:
 
 ```python
-from pixano_inference.configs import DeploymentConfig, ModelConfig, Sam2ImageParams
+from pixano_inference.configs import DeploymentConfig, ModelConfig
+from pixano_inference_sam import Sam2ImageParams
 
 
 models = [

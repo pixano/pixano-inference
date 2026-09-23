@@ -29,13 +29,14 @@ class ConfigLoader:
 
     .. code-block:: python
 
-        from pixano_inference.configs import ModelConfig, Sam2ImageParams
+        from pixano_inference.configs import DeploymentConfig, ModelConfig
 
         models = [
             ModelConfig(
-                name="sam2-image",
-                model_class="Sam2ImageModel",
-                model_params=Sam2ImageParams(path="facebook/sam2-hiera-base-plus"),
+                name="my-detector",
+                model_class="MyDetector",  # registered by an installed model package
+                model_params={"path": "org/my-detector"},
+                deployment=DeploymentConfig(num_gpus=1),
             ),
         ]
     """

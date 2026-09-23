@@ -1,6 +1,8 @@
 .git
 .github
 .venv
+# Each model package keeps its own environment next to its pyproject.toml.
+**/.venv
 venv
 **/__pycache__
 **/*.pyc

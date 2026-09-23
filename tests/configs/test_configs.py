@@ -8,52 +8,71 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 import pytest
-from pydantic import ValidationError
+from pydantic import Field, ValidationError
 
-
-# SAM2 is a plugin package; these tests exercise the config machinery through it.
-pytest.importorskip("pixano_inference_sam")
-
-from pixano_inference_sam import Sam2ImageModel, Sam2ImageParams, Sam2VideoModel, Sam2VideoParams  # noqa: E402
-
-from pixano_inference.configs import (  # noqa: E402
+from pixano_inference.configs import (
     BaseModelParams,
     DeploymentConfig,
-    GroundingDINOParams,
     ModelConfig,
     ModelParamsRegistry,
     ServerConfig,
-    TransformersVLMParams,
-    VLLMVLMParams,
+    register_model_params,
 )
-from pixano_inference.impls.transformers.grounding_dino import GroundingDINOModel  # noqa: E402
-from pixano_inference.impls.transformers.vlm import TransformersVLMModel  # noqa: E402
-from pixano_inference.models import InferenceModel  # noqa: E402
-from pixano_inference.plugins import ensure_models_loaded  # noqa: E402
-from pixano_inference.ray.config import ModelDeploymentConfig  # noqa: E402
+from pixano_inference.models import InferenceModel, register_model
+from pixano_inference.models.detection import DetectionInput, DetectionModel, DetectionOutput
+from pixano_inference.models.segmentation import SegmentationInput, SegmentationModel, SegmentationOutput
+from pixano_inference.ray.config import ModelDeploymentConfig
 
 
-# Register built-in + plugin params (Sam2*Params) into the registry for the assertions below.
-ensure_models_loaded()
+# Framework-free models registered by name, standing in for a model package's classes: the
+# config machinery is the same for every model, so the core tests need no model package.
+@register_model_params("ConfigTestSegmenter")
+class ConfigTestParams(BaseModelParams):
+    """Params with defaults for every field, like a plugin that ships a default checkpoint."""
+
+    path: str = "org/config-test-model"
+    dtype: Literal["float32", "float16"] = "float32"
+    compile: bool = True
+
+
+@register_model("ConfigTestSegmenter")
+class ConfigTestSegmenter(SegmentationModel):
+    def load_model(self) -> None:
+        pass
+
+    def predict(self, input: SegmentationInput) -> SegmentationOutput:  # pragma: no cover - test only
+        raise NotImplementedError
+
+
+@register_model_params("ConfigTestDetector")
+class ConfigTestDetectorParams(BaseModelParams):
+    """Params whose ``path`` is required, like a plugin that serves any checkpoint."""
+
+    processor_config: dict = Field(default_factory=dict)
+
+
+@register_model("ConfigTestDetector")
+class ConfigTestDetector(DetectionModel):
+    def load_model(self) -> None:
+        pass
+
+    def predict(self, input: DetectionInput) -> DetectionOutput:  # pragma: no cover - test only
+        raise NotImplementedError
 
 
 class TestModelParamsRegistry:
     """Tests for ModelParamsRegistry."""
 
     def test_registered_schemas(self):
-        assert ModelParamsRegistry.has("Sam2ImageModel")
-        assert ModelParamsRegistry.has("Sam2VideoModel")
-        assert ModelParamsRegistry.has("TransformersVLMModel")
-        assert ModelParamsRegistry.has("GroundingDINOModel")
-        assert ModelParamsRegistry.has("VLLMVLMModel")
+        assert ModelParamsRegistry.has("ConfigTestSegmenter")
+        assert ModelParamsRegistry.has("ConfigTestDetector")
 
     def test_get_returns_correct_class(self):
-        assert ModelParamsRegistry.get("Sam2ImageModel") is Sam2ImageParams
-        assert ModelParamsRegistry.get("Sam2VideoModel") is Sam2VideoParams
-        assert ModelParamsRegistry.get("TransformersVLMModel") is TransformersVLMParams
-        assert ModelParamsRegistry.get("GroundingDINOModel") is GroundingDINOParams
-        assert ModelParamsRegistry.get("VLLMVLMModel") is VLLMVLMParams
+        assert ModelParamsRegistry.get("ConfigTestSegmenter") is ConfigTestParams
+        assert ModelParamsRegistry.get("ConfigTestDetector") is ConfigTestDetectorParams
 
     def test_get_unknown_returns_none(self):
         assert ModelParamsRegistry.get("UnknownModel") is None
@@ -63,8 +82,8 @@ class TestModelParamsRegistry:
 
     def test_list_all(self):
         all_schemas = ModelParamsRegistry.list_all()
-        assert "Sam2ImageModel" in all_schemas
-        assert len(all_schemas) >= 5
+        assert "ConfigTestSegmenter" in all_schemas
+        assert len(all_schemas) >= 2
 
 
 class TestBaseModelParams:
@@ -77,96 +96,25 @@ class TestBaseModelParams:
             BaseModelParams()
 
 
-class TestSam2Params:
-    def test_sam2_image_defaults(self):
-        params = Sam2ImageParams()
-        assert params.path == "facebook/sam2-hiera-base-plus"
-        assert params.torch_dtype == "bfloat16"
-        assert params.compile is True
-
-    def test_sam2_image_custom(self):
-        params = Sam2ImageParams(path="my/model", torch_dtype="float16", compile=False)
-        assert params.path == "my/model"
-        assert params.torch_dtype == "float16"
-        assert params.compile is False
-
-    def test_sam2_image_invalid_dtype(self):
-        with pytest.raises(ValidationError):
-            Sam2ImageParams(torch_dtype="int8")
-
-    def test_sam2_video_defaults(self):
-        params = Sam2VideoParams()
-        assert params.path == "facebook/sam2-hiera-large"
-        assert params.vos_optimized is True
-        assert params.propagate is True
-
-    def test_sam2_video_custom(self):
-        params = Sam2VideoParams(path="my/video-model", vos_optimized=False, propagate=False)
-        assert params.vos_optimized is False
-        assert params.propagate is False
-
-
-class TestTransformersParams:
-    def test_vlm_minimal(self):
-        params = TransformersVLMParams(path="llava-hf/llava-1.5-7b-hf")
-        assert params.path == "llava-hf/llava-1.5-7b-hf"
-        assert params.processor_config == {}
-        assert params.config == {}
-        assert params.model_type is None
-
-    def test_vlm_full(self):
-        params = TransformersVLMParams(
-            path="llava-hf/llava-1.5-7b-hf",
-            processor_config={"use_fast": True},
-            config={"torch_dtype": "float16"},
-            model_type="llava",
-        )
-        assert params.model_type == "llava"
-
-    def test_grounding_dino_minimal(self):
-        params = GroundingDINOParams(path="IDEA-Research/grounding-dino-base")
-        assert params.path == "IDEA-Research/grounding-dino-base"
-
-    def test_vlm_missing_path(self):
-        with pytest.raises(ValidationError):
-            TransformersVLMParams()
-
-    def test_grounding_dino_missing_path(self):
-        with pytest.raises(ValidationError):
-            GroundingDINOParams()
-
-
-class TestVLLMParams:
-    def test_minimal(self):
-        params = VLLMVLMParams(path="my/vllm-model")
-        assert params.path == "my/vllm-model"
-        assert params.config == {}
-        assert params.processor_config == {}
-
-    def test_missing_path(self):
-        with pytest.raises(ValidationError):
-            VLLMVLMParams()
-
-
 class TestModelConfig:
     def test_valid_with_typed_params(self):
         config = ModelConfig(
-            name="sam2-image",
-            model_class="Sam2ImageModel",
-            model_params=Sam2ImageParams(),
+            name="seg",
+            model_class="ConfigTestSegmenter",
+            model_params=ConfigTestParams(),
         )
-        assert config.name == "sam2-image"
+        assert config.name == "seg"
         assert config.capability == "segmentation"
-        assert isinstance(config.model_params, Sam2ImageParams)
+        assert isinstance(config.model_params, ConfigTestParams)
 
     def test_valid_from_dict_auto_resolves(self):
         config = ModelConfig(
-            name="sam2-image",
-            model_class="Sam2ImageModel",
-            model_params={"path": "facebook/sam2-hiera-base-plus", "torch_dtype": "float32"},
+            name="seg",
+            model_class="ConfigTestSegmenter",
+            model_params={"path": "org/other-model", "dtype": "float16"},
         )
-        assert isinstance(config.model_params, Sam2ImageParams)
-        assert config.model_params.torch_dtype == "float32"
+        assert isinstance(config.model_params, ConfigTestParams)
+        assert config.model_params.dtype == "float16"
         assert config.capability == "segmentation"
 
     def test_unknown_model_class_raises(self):
@@ -177,18 +125,18 @@ class TestModelConfig:
         with pytest.raises(ValidationError):
             ModelConfig(
                 name="test",
-                model_class="Sam2ImageModel",
+                model_class="ConfigTestSegmenter",
                 model_params={"path": "my/model", "typo_field": True},
             )
 
     def test_type_input_derives_capability(self):
         config = ModelConfig(
-            name="grounding-dino",
-            model_class=GroundingDINOModel,
-            model_params=GroundingDINOParams(path="IDEA-Research/grounding-dino-base"),
+            name="det",
+            model_class=ConfigTestDetector,
+            model_params=ConfigTestDetectorParams(path="org/detector"),
         )
-        assert config.model_class is GroundingDINOModel
-        assert config.model_class_name == "GroundingDINOModel"
+        assert config.model_class is ConfigTestDetector
+        assert config.model_class_name == "ConfigTestDetector"
         assert config.capability == "detection"
 
     def test_external_class_resolves_capability(self):
@@ -233,21 +181,17 @@ class TestModelConfig:
 
     def test_to_deployment_config_with_typed_params(self):
         config = ModelConfig(
-            name="sam2-image",
-            model_class=Sam2ImageModel,
-            model_params=Sam2ImageParams(path="facebook/sam2-hiera-base-plus", torch_dtype="float32"),
+            name="seg",
+            model_class=ConfigTestSegmenter,
+            model_params=ConfigTestParams(path="org/other-model", dtype="float16"),
             deployment=DeploymentConfig(num_gpus=1, max_batch_size=4),
         )
         dc = config.to_deployment_config()
         assert isinstance(dc, ModelDeploymentConfig)
-        assert dc.name == "sam2-image"
+        assert dc.name == "seg"
         assert dc.capability == "segmentation"
-        assert dc.model_class == "Sam2ImageModel"
-        assert dc.model_params == {
-            "path": "facebook/sam2-hiera-base-plus",
-            "torch_dtype": "float32",
-            "compile": True,
-        }
+        assert dc.model_class == "ConfigTestSegmenter"
+        assert dc.model_params == {"path": "org/other-model", "dtype": "float16", "compile": True}
         assert dc.resources.num_gpus == 1
         assert dc.max_batch_size == 4
 
@@ -271,7 +215,7 @@ class TestModelConfig:
         assert dc.model_params == {"path": "my/model", "custom": True}
 
     def test_deployment_defaults(self):
-        config = ModelConfig(name="test", model_class="Sam2ImageModel")
+        config = ModelConfig(name="test", model_class="ConfigTestSegmenter")
         dc = config.to_deployment_config()
         assert dc.resources.num_gpus == 0.0
         assert dc.resources.num_cpus == 1.0
@@ -319,9 +263,9 @@ class TestServerConfig:
             port=8000,
             models=[
                 ModelConfig(
-                    name="sam2-image",
-                    model_class="Sam2ImageModel",
-                    model_params=Sam2ImageParams(),
+                    name="seg",
+                    model_class="ConfigTestSegmenter",
+                    model_params=ConfigTestParams(),
                 )
             ],
         )
@@ -329,12 +273,12 @@ class TestServerConfig:
         assert rsc.host == "localhost"
         assert rsc.port == 8000
         assert len(rsc.models) == 1
-        assert rsc.models[0].name == "sam2-image"
+        assert rsc.models[0].name == "seg"
         assert rsc.models[0].capability == "segmentation"
 
 
 class TestConfigLoaderIntegration:
-    def test_load_sam2_python(self, tmp_path):
+    def test_load_python_config(self, tmp_path):
         config_file = tmp_path / "test_config.py"
         config_file.write_text(
             "from pixano_inference.configs.base import ModelConfig\n"
@@ -342,9 +286,9 @@ class TestConfigLoaderIntegration:
             "\n"
             "models = [\n"
             "    ModelConfig(\n"
-            '        name="sam2-image",\n'
-            '        model_class="Sam2ImageModel",\n'
-            '        model_params={"path": "facebook/sam2-hiera-base-plus", "torch_dtype": "float32"},\n'
+            '        name="seg",\n'
+            '        model_class="ConfigTestSegmenter",\n'
+            '        model_params={"path": "org/other-model", "dtype": "float16"},\n'
             "        deployment=DeploymentConfig(num_gpus=0, min_replicas=0, max_replicas=2, max_batch_size=8),\n"
             "    ),\n"
             "]\n"
@@ -354,9 +298,9 @@ class TestConfigLoaderIntegration:
 
         configs = ConfigLoader(config_file).load()
         assert len(configs) == 1
-        assert configs[0].name == "sam2-image"
+        assert configs[0].name == "seg"
         assert configs[0].capability == "segmentation"
-        assert configs[0].model_params["torch_dtype"] == "float32"
+        assert configs[0].model_params["dtype"] == "float16"
 
     def test_load_python_invalid_model_class_raises(self, tmp_path):
         config_file = tmp_path / "bad_config.py"
@@ -385,8 +329,8 @@ class TestConfigLoaderIntegration:
             "models = [\n"
             "    ModelConfig(\n"
             '        name="test",\n'
-            '        model_class="Sam2ImageModel",\n'
-            '        model_params={"path": "facebook/sam2-hiera-base-plus", "unknown_param": True},\n'
+            '        model_class="ConfigTestSegmenter",\n'
+            '        model_params={"path": "org/other-model", "unknown_param": True},\n'
             "    ),\n"
             "]\n"
         )
@@ -408,16 +352,15 @@ class TestPluginParamDefaultsColdStart:
     """
 
     def test_plugin_defaults_resolve_in_fresh_interpreter(self):
-        pytest.importorskip("pixano_inference_clip")
+        pytest.importorskip("pixano_numpy_detector")  # framework-free example plugin (dev group)
         import subprocess
         import sys
 
         script = (
             "from pixano_inference.configs import ModelConfig\n"
-            "c = ModelConfig(name='clip', model_class='OpenClipEmbeddingModel')\n"
+            "c = ModelConfig(name='np', model_class='NumpyDetector')\n"
             "dep = c.to_deployment_config()\n"
-            "assert dep.model_params['path'] == 'MobileCLIP2-S2', dep.model_params\n"
-            "assert dep.model_params['pretrained'] == 'dfndr2b'\n"
+            "assert dep.model_params == {'path': 'numpy-detector', 'threshold': 20}, dep.model_params\n"
             "print('ok')\n"
         )
         result = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True)

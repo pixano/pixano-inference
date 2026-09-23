@@ -162,7 +162,6 @@ def test_max_bytes_cap_enforced(monkeypatch):
 
 def test_inference_routes_enforce_api_key(monkeypatch):
     """With keys configured, inference routes require a valid key; /health stays open."""
-    pytest.importorskip("torch")  # create_ray_serve_app imports the model backends
     from fastapi.testclient import TestClient
 
     from pixano_inference.ray.app import create_ray_serve_app
@@ -190,7 +189,6 @@ def test_inference_routes_enforce_api_key(monkeypatch):
 
 def test_inference_routes_open_when_no_keys(monkeypatch):
     """Without keys, auth is a no-op (routes reachable, downstream handles them)."""
-    pytest.importorskip("torch")
     from fastapi.testclient import TestClient
 
     from pixano_inference.ray.app import create_ray_serve_app

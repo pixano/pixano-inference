@@ -36,7 +36,7 @@ class ModelParamsRegistry:
         """Decorator to register a params schema for a model class.
 
         Args:
-            name: The model class name (e.g. ``"Sam2ImageModel"``).
+            name: The model class name (e.g. ``"MyDetector"``).
 
         Returns:
             The decorator function.
@@ -160,8 +160,8 @@ class ModelConfig(BaseModel):
 
     Attributes:
         name: Unique model name. Optional for HuggingFace models (auto-derived from path).
-        model_class: Registered model class name or class type (e.g. ``"Sam2ImageModel"``
-            or ``Sam2ImageModel``).
+        model_class: Registered model class name or class type (e.g. ``"MyDetector"`` or
+            ``MyDetector``), provided by an installed model package.
         model_params: Typed params or raw dict, auto-resolved via registry.
         deployment: Deployment settings.
     """
@@ -238,9 +238,9 @@ class ModelConfig(BaseModel):
     def _resolve_model_class(self) -> type:
         """Resolve ``model_class`` to a Python type and validate support."""
         from pixano_inference.models.base import InferenceModel
-        from pixano_inference.plugins import ensure_models_loaded
+        from pixano_inference.plugins import describe_plugins, ensure_models_loaded
 
-        # Register built-in backends and installed entry-point plugins before resolving.
+        # Register the installed model packages (entry-point plugins) before resolving.
         ensure_models_loaded()
 
         if isinstance(self.model_class, type):
@@ -262,9 +262,11 @@ class ModelConfig(BaseModel):
         except KeyError:
             pass
 
+        registered = ", ".join(sorted(ModelClassRegistry.list_all())) or "none"
         raise ValueError(
-            f"Unknown model_class '{self.model_class}'. Install a model plugin that provides it "
-            "(pixano_inference.models entry point) or pass the class type directly."
+            f"Unknown model_class '{self.model_class}'. Registered model classes: {registered}; "
+            f"{describe_plugins()}. Install the model package that provides it (pixano_inference.models "
+            "entry point) or pass the class type directly."
         )
 
     def to_deployment_config(self) -> ModelDeploymentConfig:

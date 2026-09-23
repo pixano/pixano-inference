@@ -12,6 +12,63 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+The core is now **framework-free**: it ships no model implementation and depends on no ML
+framework, not even through extras. Every model is a self-contained package with its own
+`pyproject.toml`, `uv.lock` and tests.
+
+### ⚠️ Breaking changes
+
+- **Extras map to model packages.** `pixano-inference[sam|clip|grounding-dino|transformers-vlm|vllm]`
+  each install one model package (`pixano-inference-sam`, ...), and `[torch]` installs the
+  `pixano-inference-torch` helpers; the core itself depends on no framework. The
+  `transformers` extra is split into `grounding-dino` and `transformers-vlm`; `jax`,
+  `tensorflow`, `mlx` and `ultralytics` are gone.
+- **Grounding DINO, the Transformers VLM and the vLLM VLM moved out of the core** into
+  `pixano-inference-grounding-dino`, `pixano-inference-transformers-vlm` and
+  `pixano-inference-vllm`. Their params are imported from those packages
+  (`from pixano_inference_grounding_dino import GroundingDINOParams`), no longer from
+  `pixano_inference.configs`. Model class names are unchanged, so configs that reference models
+  by name keep working once the package is installed.
+- **`pixano_inference.frameworks` and `pixano_inference.impls` removed.** The PyTorch helpers
+  (`resolve_device`, `resolve_torch_dtype`, `should_compile`, tensor conversions) now live in
+  the `pixano-inference-torch` package; the unused JAX/TensorFlow/MLX adapters are gone.
+- **`pixano_inference.utils`** no longer exposes the per-framework `is_*_installed` /
+  `assert_*_installed` helpers (the generic `is_package_installed` /
+  `assert_package_installed` remain), and **`pixano_inference.ray.detect_optional_packages`**
+  and `build_runtime_env(auto_detect=...)` are removed.
+- **Docker build args.** `PIXANO_EXTRAS` and `INSTALL_SAM` are replaced by `MODEL_PACKAGES`
+  (space-separated package directories under `packages/`).
+
+### Added
+
+- Model packages install from their source, without publishing: a local directory, a
+  (private) git repository, a `#subdirectory=` of a monorepo, or a directory of wheels. `uv`
+  follows a package's `[tool.uv.sources]` to the core it depends on in every case; CI
+  verifies the three install paths. The Docker build takes `EXTRA_PACKAGES` (requirement
+  specs such as a private git URL), and the runtime image ships `git` so a derived image can
+  `pip install` a private model.
+
+### Fixed
+
+- The client, model and example packages could not be built or installed from their sdist:
+  their `pyproject.toml` pointed at a license file outside the package. Each package now
+  carries its own `LICENSE`.
+- The core sdist bundled the whole repository (model packages, docs, examples); it now
+  contains the core sources only.
+- The model packages declare every dependency they import (`pydantic`, `numpy`, `torch`)
+  instead of relying on what the core or their framework pulls in.
+- An unknown `model_class` error now lists the registered model classes and the model
+  plugins that were discovered or failed to load (with the reason), and discovery logs that
+  summary at startup.
+- `GroundingDINOModel` called `post_process_grounded_object_detection` with `box_threshold`,
+  which transformers no longer accepts (every detection raised `TypeError`).
+- `TransformersVLMModel` passed the prompt where processors expect images, and its generic
+  fallback used `AutoModelForVision2Seq`, removed in transformers 5
+  (now `AutoModelForImageTextToText`).
+- `VLLMVLMModel` passed a `device` argument that `vllm.LLM` rejects.
+
 ## [0.6.0] - 2026-07-25
 
 Major production-hardening release. The serving stack is rebuilt on **real Ray Serve** behind a

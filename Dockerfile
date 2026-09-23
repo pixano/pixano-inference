@@ -2,21 +2,29 @@
 
 # Multi-stage build for Pixano Inference.
 #
-# The default image is a GPU-capable server bundling the PyTorch runtime plus the built-in
-# torch backends (transformers) and the SAM2 plugin. GPU access at runtime is provided by
-# the host driver via the NVIDIA Container Toolkit, so no CUDA base image is needed — the
-# CUDA-enabled torch wheels are self-contained.
+# The core is framework-free; models are separate packages (packages/pixano-inference-*),
+# each bringing its own framework. The default image is a GPU-capable server bundling the
+# SAM2, Grounding DINO and Transformers VLM packages on the PyTorch runtime. GPU access at
+# runtime is provided by the host driver via the NVIDIA Container Toolkit, so no CUDA base
+# image is needed — the CUDA-enabled torch wheels are self-contained.
 #
 # Build args let you produce variants:
-#   TORCH_INDEX_URL   torch wheel index; set empty to skip torch (CPU/framework-free image),
-#                     or https://download.pytorch.org/whl/cpu for a CPU torch build.
-#   PIXANO_EXTRAS     core extras to install (e.g. "transformers"); empty for none.
-#   INSTALL_SAM       "true" to bundle the SAM2 plugin (+ the git-only sam-2 library).
+#   TORCH_INDEX_URL   torch wheel index; set empty to skip it (framework-free image, or let the
+#                     model packages pull torch from PyPI), or https://download.pytorch.org/whl/cpu
+#                     for a CPU torch build.
+#   MODEL_PACKAGES    model packages to bundle: space-separated directory names under packages/;
+#                     empty for a framework-free image. pixano-inference-sam also brings the
+#                     git-only sam-2 library.
+#   EXTRA_PACKAGES    extra requirement specs installed alongside: private model packages
+#                     from a git URL or an index, e.g. "my-model @ git+https://…". They
+#                     resolve pixano-inference from this build; add
+#                     ./packages/pixano-inference-torch if they need the torch helpers.
 #   INSTALL_EXAMPLE   "true" to bundle the framework-free numpy example plugin.
 #
 # Examples:
 #   docker build -t pixano-inference .                                   # GPU (default)
 #   docker build --build-arg TORCH_INDEX_URL=https://download.pytorch.org/whl/cpu -t pixano-inference:cpu .
+#   docker build --build-arg MODEL_PACKAGES="pixano-inference-clip" -t pixano-inference:clip .
 
 ARG PYTHON_VERSION=3.11
 
@@ -24,8 +32,8 @@ ARG PYTHON_VERSION=3.11
 FROM python:${PYTHON_VERSION}-slim AS builder
 
 ARG TORCH_INDEX_URL=https://download.pytorch.org/whl/cu124
-ARG PIXANO_EXTRAS=transformers
-ARG INSTALL_SAM=true
+ARG MODEL_PACKAGES="pixano-inference-sam pixano-inference-grounding-dino pixano-inference-transformers-vlm"
+ARG EXTRA_PACKAGES=""
 ARG INSTALL_EXAMPLE=false
 
 RUN apt-get update \
@@ -54,24 +62,28 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     # for both and their CUDA builds stay ABI-coherent (torchvision is required by
     # transformers and sam-2).
     if [ -n "${TORCH_INDEX_URL}" ]; then uv pip install torch torchvision --index-url "${TORCH_INDEX_URL}"; fi; \
-    # The lightweight client is a hard core dependency not on PyPI at build time; `uv pip install .`
-    # resolves it via [tool.uv.sources] but installs it EDITABLE (a path into /build), which breaks
-    # once the runtime stage copies only /opt/venv. So install core, then reinstall the client as a
-    # real (copied) package so it survives the multi-stage copy.
-    if [ -n "${PIXANO_EXTRAS}" ]; then uv pip install ".[${PIXANO_EXTRAS}]"; else uv pip install .; fi; \
-    uv pip install --force-reinstall --no-deps ./packages/pixano-inference-client; \
-    if [ "${INSTALL_SAM}" = "true" ]; then \
-        uv pip install ./packages/pixano-inference-sam "sam-2 @ git+https://github.com/facebookresearch/sam2.git@${SAM2_REF}"; \
-    fi; \
-    if [ "${INSTALL_EXAMPLE}" = "true" ]; then uv pip install ./examples/numpy_detector; fi
+    # The local packages (core, client, torch helpers, models) are not on PyPI and point at each
+    # other through [tool.uv.sources] path entries, which uv would install EDITABLE (paths into
+    # /build, lost once the runtime stage copies only /opt/venv). --no-sources installs them as
+    # regular packages instead; listing them all on one command line lets each satisfy the
+    # others' requirements.
+    reqs=". ./packages/pixano-inference-client"; \
+    if [ -n "${MODEL_PACKAGES}" ]; then reqs="${reqs} ./packages/pixano-inference-torch"; fi; \
+    for pkg in ${MODEL_PACKAGES}; do reqs="${reqs} ./packages/${pkg}"; done; \
+    case " ${MODEL_PACKAGES} " in \
+        *" pixano-inference-sam "*) reqs="${reqs} sam-2@git+https://github.com/facebookresearch/sam2.git@${SAM2_REF}";; \
+    esac; \
+    if [ "${INSTALL_EXAMPLE}" = "true" ]; then reqs="${reqs} ./examples/numpy_detector"; fi; \
+    uv pip install --no-sources ${reqs} ${EXTRA_PACKAGES}
 
 # --- Runtime ----------------------------------------------------------------------------
 FROM python:${PYTHON_VERSION}-slim AS runtime
 
 # curl for the healthcheck; libgl/libglib for image/vision libraries; g++ so torch.compile
-# (TorchInductor) can build its host glue at inference time.
+# (TorchInductor) can build its host glue at inference time; git so a derived image can
+# `pip install` a model package from a (private) repository.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl libgl1 libglib2.0-0 gcc g++ \
+    && apt-get install -y --no-install-recommends curl git libgl1 libglib2.0-0 gcc g++ \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --create-home --uid 1000 pixano \
     && mkdir -p /data/hf \

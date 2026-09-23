@@ -30,32 +30,87 @@
 
 # Pixano-Inference
 
-## Context
+A [Ray Serve](https://docs.ray.io/en/latest/serve/index.html) inference server built for the
+[Pixano](https://pixano.github.io/pixano/latest/) annotation tool: typed model configs, a REST
+API and a Python client. The core ships no model and depends on no ML framework. Each model is
+a separate package that brings its own framework, and the server discovers every installed one.
 
-This library provides a Ray Serve-based inference server for multimodal AI
-tasks. It was first built to support the
-[Pixano](https://pixano.github.io/pixano/latest/) AI-powered annotation tool
-and exposes typed deployment configs, a Python client, and a REST API for
-running deployed models.
-
-## Installation
-
-To install the library, simply execute the following command
+## Install
 
 ```bash
-pip install pixano-inference
+pip install pixano-inference                    # the server; ships no model
+pip install pixano-inference[grounding-dino]    # add a model
 ```
 
-If you want to dynamically make changes to the library to develop and test, make a dev install by cloning the repo and executing the following commands
+Each extra installs one model package, a separate distribution with its own framework:
+
+| Extra              | Models                                                             |
+| ------------------ | ------------------------------------------------------------------ |
+| `sam`              | SAM2 image segmentation and video tracking (plus `sam-2` from git) |
+| `clip`             | CLIP-style image/text embeddings (MobileCLIP2)                     |
+| `grounding-dino`   | Grounding DINO zero-shot detection                                 |
+| `transformers-vlm` | Vision-language models through Hugging Face                        |
+| `vllm`             | Vision-language models served by vLLM (Linux, GPU)                 |
+| `torch`            | PyTorch helpers for your own model                                 |
+
+## First model
+
+`models.py`:
+
+```python
+from pixano_inference.configs import DeploymentConfig, ModelConfig
+from pixano_inference_grounding_dino import GroundingDINOParams
+
+models = [
+    ModelConfig(
+        name="grounding-dino",
+        model_class="GroundingDINOModel",
+        model_params=GroundingDINOParams(path="IDEA-Research/grounding-dino-tiny"),
+        deployment=DeploymentConfig(num_gpus=1),  # 0 on a CPU-only host
+    )
+]
+```
 
 ```bash
-cd pixano-inference
-pip install -e .
+pixano-inference --host 0.0.0.0 --port 7463 --config models.py
+curl http://localhost:7463/v1/ready   # {"ready":true,"models":{"grounding-dino":"RUNNING"},...}
 ```
 
-## Usage
+The first start downloads the weights. `--config` is optional: models can also be deployed
+later with `POST /v1/models`.
 
-Look at the [documentation](https://pixano.github.io/pixano-inference/latest/) to use Pixano-Inference.
+```python
+from pixano_inference_client import DetectionRequest, SyncPixanoInferenceClient
+
+client = SyncPixanoInferenceClient("http://localhost:7463")
+result = client.detection(
+    DetectionRequest(
+        model="grounding-dino",
+        image="https://raw.githubusercontent.com/pixano/pixano-inference/main/docs/assets/examples/sam2/bedroom/00000.jpg",
+        classes=["bed", "lamp"],
+        box_threshold=0.3,
+        text_threshold=0.25,
+    )
+)
+print(result.data.classes, result.data.boxes, result.data.scores)
+```
+
+Applications that only call a server install `pixano-inference-client` alone (httpx, pydantic,
+numpy). Docker images, autoscaling and the API: see the
+[documentation](https://pixano.github.io/pixano-inference/latest/).
+
+## Development
+
+```bash
+uv sync && uv run pytest -m "not integration"                                        # the framework-free core
+uv run --project packages/pixano-inference-sam pytest packages/pixano-inference-sam/tests  # one model, in its own environment
+uv run --project packages/pixano-inference-sam pixano-inference --config models.py
+```
+
+Every package under `packages/` and `examples/` has its own `pyproject.toml`, `uv.lock` and
+tests. Your own model is a package like these and can stay private: see the
+[custom model specification](docs/ray_serve/custom_model_spec.md) and its
+[guide](docs/ray_serve/custom_models.md).
 
 ## License
 

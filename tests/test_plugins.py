@@ -32,19 +32,6 @@ def test_ensure_models_loaded_registers_plugins():
     assert ModelClassRegistry.has("NumpyDetector")
 
 
-def test_discovers_installed_clip_plugin():
-    """The bundled CLIP embedding plugin is discovered and registers its model by name.
-
-    Importing the plugin triggers registration; ``open_clip`` is only needed at ``load_model``
-    time, so discovery stays light (no weights, no framework import here).
-    """
-    pytest.importorskip("pixano_inference_clip")
-    result = load_plugin_models()
-    assert "clip" in result["loaded"]
-    assert result["failed"] == []
-    assert ModelClassRegistry.has("OpenClipEmbeddingModel")
-
-
 def test_broken_plugin_is_skipped_not_fatal(monkeypatch):
     """A plugin whose load() raises is logged and skipped, not fatal."""
 
@@ -59,3 +46,20 @@ def test_broken_plugin_is_skipped_not_fatal(monkeypatch):
     result = load_plugin_models()
     assert result["failed"] == ["broken"]
     assert result["loaded"] == []
+
+    # A config naming a class the broken plugin should have provided says why it is missing.
+    from pydantic import ValidationError
+
+    from pixano_inference.configs import ModelConfig
+
+    with pytest.raises(ValidationError, match=r"broken \(ImportError: no such module\)"):
+        ModelConfig(name="x", model_class="ClassFromBrokenPlugin")
+
+    monkeypatch.undo()
+    load_plugin_models()  # restore the real discovery state for the other tests
+
+
+def test_describe_plugins_names_loaded_entry_points():
+    pytest.importorskip("pixano_numpy_detector")
+    load_plugin_models()
+    assert "numpy_detector" in plugins.describe_plugins()

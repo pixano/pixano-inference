@@ -19,9 +19,24 @@ registers it automatically.
 from __future__ import annotations
 
 import numpy as np
+from pydantic import Field
 
+from pixano_inference.configs import BaseModelParams, register_model_params
 from pixano_inference.models import DetectionInput, DetectionModel, DetectionOutput, register_model
 from pixano_inference.utils.media import convert_string_to_image
+
+
+@register_model_params("NumpyDetector")
+class NumpyDetectorParams(BaseModelParams):
+    """Typed params for ``NumpyDetector``, validated when a config is built.
+
+    Attributes:
+        path: There is no checkpoint; this only names the deployment when ``name`` is omitted.
+        threshold: Summed per-channel colour difference above which a pixel is foreground.
+    """
+
+    path: str = "numpy-detector"
+    threshold: int = Field(default=20, ge=0)
 
 
 @register_model("NumpyDetector")

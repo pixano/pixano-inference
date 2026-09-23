@@ -23,7 +23,7 @@ point; installing it makes `YOLOModel` discoverable by name (and importable in e
 Serve worker):
 
 ```bash
-uv pip install -e examples/yolo    # brings in ultralytics
+uv sync --project examples/yolo    # its own environment: the Pixano Inference core + ultralytics
 ```
 
 ## Project Structure
@@ -136,7 +136,7 @@ Because the package is installed, no `PYTHONPATH`/`--module-path` is needed — 
 discovered via its entry point and referenced by name in the config:
 
 ```bash
-uv run pixano-inference --config examples/yolo/config.py
+uv run --project examples/yolo pixano-inference --config examples/yolo/config.py
 ```
 
 You should see:
@@ -151,13 +151,13 @@ With the server running, use the included test script:
 
 ```bash
 # With a real image
-uv run python examples/yolo/test_yolo.py \
+uv run --project examples/yolo python examples/yolo/test_yolo.py \
     --server-url http://127.0.0.1:7463 \
     --model-name yolo26s \
     --image path/to/image.jpg
 
 # With a synthetic test image (no --image flag)
-uv run python examples/yolo/test_yolo.py \
+uv run --project examples/yolo python examples/yolo/test_yolo.py \
     --server-url http://127.0.0.1:7463 \
     --model-name yolo26s
 ```
@@ -250,10 +250,11 @@ The server deploys models synchronously before starting. If `num_gpus=1` but no 
 
 **`ModuleNotFoundError: No module named 'ultralytics'`**
 
-The plugin package pulls in ultralytics. Reinstall it: `uv pip install -e examples/yolo`.
+The plugin package pulls in ultralytics. Sync its environment (`uv sync --project examples/yolo`) and
+start the server from it (`uv run --project examples/yolo pixano-inference ...`).
 
 **`Unknown model_class 'YOLOModel'`**
 
-The plugin package is not installed in the server's environment. Install it with
-`uv pip install -e examples/yolo` (or `pip install` your published package) so its entry
-point is discovered.
+The plugin package is not installed in the server's environment. Start the server from the
+package's own environment (`uv run --project examples/yolo pixano-inference ...`), or
+`pip install` your published package where the server runs, so its entry point is discovered.

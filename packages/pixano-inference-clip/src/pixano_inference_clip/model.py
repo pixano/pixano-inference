@@ -19,7 +19,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from pixano_inference.frameworks.torch import resolve_device
+from pixano_inference_torch import resolve_device
+
 from pixano_inference.models.embedding import EmbeddingInput, EmbeddingModel, EmbeddingOutput
 from pixano_inference.models.registry import register_model
 from pixano_inference.ray.config import ModelDeploymentConfig
@@ -58,7 +59,7 @@ class OpenClipEmbeddingModel(EmbeddingModel):
         """Load the open_clip model, preprocessing transform, and tokenizer."""
         from pixano_inference.utils.package import assert_package_installed
 
-        assert_package_installed("open_clip", "open_clip is not installed. Install pixano-inference[clip].")
+        assert_package_installed("open_clip", "open_clip is not installed. Install pixano-inference-clip.")
 
         import open_clip
         import torch

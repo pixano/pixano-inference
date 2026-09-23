@@ -29,10 +29,12 @@ it takes to make a model available by name.
 
 ## Try it
 
-Install the package (editable, for live iteration):
+The package is self-contained (its own `pyproject.toml` and `uv.lock`), and its environment
+holds the Pixano Inference core plus the model, installed editable for live iteration:
 
 ```bash
-uv pip install -e examples/numpy_detector
+uv sync --project examples/numpy_detector
+uv run --project examples/numpy_detector pytest examples/numpy_detector/tests
 # or, from your own model repo:  pip install pixano-numpy-detector
 ```
 
@@ -55,7 +57,7 @@ models = [
 Start the server and call it:
 
 ```bash
-pixano-inference --host 0.0.0.0 --port 7463 --config models.py
+uv run --project examples/numpy_detector pixano-inference --host 0.0.0.0 --port 7463 --config models.py
 ```
 
 ```python
@@ -69,10 +71,9 @@ print(result.data.boxes, result.data.classes)
 
 ## Making your own
 
-1. Copy this package layout.
-2. Subclass one of the capability base classes (`DetectionModel`, `SegmentationModel`,
-   `TrackingModel`, `VLMModel`, `NERModel`), implement `load_model()` and `predict()`, and
-   decorate it with `@register_model("YourModel")`.
-3. Declare the `pixano_inference.models` entry point pointing at your module.
-4. Publish it (PyPI, a private index, or a git URL) and `pip install` it wherever the server
-   runs. It will be picked up automatically.
+Copy this layout and follow the
+[Custom Model Specification](../../docs/ray_serve/custom_model_spec.md), which uses this
+package as its reference implementation: one capability base class, `@register_model`, typed
+params, an entry point, every dependency declared, the framework imported lazily. Install the
+result wherever the server runs (PyPI, a private index, a git URL or a local path); it is
+discovered automatically.
