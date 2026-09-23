@@ -41,7 +41,7 @@ The server discovers installed models automatically; the core requires no ML fra
 Requires Python 3.10–3.13. Install Pixano-Inference with the Grounding DINO model:
 
 ```bash
-pip install "pixano-inference[grounding-dino]"
+pip install "pixano-inference[sam,clip]"
 ```
 
 Create `models.py`:
