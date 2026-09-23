@@ -31,6 +31,12 @@ them and skips their upload. Once a project has its publisher, remove it from th
 re-run that package's job on the release run; delete the variable when all are published. Until
 a model package is on PyPI, `pip install pixano-inference[<its extra>]` fails on that name.
 
+## Re-publishing a tag
+
+`Actions → Publish → Run workflow` with the tag (e.g. `v0.6.0`) publishes that tag again with
+the current workflow file; uploads that already exist are skipped, and the docs are not
+redeployed.
+
 ## PyPI prerequisites
 
 Each project needs a [trusted publisher](https://docs.pypi.org/trusted-publishers/) for the
@@ -38,7 +44,9 @@ repository `pixano/pixano-inference` and the workflow `publish.yml` (no environm
 project that does not exist on PyPI yet, add it as a _pending_ publisher; the first upload
 creates it. PyPI allows one pending publisher per configuration and at most three at a time,
 so either bring the projects online one release job at a time (`PYPI_SKIP_PACKAGES`), or create
-them all at once with a one-off manual upload using an account-scoped API token and then add
-regular publishers to the created projects. The projects: `pixano-inference`, `pixano-inference-client`, `pixano-inference-torch`,
+them all at once with an account-scoped API token: either a one-off manual upload
+(`uv publish dist/*`), or the token stored as the repository secret `PYPI_API_TOKEN`, which the
+workflow uses instead of trusted publishing for as long as it exists (delete it afterwards, and
+add regular publishers to the created projects). The projects: `pixano-inference`, `pixano-inference-client`, `pixano-inference-torch`,
 `pixano-inference-sam`, `pixano-inference-clip`, `pixano-inference-grounding-dino`,
 `pixano-inference-transformers-vlm`, `pixano-inference-vllm`.
