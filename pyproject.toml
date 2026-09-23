@@ -54,6 +54,7 @@ dependencies = [
   "requests",
   "uvicorn >= 0.31.0",
   "ray[serve] >= 2.53.0, < 3.0.0",
+  "jinja2 >= 3.1.6",
   "pyyaml >= 6.0.0",
   "prometheus-client >= 0.16.0",
 ]

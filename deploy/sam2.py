@@ -1,3 +1,9 @@
+# =================================
+# Copyright: CEA-LIST/DIASI/SIALV
+# Author : pixano@cea.fr
+# License: CECILL-C
+# =================================
+
 from pixano_inference.configs import DeploymentConfig, ModelConfig
 from pixano_inference_sam import Sam2ImageParams, Sam2VideoParams
 

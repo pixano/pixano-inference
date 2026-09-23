@@ -80,7 +80,7 @@ def _decode_image_under_policy(source: Any, policy: Any) -> Image.Image:
         ValueError: If the format is not allowed or the image exceeds the pixel cap.
     """
     image = Image.open(source)
-    allowed = getattr(policy, "allowed_image_formats", frozenset())
+    allowed: frozenset[str] = getattr(policy, "allowed_image_formats", frozenset())
     fmt = (image.format or "").upper()
     if allowed and fmt not in allowed:
         image.close()

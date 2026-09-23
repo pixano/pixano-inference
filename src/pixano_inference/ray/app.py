@@ -442,10 +442,14 @@ class DeploymentManager:
 
     def model_statuses(self) -> dict[str, str]:
         """Return {model_name: Serve status string} for all configured models."""
-        try:
-            apps = serve.status().applications
-        except Exception:
-            apps = {}
+        # serve.status() auto-starts a local Ray cluster when none is connected; a status
+        # query must never do that.
+        apps: dict[str, Any] = {}
+        if ray.is_initialized():
+            try:
+                apps = serve.status().applications
+            except Exception:
+                pass
         result: dict[str, str] = {}
         for name in self._configs:
             app = apps.get(name)
