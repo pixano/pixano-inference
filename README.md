@@ -13,14 +13,14 @@
 <br/>
 <br/>
 
-**Pixano-Inference is an open-source inference library for Pixano.**
+**Pixano-Inference is an inference library for Pixano.**
 
 **_Under active development, subject to API change_**
 
 [![GitHub version](https://img.shields.io/github/v/release/pixano/pixano-inference?label=release&logo=github)](https://github.com/pixano/pixano-inference/releases)
 [![PyPI version](https://img.shields.io/pypi/v/pixano-inference?color=blue&label=release&logo=pypi&logoColor=white)](https://pypi.org/project/pixano-inference/)
-[![Tests](https://img.shields.io/github/actions/workflow/status/pixano/pixano-inference/test_back.yml?branch=develop)](https://github.com/pixano/pixano-inference/actions/workflows/test_back.yml)
-[![Documentation](https://img.shields.io/website?url=https%3A%2F%2Fpixano.github.io%2F&up_message=online&down_message=offline&label=docs)](https://pixano.github.io)
+[![Tests](https://img.shields.io/github/actions/workflow/status/pixano/pixano-inference/test_back.yml?branch=main)](https://github.com/pixano/pixano-inference/actions/workflows/test_back.yml)
+[![Documentation](https://img.shields.io/website?url=https%3A%2F%2Fpixano.github.io%2Fpixano-inference%2F&up_message=online&down_message=offline&label=docs)](https://pixano.github.io/pixano-inference/)
 [![Python version](https://img.shields.io/pypi/pyversions/pixano-inference?color=important&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-CeCILL--C-blue.svg)](LICENSE)
 
@@ -30,32 +30,21 @@
 
 # Pixano-Inference
 
-A [Ray Serve](https://docs.ray.io/en/latest/serve/index.html) inference server built for the
-[Pixano](https://pixano.github.io/pixano/latest/) annotation tool: typed model configs, a REST
-API and a Python client. The core ships no model and depends on no ML framework. Each model is
-a separate package that brings its own framework, and the server discovers every installed one.
+A [Ray Serve](https://docs.ray.io/en/latest/serve/index.html) inference server for the
+[Pixano](https://pixano.github.io/pixano/latest/) annotation tool, with a REST API and a Python client.
 
-## Install
+Models are independent Python packages with their own code, dependencies, and environments.
+The server discovers installed models automatically; the core requires no ML framework.
+
+## Quickstart
+
+Requires Python 3.10–3.13. Install Pixano-Inference with the Grounding DINO model:
 
 ```bash
-pip install pixano-inference                    # the server; ships no model
-pip install pixano-inference[grounding-dino]    # add a model
+pip install "pixano-inference[grounding-dino]"
 ```
 
-Each extra installs one model package, a separate distribution with its own framework:
-
-| Extra              | Models                                                             |
-| ------------------ | ------------------------------------------------------------------ |
-| `sam`              | SAM2 image segmentation and video tracking (plus `sam-2` from git) |
-| `clip`             | CLIP-style image/text embeddings (MobileCLIP2)                     |
-| `grounding-dino`   | Grounding DINO zero-shot detection                                 |
-| `transformers-vlm` | Vision-language models through Hugging Face                        |
-| `vllm`             | Vision-language models served by vLLM (Linux, GPU)                 |
-| `torch`            | PyTorch helpers for your own model                                 |
-
-## First model
-
-`models.py`:
+Create `models.py`:
 
 ```python
 from pixano_inference.configs import DeploymentConfig, ModelConfig
@@ -66,18 +55,18 @@ models = [
         name="grounding-dino",
         model_class="GroundingDINOModel",
         model_params=GroundingDINOParams(path="IDEA-Research/grounding-dino-tiny"),
-        deployment=DeploymentConfig(num_gpus=1),  # 0 on a CPU-only host
-    )
+        deployment=DeploymentConfig(num_gpus=0),  # Set to 1 to use a GPU
+    ),
 ]
 ```
 
+Start the server. The first run downloads the model weights.
+
 ```bash
-pixano-inference --host 0.0.0.0 --port 7463 --config models.py
-curl http://localhost:7463/v1/ready   # {"ready":true,"models":{"grounding-dino":"RUNNING"},...}
+pixano-inference --config models.py
 ```
 
-The first start downloads the weights. `--config` is optional: models can also be deployed
-later with `POST /v1/models`.
+Check [readiness](http://localhost:7463/v1/ready), then save this request as `predict.py`:
 
 ```python
 from pixano_inference_client import DetectionRequest, SyncPixanoInferenceClient
@@ -95,22 +84,47 @@ result = client.detection(
 print(result.data.classes, result.data.boxes, result.data.scores)
 ```
 
-Applications that only call a server install `pixano-inference-client` alone (httpx, pydantic,
-numpy). Docker images, autoscaling and the API: see the
-[documentation](https://pixano.github.io/pixano-inference/latest/).
+Run it in another terminal, using the same Python environment:
+
+```bash
+python predict.py
+```
+
+Applications calling an existing server only need [pixano-inference-client](packages/pixano-inference-client).
+See the [documentation](https://pixano.github.io/pixano-inference/latest/) for the API,
+Docker deployment, and autoscaling.
+
+## Model packages
+
+Choose a model with an extra, for example `pip install "pixano-inference[sam]"`:
+
+| Extra              | Package                                                        | Supports                                     |
+| ------------------ | -------------------------------------------------------------- | -------------------------------------------- |
+| `sam`              | [SAM](packages/pixano-inference-sam)                           | SAM2 image segmentation and video tracking   |
+| `clip`             | [CLIP](packages/pixano-inference-clip)                         | Image/text embeddings, including MobileCLIP2 |
+| `grounding-dino`   | [Grounding DINO](packages/pixano-inference-grounding-dino)     | Object detection from text prompts           |
+| `transformers-vlm` | [Transformers VLM](packages/pixano-inference-transformers-vlm) | Hugging Face vision-language models          |
+| `vllm`             | [vLLM](packages/pixano-inference-vllm)                         | Vision-language models on Linux GPUs         |
+
+Each extra installs an independent model package. SAM also needs the upstream `sam-2`
+library; follow its package's installation instructions.
 
 ## Development
 
+For source development, clone the repository and use [uv](https://docs.astral.sh/uv/):
+
 ```bash
-uv sync && uv run pytest -m "not integration"                                        # the framework-free core
-uv run --project packages/pixano-inference-sam pytest packages/pixano-inference-sam/tests  # one model, in its own environment
-uv run --project packages/pixano-inference-sam pixano-inference --config models.py
+git clone https://github.com/pixano/pixano-inference.git
+cd pixano-inference
+uv sync
+uv run pytest -m "not integration" tests/  # Core unit tests
+uv run --project packages/pixano-inference-sam pytest packages/pixano-inference-sam/tests
 ```
 
-Every package under `packages/` and `examples/` has its own `pyproject.toml`, `uv.lock` and
-tests. Your own model is a package like these and can stay private: see the
-[custom model specification](docs/ray_serve/custom_model_spec.md) and its
-[guide](docs/ray_serve/custom_models.md).
+Develop and test each model in its own package, with its own `pyproject.toml`, `uv.lock`,
+and tests. To build a custom model, start with the [numpy detector](examples/numpy_detector)
+and follow the [guide](docs/ray_serve/custom_models.md) and
+[package specification](docs/ray_serve/custom_model_spec.md).
 
 ## License
 
