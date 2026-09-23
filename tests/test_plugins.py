@@ -32,19 +32,6 @@ def test_ensure_models_loaded_registers_plugins():
     assert ModelClassRegistry.has("NumpyDetector")
 
 
-def test_discovers_installed_clip_plugin():
-    """The bundled CLIP embedding plugin is discovered and registers its model by name.
-
-    Importing the plugin triggers registration; ``open_clip`` is only needed at ``load_model``
-    time, so discovery stays light (no weights, no framework import here).
-    """
-    pytest.importorskip("pixano_inference_clip")
-    result = load_plugin_models()
-    assert "clip" in result["loaded"]
-    assert result["failed"] == []
-    assert ModelClassRegistry.has("OpenClipEmbeddingModel")
-
-
 def test_broken_plugin_is_skipped_not_fatal(monkeypatch):
     """A plugin whose load() raises is logged and skipped, not fatal."""
 

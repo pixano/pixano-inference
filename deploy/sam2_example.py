@@ -15,9 +15,9 @@ Note:
     GPU resources that will never become available.
 """
 
-from pixano_inference.configs import DeploymentConfig, ModelConfig, Sam2ImageParams, Sam2VideoParams
-from pixano_inference.impls.sam2.image import Sam2ImageModel
-from pixano_inference.impls.sam2.video import Sam2VideoModel
+from pixano_inference_sam import Sam2ImageModel, Sam2ImageParams, Sam2VideoModel, Sam2VideoParams
+
+from pixano_inference.configs import DeploymentConfig, ModelConfig
 
 
 models = [

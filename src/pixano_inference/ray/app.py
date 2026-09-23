@@ -525,11 +525,7 @@ def _start_ray_and_serve(config: RayServeConfig, should_abort: Callable[[], bool
     if not ray.is_initialized():
         _disable_ray_uv_run_hook()
         init_kwargs: dict[str, Any] = {"namespace": config.ray_namespace}
-        runtime_env = build_runtime_env(
-            pip_packages=config.pip_packages,
-            working_dir=config.working_dir,
-            auto_detect=False,
-        )
+        runtime_env = build_runtime_env(pip_packages=config.pip_packages, working_dir=config.working_dir)
         if runtime_env:
             init_kwargs["runtime_env"] = runtime_env
         if config.num_cpus is not None:
@@ -599,7 +595,7 @@ def create_ray_serve_app(
     if config is None:
         config = RayServeConfig()
 
-    # Register built-in backends and installed entry-point plugins.
+    # Register the installed model packages (entry-point plugins).
     from pixano_inference.plugins import ensure_models_loaded
 
     ensure_models_loaded()

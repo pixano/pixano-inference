@@ -6,6 +6,7 @@ requires-python = ">=3.10,<3.14"
 license = { file = "../../LICENSE" }
 dependencies = [
   "pixano-inference",
+  "pixano-inference-torch",
   "torch >= 2.3.0, < 3.0.0",
   # open_clip provides a unified API over CLIP-family models (MobileCLIP, OpenCLIP, MetaCLIP,
   # and some SigLIP checkpoints), so this one plugin can load any of them by checkpoint spec.
@@ -15,6 +16,28 @@ dependencies = [
 
 [project.entry-points."pixano_inference.models"]
 clip = "pixano_inference_clip"
+
+[dependency-groups]
+dev = [
+  "pytest",
+]
+
+[tool.uv]
+environments = [
+  "sys_platform == 'linux'",
+  "sys_platform == 'darwin'",
+]
+
+[tool.uv.sources]
+pixano-inference = { path = "../..", editable = true }
+pixano-inference-torch = { path = "../pixano-inference-torch", editable = true }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-m 'not integration'"
+markers = [
+  "integration: deploys the model on a real Ray Serve runtime and downloads weights (deselect with '-m \"not integration\"')",
+]
 
 [build-system]
 requires = ["hatchling"]

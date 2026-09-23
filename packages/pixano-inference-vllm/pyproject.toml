@@ -1,0 +1,41 @@
+[project]
+name = "pixano-inference-vllm"
+version = "0.1.0"
+description = "vLLM-served vision-language models, packaged as a Pixano Inference plugin."
+requires-python = ">=3.10,<3.14"
+license = { file = "../../LICENSE" }
+readme = "README.md"
+dependencies = [
+  "pixano-inference",
+  "msgspec",
+  "torch >= 2.3.0, < 3.0.0",
+  "vllm >= 0.28.0; sys_platform == 'linux'",
+]
+
+# Discovery: Pixano Inference loads this entry point at startup, registering the model.
+[project.entry-points."pixano_inference.models"]
+vllm_vlm = "pixano_inference_vllm"
+
+[dependency-groups]
+dev = [
+  "pytest",
+]
+
+[tool.uv]
+environments = [
+  "sys_platform == 'linux'",
+  "sys_platform == 'darwin'",
+]
+
+[tool.uv.sources]
+pixano-inference = { path = "../..", editable = true }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pixano_inference_vllm"]

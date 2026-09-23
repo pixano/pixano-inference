@@ -6,18 +6,41 @@ requires-python = ">=3.10,<3.14"
 license = { file = "../../LICENSE" }
 dependencies = [
   "pixano-inference",
+  "pixano-inference-torch",
+  # sam-2 downloads Hugging Face checkpoints with huggingface_hub but does not declare it.
+  "huggingface_hub",
   "torch >= 2.3.0, < 3.0.0",
 ]
 
 # NOTE: the SAM2 backend also needs the upstream `sam-2` library, which is only distributed
 # from git (not PyPI), so it cannot be listed here without making this package
 # non-publishable. Install it alongside:
-#   pip install pixano-inference[sam]
+#   pip install pixano-inference-sam
 #   pip install "sam-2 @ git+https://github.com/facebookresearch/sam2.git"
+# (The dev dependency-group below installs it for local development.)
 
 # Discovery: Pixano Inference loads this entry point at startup, registering the SAM2 models.
 [project.entry-points."pixano_inference.models"]
 sam2 = "pixano_inference_sam"
+
+[dependency-groups]
+dev = [
+  "pytest",
+  "sam-2 @ git+https://github.com/facebookresearch/sam2.git",
+]
+
+[tool.uv]
+environments = [
+  "sys_platform == 'linux'",
+  "sys_platform == 'darwin'",
+]
+
+[tool.uv.sources]
+pixano-inference = { path = "../..", editable = true }
+pixano-inference-torch = { path = "../pixano-inference-torch", editable = true }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [build-system]
 requires = ["hatchling"]

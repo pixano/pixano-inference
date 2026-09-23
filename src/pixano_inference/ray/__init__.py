@@ -56,7 +56,7 @@ from .config import AutoscalingConfig, ModelDeploymentConfig, RayServeConfig, Re
 from .config_loader import ConfigLoader
 from .deployment import build_model_app
 from .server import InferenceServer
-from .utils import build_runtime_env, detect_optional_packages
+from .utils import build_runtime_env
 
 
 __all__ = [
@@ -68,5 +68,4 @@ __all__ = [
     "build_model_app",
     "InferenceServer",
     "build_runtime_env",
-    "detect_optional_packages",
 ]

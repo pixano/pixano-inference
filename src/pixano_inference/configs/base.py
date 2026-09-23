@@ -240,7 +240,7 @@ class ModelConfig(BaseModel):
         from pixano_inference.models.base import InferenceModel
         from pixano_inference.plugins import ensure_models_loaded
 
-        # Register built-in backends and installed entry-point plugins before resolving.
+        # Register the installed model packages (entry-point plugins) before resolving.
         ensure_models_loaded()
 
         if isinstance(self.model_class, type):

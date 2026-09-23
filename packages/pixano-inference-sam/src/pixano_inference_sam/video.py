@@ -16,12 +16,13 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+from pixano_inference_torch import resolve_device, resolve_torch_dtype
 
-from pixano_inference.frameworks.torch import resolve_device, resolve_torch_dtype
 from pixano_inference.models.registry import register_model
 from pixano_inference.models.tracking import TrackingInput, TrackingKeyframe, TrackingModel, TrackingOutput
 from pixano_inference.ray.config import ModelDeploymentConfig
 
+from ._deps import assert_sam2_installed
 from ._prompts import validate_prompts
 
 
@@ -57,8 +58,6 @@ class Sam2VideoModel(TrackingModel):
 
     def load_model(self) -> None:
         """Load the SAM2 video predictor."""
-        from pixano_inference.utils.package import assert_sam2_installed
-
         assert_sam2_installed()
 
         import torch
@@ -371,8 +370,8 @@ class Sam2VideoModel(TrackingModel):
             RuntimeError: If no frames are provided.
         """
         import torch
+        from pixano_inference_torch import convert_image_pil_to_tensor
 
-        from pixano_inference.frameworks.torch import convert_image_pil_to_tensor
         from pixano_inference.utils.media import convert_string_to_image
 
         num_frames = len(frames)

@@ -7,8 +7,8 @@
 """Pydantic models for N-dimensional arrays.
 
 This is a core, framework-agnostic wire type. It converts to and from ``numpy.ndarray``
-only; conversions to framework tensors (torch/jax/tf/mlx) live in
-:mod:`pixano_inference.frameworks`, so the core does not privilege any one framework.
+only; conversions to framework tensors live in the model packages (e.g.
+``pixano_inference_torch`` for PyTorch), so the core does not privilege any one framework.
 
 Arrays serialize as ``{shape, dtype, data}`` where ``data`` is the base64-encoded raw bytes
 of the array (compact and cheap to parse, unlike a JSON list of floats — important for

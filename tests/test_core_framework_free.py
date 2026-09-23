@@ -7,8 +7,8 @@
 """Guardrail: the core package must not import any ML framework at module load.
 
 pixano-inference is framework-agnostic. The core (``models``, ``schemas``, ``configs``,
-``ray``, ``client``, ``utils``) depends on numpy only; PyTorch/JAX/TensorFlow/MLX are
-optional extras resolved lazily inside ``pixano_inference.frameworks`` and ``impls``.
+``ray``, ``client``, ``utils``) depends on numpy only and ships no model implementation;
+every model lives in its own package (``packages/*``, ``examples/*``) that brings its framework.
 
 These tests run each import in a fresh subprocess so a framework imported elsewhere in the
 test session (fixtures, other modules) cannot mask an eager import in the core.
@@ -16,6 +16,9 @@ test session (fixtures, other modules) cannot mask an eager import in the core.
 
 import subprocess
 import sys
+from importlib.metadata import requires
+
+from packaging.requirements import Requirement
 
 
 _FRAMEWORKS = ("torch", "tensorflow", "jax", "flax", "mlx")
@@ -32,12 +35,7 @@ _CORE_IMPORTS = (
     "import pixano_inference.ray",
     "import pixano_inference.ray.app",
     "import pixano_inference.ray.config",
-    # The frameworks registry and each adapter module must import without their framework.
-    "import pixano_inference.frameworks",
-    "import pixano_inference.frameworks.torch",
-    "import pixano_inference.frameworks.jax",
-    "import pixano_inference.frameworks.tensorflow",
-    "import pixano_inference.frameworks.mlx",
+    "import pixano_inference.plugins",
 )
 
 
@@ -73,3 +71,10 @@ def test_each_core_module_is_framework_free():
         if leaked:
             offenders[stmt] = leaked
     assert not offenders, f"Modules that eagerly import an ML framework: {offenders}"
+
+
+def test_core_distribution_declares_no_ml_framework():
+    """No requirement of the core -- in any extra -- may pull an ML framework or model backend."""
+    banned = set(_FRAMEWORKS) | {"transformers", "vllm", "ultralytics", "keras", "torchvision", "open-clip-torch"}
+    declared = {Requirement(r).name.lower().replace("_", "-") for r in requires("pixano-inference") or []}
+    assert not declared & banned, f"Core declares framework dependencies: {sorted(declared & banned)}"
