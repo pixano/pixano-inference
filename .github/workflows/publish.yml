@@ -105,8 +105,13 @@ jobs:
         working-directory: packages/${{ matrix.package }}
         run: hatch build
 
-      # Model packages are versioned on their own; unchanged ones are skipped, not failed.
+      # Each project needs its own trusted publisher on PyPI, and PyPI only lets a few pending
+      # ones exist at a time. Until every project has one, list the packages to hold back in the
+      # repository variable PYPI_SKIP_PACKAGES (space-separated names): they are still built, not
+      # uploaded. Publish one later by re-running just its job. Versioned on their own, unchanged
+      # packages are skipped, not failed.
       - name: Publish
+        if: ${{ !contains(vars.PYPI_SKIP_PACKAGES, matrix.package) }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: packages/${{ matrix.package }}/dist
@@ -137,9 +142,12 @@ jobs:
       - name: Build
         run: hatch build
 
-      # No skip-existing here: a release must carry a new core version.
+      # The tag check above guarantees a new core version; skip-existing keeps re-runs of the
+      # workflow idempotent once the core is up.
       - name: Publish
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
 
   deploy_docs:
     name: Publish documentation website
