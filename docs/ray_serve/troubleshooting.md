@@ -14,10 +14,10 @@ Startup is bounded and interruptible: `Ctrl-C` exits within a few seconds at any
 wait on Ray fails with a diagnostic rather than blocking forever. Two knobs on `RayServeConfig`
 control the budgets:
 
-| Setting | Default | Bounds |
-| --- | --- | --- |
-| `serve_start_timeout_s` | `120.0` | Waiting for Ray Serve's controller actor to come up. |
-| `deploy_timeout_s` | `600.0` | Waiting for one model's Serve application to reach `RUNNING`. |
+| Setting                 | Default | Bounds                                                        |
+| ----------------------- | ------- | ------------------------------------------------------------- |
+| `serve_start_timeout_s` | `120.0` | Waiting for Ray Serve's controller actor to come up.          |
+| `deploy_timeout_s`      | `600.0` | Waiting for one model's Serve application to reach `RUNNING`. |
 
 These exist because Ray's own calls have no timeout: `serve.start()` does a bare `ray.get` on the
 controller, and `serve.run()` waits with `timeout_s=-1` regardless of its `blocking` argument. If a
