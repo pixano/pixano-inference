@@ -32,7 +32,7 @@ class TransformersVLMModel(VLMModel):
     - ``processor_config`` (dict, optional): Kwargs for ``AutoProcessor.from_pretrained``.
     - ``config`` (dict, optional): Kwargs for model ``from_pretrained``.
     - ``model_type`` (str, optional): Model type hint (e.g. "llava", "llava-next").
-      If not provided, falls back to ``AutoModelForVision2Seq``.
+      If not provided, falls back to ``AutoModelForImageTextToText``.
     - ``compile`` (bool, optional): ``torch.compile`` the model. Default auto (GPU only).
     """
 
@@ -103,10 +103,10 @@ class TransformersVLMModel(VLMModel):
 
                 return LlavaForConditionalGeneration.from_pretrained(path, device_map=device, **model_config)
 
-        # Fallback to generic Vision2Seq
-        from transformers import AutoModelForVision2Seq
+        # Fallback to the generic image-text-to-text auto class
+        from transformers import AutoModelForImageTextToText
 
-        return AutoModelForVision2Seq.from_pretrained(path, device_map=device, **model_config)
+        return AutoModelForImageTextToText.from_pretrained(path, device_map=device, **model_config)
 
     @property
     def metadata(self) -> dict[str, Any]:
@@ -157,7 +157,7 @@ class TransformersVLMModel(VLMModel):
             if isinstance(prompt, list):
                 prompt = self._processor.apply_chat_template(prompt, add_generation_prompt=True)
 
-            inputs = self._processor(prompt, pil_images, return_tensors="pt").to(self._model.device)
+            inputs = self._processor(text=prompt, images=pil_images, return_tensors="pt").to(self._model.device)
             generate_ids = self._model.generate(**inputs, generation_config=generation_config)
 
             total_tokens: int = generate_ids.shape[1]

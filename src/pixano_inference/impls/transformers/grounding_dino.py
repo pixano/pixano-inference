@@ -116,7 +116,7 @@ class GroundingDINOModel(DetectionModel):
             result = self._processor.post_process_grounded_object_detection(
                 outputs,
                 inputs.input_ids,
-                box_threshold=input.box_threshold,
+                threshold=input.box_threshold,
                 text_threshold=input.text_threshold,
                 target_sizes=[target_size],
             )[0]
@@ -124,7 +124,7 @@ class GroundingDINOModel(DetectionModel):
             return DetectionOutput(
                 boxes=[[int(round(x, 0)) for x in box.tolist()] for box in result["boxes"]],
                 scores=result["scores"].tolist() if hasattr(result["scores"], "tolist") else result["scores"],
-                classes=result["labels"],
+                classes=result["text_labels"],
             )
 
     def unload(self) -> None:
