@@ -187,11 +187,12 @@ jobs:
           .venv-path/bin/python -c "from pixano_inference.plugins import load_plugin_models as l; r = l(); assert r == {'loaded': ['sam2'], 'failed': []}, r"
 
       # git+file:// stands in for a private repository; the subdirectory form is what a
-      # monorepo of models needs.
+      # monorepo of models needs. The checkout is a detached HEAD, so give uv a branch to fetch.
       - name: From a git URL with a subdirectory
         run: |
+          git branch -f under-test HEAD
           uv venv .venv-git
-          VIRTUAL_ENV=$PWD/.venv-git uv pip install --torch-backend=cpu "pixano-inference-sam @ git+file://$PWD#subdirectory=packages/pixano-inference-sam"
+          VIRTUAL_ENV=$PWD/.venv-git uv pip install --torch-backend=cpu "pixano-inference-sam @ git+file://$PWD@under-test#subdirectory=packages/pixano-inference-sam"
           .venv-git/bin/python -c "from pixano_inference.plugins import load_plugin_models as l; r = l(); assert r == {'loaded': ['sam2'], 'failed': []}, r"
 
       # Plain pip ignores uv sources, so every local package goes on the command line.

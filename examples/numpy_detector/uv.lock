@@ -1268,6 +1268,12 @@ requires-dist = [
     { name = "numpy", specifier = ">=1.26.0,<3.0.0" },
     { name = "pillow", specifier = ">=12.3.0" },
     { name = "pixano-inference-client", extras = ["masks"], editable = "../../packages/pixano-inference-client" },
+    { name = "pixano-inference-clip", marker = "extra == 'clip'", editable = "../../packages/pixano-inference-clip" },
+    { name = "pixano-inference-grounding-dino", marker = "extra == 'grounding-dino'", editable = "../../packages/pixano-inference-grounding-dino" },
+    { name = "pixano-inference-sam", marker = "extra == 'sam'", editable = "../../packages/pixano-inference-sam" },
+    { name = "pixano-inference-torch", marker = "extra == 'torch'", editable = "../../packages/pixano-inference-torch" },
+    { name = "pixano-inference-transformers-vlm", marker = "extra == 'transformers-vlm'", editable = "../../packages/pixano-inference-transformers-vlm" },
+    { name = "pixano-inference-vllm", marker = "extra == 'vllm'", editable = "../../packages/pixano-inference-vllm" },
     { name = "prometheus-client", specifier = ">=0.16.0" },
     { name = "pycocotools" },
     { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
@@ -1286,7 +1292,7 @@ requires-dist = [
     { name = "typer", specifier = ">=0.9.0" },
     { name = "uvicorn", specifier = ">=0.31.0" },
 ]
-provides-extras = ["docs", "test"]
+provides-extras = ["clip", "docs", "grounding-dino", "sam", "test", "torch", "transformers-vlm", "vllm"]
 
 [package.metadata.requires-dev]
 dev = [
