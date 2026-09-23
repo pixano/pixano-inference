@@ -109,7 +109,8 @@ uv run --project packages/pixano-inference-sam pixano-inference --config models.
 
 Every package under `packages/` and `examples/` has its own `pyproject.toml`, `uv.lock` and
 tests. Your own model is a package like these and can stay private: see the
-[custom models guide](docs/ray_serve/custom_models.md).
+[custom model specification](docs/ray_serve/custom_model_spec.md) and its
+[guide](docs/ray_serve/custom_models.md).
 
 ## License
 

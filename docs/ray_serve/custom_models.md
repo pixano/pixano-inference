@@ -22,7 +22,8 @@ a self-contained package under
 
 A complete, runnable example lives in
 [`examples/numpy_detector`](https://github.com/pixano/pixano-inference/tree/main/examples/numpy_detector)
-— a framework-free (numpy-only) detector.
+— a framework-free (numpy-only) detector. The exact contract a package must meet is the
+[Custom Model Specification](custom_model_spec.md); this page walks through it.
 
 ## 1. Choose a base class
 

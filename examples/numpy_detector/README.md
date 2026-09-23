@@ -71,10 +71,9 @@ print(result.data.boxes, result.data.classes)
 
 ## Making your own
 
-1. Copy this package layout.
-2. Subclass one of the capability base classes (`DetectionModel`, `SegmentationModel`,
-   `TrackingModel`, `VLMModel`, `NERModel`), implement `load_model()` and `predict()`, and
-   decorate it with `@register_model("YourModel")`.
-3. Declare the `pixano_inference.models` entry point pointing at your module.
-4. Publish it (PyPI, a private index, or a git URL) and `pip install` it wherever the server
-   runs. It will be picked up automatically.
+Copy this layout and follow the
+[Custom Model Specification](../../docs/ray_serve/custom_model_spec.md), which uses this
+package as its reference implementation: one capability base class, `@register_model`, typed
+params, an entry point, every dependency declared, the framework imported lazily. Install the
+result wherever the server runs (PyPI, a private index, a git URL or a local path); it is
+discovered automatically.

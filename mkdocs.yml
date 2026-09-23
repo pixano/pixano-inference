@@ -130,6 +130,7 @@ nav:
           - "Overview": ray_serve/index.md
           - "Quickstart": ray_serve/quickstart.md
           - "Custom Models Guide": ray_serve/custom_models.md
+          - "Custom Model Specification": ray_serve/custom_model_spec.md
           - "Troubleshooting": ray_serve/troubleshooting.md
       - "Examples": examples/
       - "HTTP API Reference": api-reference.md
