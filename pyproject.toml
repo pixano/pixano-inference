@@ -46,14 +46,14 @@ dependencies = [
   "fastapi >= 0.100.0",
   "numpy >= 1.26.0, < 3.0.0",
   "pydantic >= 2.0.0, < 3.0.0",
-  "pydantic_settings",
+  "pydantic_settings >= 2.14.2",
   "Pillow >= 12.3.0",
   "pycocotools",
-  "python-dotenv~=1.0.1",
+  "python-dotenv >= 1.2.2, < 2.0.0",
   "python-multipart >= 0.0.30",
-  "requests",
+  "requests >= 2.33.0",
   "uvicorn >= 0.31.0",
-  "ray[serve] >= 2.53.0, < 3.0.0",
+  "ray[serve] >= 2.56.0, < 3.0.0",
   "jinja2 >= 3.1.6",
   "pyyaml >= 6.0.0",
   "prometheus-client >= 0.16.0",
@@ -91,11 +91,11 @@ mlx=[
   "mlx >= 0.1.0; sys_platform == 'darwin'",
 ]
 transformers=[
-  "accelerate",
+  "accelerate >= 1.15.0",
   "bitsandbytes",
   "torch >= 2.3.0, < 3.0.0",
   "torchvision",
-  "transformers >= 4.0.0, < 5.0.0",
+  "transformers >= 5.10.0, < 6.0.0",
 ]
 test=[
   "pytest",
@@ -109,7 +109,7 @@ ultralytics=[
   "ultralytics",
 ]
 vllm=[
-  "vllm >= 0.22.0; sys_platform == 'linux'",
+  "vllm >= 0.28.0; sys_platform == 'linux'",
 ]
 
 [project.scripts]
