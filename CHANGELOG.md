@@ -12,73 +12,18 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.6.0] - 2026-09-23
 
-The core is now **framework-free**: it ships no model implementation and depends on no ML
-framework, not even through extras. Every model is a self-contained package with its own
-`pyproject.toml`, `uv.lock` and tests.
-
-### ⚠️ Breaking changes
-
-- **Extras map to model packages.** `pixano-inference[sam|clip|grounding-dino|transformers-vlm|vllm]`
-  each install one model package (`pixano-inference-sam`, ...), and `[torch]` installs the
-  `pixano-inference-torch` helpers; the core itself depends on no framework. The
-  `transformers` extra is split into `grounding-dino` and `transformers-vlm`; `jax`,
-  `tensorflow`, `mlx` and `ultralytics` are gone.
-- **Grounding DINO, the Transformers VLM and the vLLM VLM moved out of the core** into
-  `pixano-inference-grounding-dino`, `pixano-inference-transformers-vlm` and
-  `pixano-inference-vllm`. Their params are imported from those packages
-  (`from pixano_inference_grounding_dino import GroundingDINOParams`), no longer from
-  `pixano_inference.configs`. Model class names are unchanged, so configs that reference models
-  by name keep working once the package is installed.
-- **`pixano_inference.frameworks` and `pixano_inference.impls` removed.** The PyTorch helpers
-  (`resolve_device`, `resolve_torch_dtype`, `should_compile`, tensor conversions) now live in
-  the `pixano-inference-torch` package; the unused JAX/TensorFlow/MLX adapters are gone.
-- **`pixano_inference.utils`** no longer exposes the per-framework `is_*_installed` /
-  `assert_*_installed` helpers (the generic `is_package_installed` /
-  `assert_package_installed` remain), and **`pixano_inference.ray.detect_optional_packages`**
-  and `build_runtime_env(auto_detect=...)` are removed.
-- **Docker build args.** `PIXANO_EXTRAS` and `INSTALL_SAM` are replaced by `MODEL_PACKAGES`
-  (space-separated package directories under `packages/`).
-
-### Added
-
-- Model packages install from their source, without publishing: a local directory, a
-  (private) git repository, a `#subdirectory=` of a monorepo, or a directory of wheels. `uv`
-  follows a package's `[tool.uv.sources]` to the core it depends on in every case; CI
-  verifies the three install paths. The Docker build takes `EXTRA_PACKAGES` (requirement
-  specs such as a private git URL), and the runtime image ships `git` so a derived image can
-  `pip install` a private model.
-
-### Fixed
-
-- The client, model and example packages could not be built or installed from their sdist:
-  their `pyproject.toml` pointed at a license file outside the package. Each package now
-  carries its own `LICENSE`.
-- The core sdist bundled the whole repository (model packages, docs, examples); it now
-  contains the core sources only.
-- The model packages declare every dependency they import (`pydantic`, `numpy`, `torch`)
-  instead of relying on what the core or their framework pulls in.
-- An unknown `model_class` error now lists the registered model classes and the model
-  plugins that were discovered or failed to load (with the reason), and discovery logs that
-  summary at startup.
-- `GroundingDINOModel` called `post_process_grounded_object_detection` with `box_threshold`,
-  which transformers no longer accepts (every detection raised `TypeError`).
-- `TransformersVLMModel` passed the prompt where processors expect images, and its generic
-  fallback used `AutoModelForVision2Seq`, removed in transformers 5
-  (now `AutoModelForImageTextToText`).
-- `VLLMVLMModel` passed a `device` argument that `vllm.LLM` rejects.
-
-## [0.6.0] - 2026-07-25
-
-Major production-hardening release. The serving stack is rebuilt on **real Ray Serve** behind a
-versioned, camelCase **`/v1`** HTTP API, with a security baseline, a framework-agnostic core,
-installable plugin packages, a standalone client distribution, single-node Docker deployment,
-and observability.
+Major release. The serving stack is rebuilt on **real Ray Serve** behind a versioned, camelCase
+**`/v1`** HTTP API, with a security baseline, a standalone client distribution, single-node
+Docker deployment and observability. The core is now the contract only: it ships no model and
+depends on no ML framework, not even through an extra. Every model is a self-contained package
+with its own `pyproject.toml`, `uv.lock` and tests, plugged in at runtime.
 
 > **Upgrading:** the HTTP API and the Python client are intentionally breaking. Server operators
-> install `pixano-inference` (optionally with `[sam]`, `[clip]`, `[transformers]`); apps that
-> only _call_ a server should install the new lightweight **`pixano-inference-client`** instead.
+> install `pixano-inference` plus one extra per model (`[sam]`, `[clip]`, `[grounding-dino]`,
+> `[transformers-vlm]`, `[vllm]`); apps that only _call_ a server install the lightweight
+> **`pixano-inference-client`** instead.
 
 ### ⚠️ Breaking changes
 
@@ -93,66 +38,105 @@ and observability.
   **separate `pixano-inference-client` distribution** (deps: httpx/pydantic/numpy only — no Ray,
   FastAPI, or torch). `from pixano_inference.client import PixanoInferenceClient` still works
   when the full package is installed.
-- **Custom models are installable plugin packages** discovered via the `pixano_inference.models`
-  entry point. The broken `--module-path` flag is removed.
-- **SAM2 extracted to a plugin.** `pip install pixano-inference[sam]` (was `[sam2]`/`[sam3]`);
-  SAM2 is no longer bundled in core.
-- **Framework-agnostic core.** The core depends on numpy only; PyTorch/JAX/TensorFlow/MLX are
-  optional peer runtimes.
+- **Every model is a separate package**, discovered through the `pixano_inference.models` entry
+  point: `pixano-inference-sam` (SAM2 image and video), `pixano-inference-clip`,
+  `pixano-inference-grounding-dino`, `pixano-inference-transformers-vlm` and
+  `pixano-inference-vllm`. The core bundles none of them. Extras map to those packages:
+  `pip install pixano-inference[sam]` (was `[sam2]`/`[sam3]`), `[clip]`, `[grounding-dino]` and
+  `[transformers-vlm]` (replace `[transformers]`), `[vllm]`; `[torch]` installs the
+  `pixano-inference-torch` helpers. The `jax`, `tensorflow`, `mlx` and `ultralytics` extras are
+  gone. Model-specific params are imported from their package
+  (`from pixano_inference_grounding_dino import GroundingDINOParams`), no longer from
+  `pixano_inference.configs`; model class names are unchanged, so configs that reference a
+  model by name keep working once its package is installed.
+- **Framework-free core.** The core depends on numpy only. The PyTorch helpers
+  (`resolve_device`, `resolve_torch_dtype`, `should_compile`, tensor conversions) live in
+  `pixano-inference-torch`, and `pixano_inference.utils` no longer exposes the per-framework
+  `is_*_installed` / `assert_*_installed` helpers (the generic `is_package_installed` /
+  `assert_package_installed` remain).
+- **Custom models are installable plugin packages** that follow the
+  [custom model specification](docs/ray_serve/custom_model_spec.md). The broken
+  `--module-path` flag is removed.
 - **Secure defaults.** The server binds `127.0.0.1` by default; exposing it externally requires
-  configuring API keys.
+  configuring API keys. Request images must be in `media_allowed_image_formats` (default JPEG,
+  JPEG2000, PNG, BMP, GIF, TIFF, WEBP; empty accepts anything Pillow supports) and under
+  `media_max_image_pixels` (default 100M).
 
 ### Added
 
 - **Real Ray Serve backend** — working autoscaling, replicas, `@serve.batch`, health checks, and
   crash-restarts; one Serve app per model; graceful lifecycle (SIGTERM drain); pre-flight
-  resource checks; runtime deploy/undeploy admin routes; an async `JobManager` (TTL + bounded)
-  for long-running tracking jobs; per-capability inference timeouts (504 on hang).
+  resource checks; runtime deploy/undeploy admin routes (`POST /v1/models`, so `--config` is
+  optional); an async `JobManager` (TTL + bounded) for long-running tracking jobs;
+  per-capability inference timeouts (504 on hang).
+- **Bounded, interruptible startup.** Ctrl-C works during startup, and every wait on Ray is
+  bounded (`serve_start_timeout_s`, `deploy_timeout_s`) with a diagnostic pointing at the raylet
+  log instead of hanging forever when a node dies.
+- **`--num-gpus` CLI flag**, to pin the GPU count when Ray's accelerator autodetection is wrong.
 - **Embedding capability** — one `embedding` capability that maps image **or** text into a shared
-  CLIP space, plus the bundled **`pixano-inference-clip`** plugin (MobileCLIP2 via open_clip,
-  CPU-friendly).
+  CLIP space, plus the `pixano-inference-clip` package (MobileCLIP2 via open_clip, CPU-friendly).
 - **NER capability.**
 - **Security baseline** — optional API-key auth (`X-API-Key` / Bearer, constant-time), optional
   CORS, request body-size limits, and an SSRF-guarded media resolver (`MediaPolicy`: http/https
   only, private/loopback/link-local blocks with allowlist, timeouts, streamed size caps,
-  redirect re-validation, media-root path containment).
+  redirect re-validation, media-root path containment, image format allowlist and pixel cap).
+- **Install from source, publishing optional.** A model package installs from a local
+  directory, a (private) git repository, a `#subdirectory=` of a monorepo, or a directory of
+  wheels; `uv` follows the package's `[tool.uv.sources]` to the core it depends on.
 - **Docker deployment** — multi-stage `Dockerfile` (CUDA torch wheels, non-root, `HF_HOME`
-  volume, healthcheck) and `docker-compose.yml` (GPU reservation, weights volume); CPU /
-  framework-free / GPU build variants; deployment docs.
+  volume, healthcheck) and `docker-compose.yml`; build args `TORCH_INDEX_URL`, `MODEL_PACKAGES`
+  (which model packages to bundle), `EXTRA_PACKAGES` (a private model from a git URL or an index)
+  and `INSTALL_EXAMPLE`; the runtime image ships `git` so a derived image can `pip install` a
+  private model.
+- **Plugin diagnostics.** Discovery logs which model plugins loaded, and an unknown
+  `model_class` error lists the registered classes and the plugins that failed to load, with
+  the reason.
 - **Observability** — `X-Request-ID` propagation middleware, Prometheus HTTP metrics at
   `/v1/metrics`, and request-id-aware logging (`configure_logging`, plain or JSON).
 - **Committed OpenAPI schema** (`docs/openapi.json`) with a generator, kept in sync by CI — a
   stable source for generated frontend types.
 - **`scripts/load_test.py`** — an async load generator reporting throughput and latency
   percentiles.
-- **New distributions:** `pixano-inference-client`, `pixano-inference-sam`,
-  `pixano-inference-clip`.
+- **Custom model specification** (`docs/ray_serve/custom_model_spec.md`), with
+  `examples/numpy_detector` as the reference implementation, alongside the guide.
+- **New distributions:** `pixano-inference-client`, `pixano-inference-torch`,
+  `pixano-inference-sam`, `pixano-inference-clip`, `pixano-inference-grounding-dino`,
+  `pixano-inference-transformers-vlm`, `pixano-inference-vllm`.
 
 ### Changed
 
-- `torch.compile` on the transformers backends is now gated (explicit flag, else auto = GPU
+- `torch.compile` on the transformers-based models is gated (explicit flag, else auto = GPU
   only) — it was compiling unconditionally, a slow no-win or outright failure on CPU.
-- Extras restructured into framework-runtime extras (`torch`, `jax`, `tensorflow`, `mlx`) vs
-  model-backend extras (`sam`, `transformers`, `vllm`, `ultralytics`).
 - `/ready` returns 503 unless every configured model is `RUNNING`; `/health` is a cheap liveness
   probe; `/info` reports live cluster/model status.
+- Dependencies raised past published advisories (154 of the 158 Dependabot alerts on the
+  previous lock): `ray[serve] >= 2.56`, `transformers >= 5.10`, `vllm >= 0.28`, `Pillow >= 12.3`,
+  `python-multipart >= 0.0.30`, `pydantic-settings >= 2.14.2`, `requests >= 2.33`,
+  `python-dotenv >= 1.2.2`. The server's `numpy < 2` cap is lifted: server and client accept
+  `numpy >= 1.26, < 3`.
 
 ### Fixed
 
 - Plugin param defaults now resolve when a model is referenced from a config file (previously the
   replica failed at load with `KeyError` on a defaulted param such as the checkpoint path).
-- The client's numpy range was widened to `>= 1.26, < 3` so numpy-2.x consumers are not forced
-  into a downgrade (the server keeps `< 2`).
 - The `/v1` error envelope JSON-encodes validation error context (a raised `ValueError` no longer
   500s the handler).
+- `GroundingDINOModel` called `post_process_grounded_object_detection` with `box_threshold`,
+  which transformers no longer accepts (every detection raised `TypeError`).
+- `TransformersVLMModel` passed the prompt where processors expect images, and its generic
+  fallback used `AutoModelForVision2Seq`, removed in transformers 5
+  (now `AutoModelForImageTextToText`).
+- `VLLMVLMModel` passed a `device` argument that `vllm.LLM` rejects.
 
 ### Packaging / CI
 
 - Published wheels are PyPI-clean (no direct/VCS references); the git-only `sam-2` dependency
-  lives in the dev group and Docker image only.
-- `ray[serve]` pinned to `>= 2.53, < 3`; license field/classifier and GitHub project URLs added.
-- CI overhauled: correct coverage package, a CPU-torch job so model paths are exercised, a
-  Ray Serve integration job, a framework-free-core guardrail job, a standalone-client job, and a
-  Docker build-and-smoke job. Publishing the standalone client is wired into the release workflow.
+  lives in the SAM package's dev group and the Docker image only. The core sdist contains the
+  core sources only.
+- CI tests the core with no ML framework installed, every model package from its own lock file
+  and environment, a Ray Serve integration job, the three install-from-source paths, the
+  standalone client, the OpenAPI schema and a Docker build-and-smoke. The release workflow
+  publishes all nine distributions and refuses a tag that does not match `__version__`
+  (see `RELEASING.md`).
 
 [0.6.0]: https://github.com/pixano/pixano-inference/releases/tag/v0.6.0
