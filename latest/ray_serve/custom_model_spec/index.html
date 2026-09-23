@@ -8,31 +8,31 @@
       
       
       
-        <link rel="canonical" href="https://pixano.github.io/pixano-inference/latest/api_reference/frameworks/mlx/">
+        <link rel="canonical" href="https://pixano.github.io/pixano-inference/latest/ray_serve/custom_model_spec/">
       
       
-        <link rel="prev" href="../jax/">
+        <link rel="prev" href="../custom_models/">
       
       
-        <link rel="next" href="../tensorflow/">
+        <link rel="next" href="../troubleshooting/">
       
       
         
       
       
-      <link rel="icon" href="../../../assets/pixano.png">
+      <link rel="icon" href="../../assets/pixano.png">
       <meta name="generator" content="mkdocs-ProperDocs 1.6.7, mkdocs-material-9.7.7">
     
     
       
-        <title>mlx - Pixano-Inference Documentation</title>
+        <title>Custom Model Specification - Pixano-Inference Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -51,11 +51,11 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../../../assets/extra.css">
+      <link rel="stylesheet" href="../../assets/extra.css">
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#pixano_inference.frameworks.mlx" class="md-skip">
+        <a href="#custom-model-package-specification" class="md-skip">
           Skip to content
         </a>
       
@@ -100,9 +100,9 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../.." title="Pixano-Inference Documentation" class="md-header__button md-logo" aria-label="Pixano-Inference Documentation" data-md-component="logo">
+    <a href="../.." title="Pixano-Inference Documentation" class="md-header__button md-logo" aria-label="Pixano-Inference Documentation" data-md-component="logo">
       
-  <img src="../../../assets/pixano_white.png" alt="logo">
+  <img src="../../assets/pixano_white.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              mlx
+              Custom Model Specification
             
           </span>
         </div>
@@ -275,7 +275,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../../../home/" class="md-tabs__link">
+        <a href="../../home/" class="md-tabs__link">
           
   
   
@@ -322,9 +322,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../.." title="Pixano-Inference Documentation" class="md-nav__button md-logo" aria-label="Pixano-Inference Documentation" data-md-component="logo">
+    <a href="../.." title="Pixano-Inference Documentation" class="md-nav__button md-logo" aria-label="Pixano-Inference Documentation" data-md-component="logo">
       
-  <img src="../../../assets/pixano_white.png" alt="logo">
+  <img src="../../assets/pixano_white.png" alt="logo">
 
     </a>
     Pixano-Inference Documentation
@@ -495,7 +495,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../home/" class="md-nav__link ">
+            <a href="../../home/" class="md-nav__link ">
               
   
   
@@ -563,7 +563,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../getting_started/" class="md-nav__link ">
+            <a href="../../getting_started/" class="md-nav__link ">
               
   
   
@@ -607,6 +607,8 @@
                 
   
   
+    
+  
   
   
     
@@ -622,6 +624,8 @@
       
         
       
+        
+      
     
     
     
@@ -629,15 +633,15 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" checked>
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../ray_serve/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   
@@ -661,7 +665,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -681,7 +685,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../ray_serve/quickstart/" class="md-nav__link">
+      <a href="../quickstart/" class="md-nav__link">
         
   
   
@@ -709,7 +713,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../ray_serve/custom_models/" class="md-nav__link">
+      <a href="../custom_models/" class="md-nav__link">
         
   
   
@@ -734,10 +738,151 @@
                 
   
   
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Model Specification
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Model Specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-package" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Package
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-model-class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Model class
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Parameters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Distribution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-conformance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Conformance
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
   
   
     <li class="md-nav__item">
-      <a href="../../../ray_serve/troubleshooting/" class="md-nav__link">
+      <a href="../troubleshooting/" class="md-nav__link">
         
   
   
@@ -804,7 +949,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../examples/" class="md-nav__link ">
+            <a href="../../examples/" class="md-nav__link ">
               
   
   
@@ -848,7 +993,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/Grounding_%2B_SAM2/" class="md-nav__link">
+      <a href="../../examples/Grounding_%2B_SAM2/" class="md-nav__link">
         
   
   
@@ -876,7 +1021,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/Grounding_DINO/" class="md-nav__link">
+      <a href="../../examples/Grounding_DINO/" class="md-nav__link">
         
   
   
@@ -904,7 +1049,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/SAM2_image/" class="md-nav__link">
+      <a href="../../examples/SAM2_image/" class="md-nav__link">
         
   
   
@@ -932,7 +1077,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/SAM2_video/" class="md-nav__link">
+      <a href="../../examples/SAM2_video/" class="md-nav__link">
         
   
   
@@ -960,7 +1105,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../examples/VQA/" class="md-nav__link">
+      <a href="../../examples/VQA/" class="md-nav__link">
         
   
   
@@ -996,7 +1141,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../api-reference/" class="md-nav__link">
+      <a href="../../api-reference/" class="md-nav__link">
         
   
   
@@ -1021,8 +1166,6 @@
                 
   
   
-    
-  
   
   
     
@@ -1058,10 +1201,6 @@
       
         
       
-        
-      
-        
-      
     
     
     
@@ -1069,15 +1208,15 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../" class="md-nav__link ">
+            <a href="../../api_reference/" class="md-nav__link ">
               
   
   
@@ -1101,7 +1240,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_6">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1243,7 +1382,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/v1/admin/" class="md-nav__link">
+      <a href="../../api_reference/api/v1/admin/" class="md-nav__link">
         
   
   
@@ -1271,7 +1410,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/v1/errors/" class="md-nav__link">
+      <a href="../../api_reference/api/v1/errors/" class="md-nav__link">
         
   
   
@@ -1299,7 +1438,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/v1/helpers/" class="md-nav__link">
+      <a href="../../api_reference/api/v1/helpers/" class="md-nav__link">
         
   
   
@@ -1327,7 +1466,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/v1/inference/" class="md-nav__link">
+      <a href="../../api_reference/api/v1/inference/" class="md-nav__link">
         
   
   
@@ -1355,7 +1494,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/v1/jobs/" class="md-nav__link">
+      <a href="../../api_reference/api/v1/jobs/" class="md-nav__link">
         
   
   
@@ -1383,7 +1522,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/v1/router/" class="md-nav__link">
+      <a href="../../api_reference/api/v1/router/" class="md-nav__link">
         
   
   
@@ -1411,7 +1550,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/v1/schemas/" class="md-nav__link">
+      <a href="../../api_reference/api/v1/schemas/" class="md-nav__link">
         
   
   
@@ -1439,7 +1578,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/v1/service/" class="md-nav__link">
+      <a href="../../api_reference/api/v1/service/" class="md-nav__link">
         
   
   
@@ -1483,7 +1622,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../client/" class="md-nav__link">
+      <a href="../../api_reference/client/" class="md-nav__link">
         
   
   
@@ -1512,10 +1651,6 @@
   
     
     
-      
-        
-      
-        
       
         
       
@@ -1569,7 +1704,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../configs/base/" class="md-nav__link">
+      <a href="../../api_reference/configs/base/" class="md-nav__link">
         
   
   
@@ -1590,697 +1725,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../configs/transformers/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    transformers
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../configs/vllm/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    vllm
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6_5" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_3_6_5" id="__nav_3_6_5_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    frameworks
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_6_5_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3_6_5">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    frameworks
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../base/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    base
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../jax/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    jax
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    mlx
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    mlx
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#pixano_inference.frameworks.mlx.MlxAdapter" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        MlxAdapter
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="MlxAdapter">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#pixano_inference.frameworks.mlx.MlxAdapter.from_numpy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        from_numpy
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pixano_inference.frameworks.mlx.MlxAdapter.is_available" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        is_available
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pixano_inference.frameworks.mlx.MlxAdapter.resolve_device" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        resolve_device
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pixano_inference.frameworks.mlx.MlxAdapter.resolve_dtype" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        resolve_dtype
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#pixano_inference.frameworks.mlx.MlxAdapter.to_numpy" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        to_numpy
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../tensorflow/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    tensorflow
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../torch/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    torch
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6_6" >
-        
-          
-          <label class="md-nav__link" for="__nav_3_6_6" id="__nav_3_6_6_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    impls
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_6_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_6_6">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    impls
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../impls/_helpers/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    _helpers
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6_6_2" >
-        
-          
-          <label class="md-nav__link" for="__nav_3_6_6_2" id="__nav_3_6_6_2_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    transformers
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_6_6_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_6_6_2">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    transformers
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../impls/transformers/grounding_dino/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    grounding_dino
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../impls/transformers/vlm/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    vlm
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6_6_3" >
-        
-          
-          <label class="md-nav__link" for="__nav_3_6_6_3" id="__nav_3_6_6_3_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    vllm
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_3_6_6_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_6_6_3">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    vllm
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../impls/vllm/vlm/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    vlm
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -2296,7 +1740,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../jobs/" class="md-nav__link">
+      <a href="../../api_reference/jobs/" class="md-nav__link">
         
   
   
@@ -2324,7 +1768,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../main/" class="md-nav__link">
+      <a href="../../api_reference/main/" class="md-nav__link">
         
   
   
@@ -2383,10 +1827,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6_9" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6_7" >
         
           
-          <label class="md-nav__link" for="__nav_3_6_9" id="__nav_3_6_9_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_6_7" id="__nav_3_6_7_label" tabindex="0">
             
   
   
@@ -2404,8 +1848,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_6_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_6_9">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_6_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6_7">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2422,7 +1866,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/base/" class="md-nav__link">
+      <a href="../../api_reference/models/base/" class="md-nav__link">
         
   
   
@@ -2450,7 +1894,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/capabilities/" class="md-nav__link">
+      <a href="../../api_reference/models/capabilities/" class="md-nav__link">
         
   
   
@@ -2478,7 +1922,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/detection/" class="md-nav__link">
+      <a href="../../api_reference/models/detection/" class="md-nav__link">
         
   
   
@@ -2506,7 +1950,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/embedding/" class="md-nav__link">
+      <a href="../../api_reference/models/embedding/" class="md-nav__link">
         
   
   
@@ -2534,7 +1978,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/ner/" class="md-nav__link">
+      <a href="../../api_reference/models/ner/" class="md-nav__link">
         
   
   
@@ -2562,7 +2006,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/registry/" class="md-nav__link">
+      <a href="../../api_reference/models/registry/" class="md-nav__link">
         
   
   
@@ -2590,7 +2034,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/segmentation/" class="md-nav__link">
+      <a href="../../api_reference/models/segmentation/" class="md-nav__link">
         
   
   
@@ -2618,7 +2062,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/tracking/" class="md-nav__link">
+      <a href="../../api_reference/models/tracking/" class="md-nav__link">
         
   
   
@@ -2646,7 +2090,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/vlm/" class="md-nav__link">
+      <a href="../../api_reference/models/vlm/" class="md-nav__link">
         
   
   
@@ -2682,7 +2126,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../observability/" class="md-nav__link">
+      <a href="../../api_reference/observability/" class="md-nav__link">
         
   
   
@@ -2710,7 +2154,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../plugins/" class="md-nav__link">
+      <a href="../../api_reference/plugins/" class="md-nav__link">
         
   
   
@@ -2763,10 +2207,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6_12" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6_10" >
         
           
-          <label class="md-nav__link" for="__nav_3_6_12" id="__nav_3_6_12_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_6_10" id="__nav_3_6_10_label" tabindex="0">
             
   
   
@@ -2784,8 +2228,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_6_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_6_12">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_6_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6_10">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2802,7 +2246,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ray/app/" class="md-nav__link">
+      <a href="../../api_reference/ray/app/" class="md-nav__link">
         
   
   
@@ -2830,7 +2274,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ray/config/" class="md-nav__link">
+      <a href="../../api_reference/ray/config/" class="md-nav__link">
         
   
   
@@ -2858,7 +2302,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ray/config_loader/" class="md-nav__link">
+      <a href="../../api_reference/ray/config_loader/" class="md-nav__link">
         
   
   
@@ -2886,7 +2330,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ray/deployment/" class="md-nav__link">
+      <a href="../../api_reference/ray/deployment/" class="md-nav__link">
         
   
   
@@ -2914,7 +2358,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ray/server/" class="md-nav__link">
+      <a href="../../api_reference/ray/server/" class="md-nav__link">
         
   
   
@@ -2942,7 +2386,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ray/utils/" class="md-nav__link">
+      <a href="../../api_reference/ray/utils/" class="md-nav__link">
         
   
   
@@ -3003,10 +2447,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6_13" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6_11" >
         
           
-          <label class="md-nav__link" for="__nav_3_6_13" id="__nav_3_6_13_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_6_11" id="__nav_3_6_11_label" tabindex="0">
             
   
   
@@ -3024,8 +2468,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_6_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_6_13">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_6_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6_11">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3042,7 +2486,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../schemas/base/" class="md-nav__link">
+      <a href="../../api_reference/schemas/base/" class="md-nav__link">
         
   
   
@@ -3070,7 +2514,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../schemas/inference/" class="md-nav__link">
+      <a href="../../api_reference/schemas/inference/" class="md-nav__link">
         
   
   
@@ -3098,7 +2542,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../schemas/models/" class="md-nav__link">
+      <a href="../../api_reference/schemas/models/" class="md-nav__link">
         
   
   
@@ -3126,7 +2570,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../schemas/nd_array/" class="md-nav__link">
+      <a href="../../api_reference/schemas/nd_array/" class="md-nav__link">
         
   
   
@@ -3154,7 +2598,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../schemas/rle/" class="md-nav__link">
+      <a href="../../api_reference/schemas/rle/" class="md-nav__link">
         
   
   
@@ -3182,7 +2626,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../schemas/v1/" class="md-nav__link">
+      <a href="../../api_reference/schemas/v1/" class="md-nav__link">
         
   
   
@@ -3218,7 +2662,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../security/" class="md-nav__link">
+      <a href="../../api_reference/security/" class="md-nav__link">
         
   
   
@@ -3246,7 +2690,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../server_settings/" class="md-nav__link">
+      <a href="../../api_reference/server_settings/" class="md-nav__link">
         
   
   
@@ -3297,10 +2741,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6_16" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6_14" >
         
           
-          <label class="md-nav__link" for="__nav_3_6_16" id="__nav_3_6_16_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_6_14" id="__nav_3_6_14_label" tabindex="0">
             
   
   
@@ -3318,8 +2762,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_6_16_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_6_16">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_6_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6_14">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3336,7 +2780,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utils/gpu/" class="md-nav__link">
+      <a href="../../api_reference/utils/gpu/" class="md-nav__link">
         
   
   
@@ -3364,7 +2808,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utils/media/" class="md-nav__link">
+      <a href="../../api_reference/utils/media/" class="md-nav__link">
         
   
   
@@ -3392,7 +2836,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utils/media_security/" class="md-nav__link">
+      <a href="../../api_reference/utils/media_security/" class="md-nav__link">
         
   
   
@@ -3420,7 +2864,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utils/package/" class="md-nav__link">
+      <a href="../../api_reference/utils/package/" class="md-nav__link">
         
   
   
@@ -3448,7 +2892,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utils/url/" class="md-nav__link">
+      <a href="../../api_reference/utils/url/" class="md-nav__link">
         
   
   
@@ -3512,275 +2956,271 @@
   
 
 
-<div class="doc doc-object doc-module">
-
-
-
-<h1 id="pixano_inference.frameworks.mlx" class="doc doc-heading">
-            <code>pixano_inference.frameworks.mlx</code>
-
-
-</h1>
-
-    <div class="doc doc-contents first">
-
-        <p>MLX framework adapter (Apple Silicon).</p>
-<p>Provides framework-neutral device/dtype resolution and numpy interchange for custom models
-written in MLX. MLX runs on Apple-Silicon GPUs (Metal) and CPU. MLX is imported lazily;
-importing this module does not require it.</p>
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="pixano_inference.frameworks.mlx.MlxAdapter" class="doc doc-heading">
-            <code>MlxAdapter</code>
-
-
-</h2>
-
-
-    <div class="doc doc-contents ">
-
-
-
-        <p>:class:<code>~pixano_inference.frameworks.base.FrameworkAdapter</code> for MLX.</p>
-
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="pixano_inference.frameworks.mlx.MlxAdapter.from_numpy" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">from_numpy</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
-
-</h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Convert a numpy array to an MLX array. MLX manages device placement implicitly.</p>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>pixano_inference/frameworks/mlx.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-63">63</a></span>
-<span class="normal"><a href="#__codelineno-0-64">64</a></span>
-<span class="normal"><a href="#__codelineno-0-65">65</a></span>
-<span class="normal"><a href="#__codelineno-0-66">66</a></span>
-<span class="normal"><a href="#__codelineno-0-67">67</a></span>
-<span class="normal"><a href="#__codelineno-0-68">68</a></span>
-<span class="normal"><a href="#__codelineno-0-69">69</a></span>
-<span class="normal"><a href="#__codelineno-0-70">70</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="k">def</span><span class="w"> </span><span class="nf">from_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="w">    </span><span class="sd">"""Convert a numpy array to an MLX array. MLX manages device placement implicitly."""</span>
-</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">mlx.core</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mx</span>
-</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a>
-</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">mx</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
-</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
-</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a>    <span class="k">return</span> <span class="n">result</span>
-</span></code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="pixano_inference.frameworks.mlx.MlxAdapter.is_available" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">is_available</span><span class="p">()</span></code>
-
-</h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Whether mlx is importable.</p>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>pixano_inference/frameworks/mlx.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-30">30</a></span>
-<span class="normal"><a href="#__codelineno-0-31">31</a></span>
-<span class="normal"><a href="#__codelineno-0-32">32</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="k">def</span><span class="w"> </span><span class="nf">is_available</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="w">    </span><span class="sd">"""Whether mlx is importable."""</span>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a>    <span class="k">return</span> <span class="n">is_mlx_installed</span><span class="p">()</span>
-</span></code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="pixano_inference.frameworks.mlx.MlxAdapter.resolve_device" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">resolve_device</span><span class="p">(</span><span class="n">num_gpus</span><span class="p">)</span></code>
-
-</h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Return an MLX device: the Metal GPU when requested and available, else CPU.</p>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>pixano_inference/frameworks/mlx.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-34">34</a></span>
-<span class="normal"><a href="#__codelineno-0-35">35</a></span>
-<span class="normal"><a href="#__codelineno-0-36">36</a></span>
-<span class="normal"><a href="#__codelineno-0-37">37</a></span>
-<span class="normal"><a href="#__codelineno-0-38">38</a></span>
-<span class="normal"><a href="#__codelineno-0-39">39</a></span>
-<span class="normal"><a href="#__codelineno-0-40">40</a></span>
-<span class="normal"><a href="#__codelineno-0-41">41</a></span>
-<span class="normal"><a href="#__codelineno-0-42">42</a></span>
-<span class="normal"><a href="#__codelineno-0-43">43</a></span>
-<span class="normal"><a href="#__codelineno-0-44">44</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="k">def</span><span class="w"> </span><span class="nf">resolve_device</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_gpus</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="w">    </span><span class="sd">"""Return an MLX device: the Metal GPU when requested and available, else CPU."""</span>
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">mlx.core</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mx</span>
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a>
-</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38"></a>    <span class="k">if</span> <span class="n">num_gpus</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39"></a>        <span class="k">try</span><span class="p">:</span>
-</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40"></a>            <span class="k">if</span> <span class="n">mx</span><span class="o">.</span><span class="n">metal</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
-</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41"></a>                <span class="k">return</span> <span class="n">mx</span><span class="o">.</span><span class="n">gpu</span>
-</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a>        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a>            <span class="k">pass</span>
-</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a>    <span class="k">return</span> <span class="n">mx</span><span class="o">.</span><span class="n">cpu</span>
-</span></code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="pixano_inference.frameworks.mlx.MlxAdapter.resolve_dtype" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">resolve_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span></code>
-
-</h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Resolve an mlx dtype from a string (e.g. <code>"float32"</code>, <code>"bfloat16"</code>).</p>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>pixano_inference/frameworks/mlx.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-46">46</a></span>
-<span class="normal"><a href="#__codelineno-0-47">47</a></span>
-<span class="normal"><a href="#__codelineno-0-48">48</a></span>
-<span class="normal"><a href="#__codelineno-0-49">49</a></span>
-<span class="normal"><a href="#__codelineno-0-50">50</a></span>
-<span class="normal"><a href="#__codelineno-0-51">51</a></span>
-<span class="normal"><a href="#__codelineno-0-52">52</a></span>
-<span class="normal"><a href="#__codelineno-0-53">53</a></span>
-<span class="normal"><a href="#__codelineno-0-54">54</a></span>
-<span class="normal"><a href="#__codelineno-0-55">55</a></span>
-<span class="normal"><a href="#__codelineno-0-56">56</a></span>
-<span class="normal"><a href="#__codelineno-0-57">57</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="k">def</span><span class="w"> </span><span class="nf">resolve_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="w">    </span><span class="sd">"""Resolve an mlx dtype from a string (e.g. ``"float32"``, ``"bfloat16"``)."""</span>
-</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">mlx.core</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mx</span>
-</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a>
-</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a>    <span class="n">mapping</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a>        <span class="s2">"float32"</span><span class="p">:</span> <span class="n">mx</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
-</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a>        <span class="s2">"float16"</span><span class="p">:</span> <span class="n">mx</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span>
-</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53"></a>        <span class="s2">"bfloat16"</span><span class="p">:</span> <span class="n">mx</span><span class="o">.</span><span class="n">bfloat16</span><span class="p">,</span>
-</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="p">}</span>
-</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a>    <span class="k">if</span> <span class="n">dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">mapping</span><span class="p">:</span>
-</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unsupported mlx dtype '</span><span class="si">{</span><span class="n">dtype</span><span class="si">}</span><span class="s2">'. Choose from </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">mapping</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
-</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="k">return</span> <span class="n">mapping</span><span class="p">[</span><span class="n">dtype</span><span class="p">]</span>
-</span></code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="pixano_inference.frameworks.mlx.MlxAdapter.to_numpy" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">to_numpy</span><span class="p">(</span><span class="n">array</span><span class="p">)</span></code>
-
-</h3>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Convert an MLX array to a numpy array (host memory).</p>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>pixano_inference/frameworks/mlx.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-59">59</a></span>
-<span class="normal"><a href="#__codelineno-0-60">60</a></span>
-<span class="normal"><a href="#__codelineno-0-61">61</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="w">    </span><span class="sd">"""Convert an MLX array to a numpy array (host memory)."""</span>
-</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
-</span></code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-
-
-  </div>
-
-    </div>
-
-</div>
-
-
-
-
-  </div>
-
-    </div>
-
-</div>
+<!---
+# =================================
+# Copyright: CEA-LIST/DIASI/SIALV
+# Author : pixano@cea.fr
+# License: CECILL-C
+# =================================
+--->
+
+<h1 id="custom-model-package-specification">Custom Model Package Specification</h1>
+<p>This is the contract between a model package and the Pixano Inference core. The core ships no
+model: every model, first-party or yours, is a package that follows this specification and is
+plugged in at runtime. MUST, SHOULD and MAY are used in the RFC 2119 sense.</p>
+<p>The reference implementation is
+<a href="https://github.com/pixano/pixano-inference/tree/main/examples/numpy_detector"><code>examples/numpy_detector</code></a>,
+a complete, framework-free detector; each rule below says how it meets it.
+<a href="https://github.com/pixano/pixano-inference/tree/main/examples/yolo"><code>examples/yolo</code></a> shows the
+same contract around a third-party framework (ultralytics). The
+<a href="../custom_models/">Custom Models Guide</a> is the tutorial version of this page.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>examples/numpy_detector/
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── pyproject.toml                       # metadata, dependencies, entry point   (§1)
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── uv.lock                              # the package's own lock file            (§1.3)
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>├── LICENSE
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>├── src/pixano_numpy_detector/
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│   ├── __init__.py
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│   └── model.py                         # params + model class                   (§2, §3)
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>└── tests/test_model.py                  # discovery, params, predict             (§6)
+</span></code></pre></div>
+<h2 id="1-package">1. Package</h2>
+<p><strong>1.1 One distribution per model.</strong> A model package MUST be an installable Python
+distribution with its own <code>pyproject.toml</code>. It MAY contain several models of one family (the
+SAM2 package registers an image and a video model). Its <code>requires-python</code> MUST overlap the
+core's (<code>&gt;=3.10,&lt;3.14</code>).</p>
+<p><strong>1.2 Dependencies.</strong> The package MUST declare <code>pixano-inference</code> and every library it
+imports, its ML framework included. It MUST NOT rely on a dependency another package happens
+to install, and MUST NOT import another model package. PyTorch models MAY depend on
+<code>pixano-inference-torch</code> for device, dtype and tensor helpers.</p>
+<p><strong>1.3 Environment.</strong> The package SHOULD keep its own <code>uv.lock</code>, so it is developed, tested
+and served from its own environment, independent of the core's repository and of other
+models. <code>[tool.uv.sources]</code> MAY point <code>pixano-inference</code> at a clone or a git ref of the core
+for development.</p>
+<p><strong>1.4 Entry point.</strong> The package MUST declare one entry point per model module (or class) in
+the <code>pixano_inference.models</code> group. The target is <code>module</code> or <code>module:Class</code>; importing it
+MUST register the model class and its params (§2.2, §3). The server imports every entry point
+of the group at startup, and Ray Serve workers import the model's module from the same
+installed package, so nothing else is needed for a model to be found by name.</p>
+<p>In the example (<code>pyproject.toml</code>):</p>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[project]</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"pixano-numpy-detector"</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">requires-python</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"&gt;=3.10,&lt;3.14"</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">dependencies</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"pixano-inference"</span><span class="p">,</span><span class="w"> </span><span class="s2">"numpy &gt;= 1.26.0, &lt; 3.0.0"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Pillow &gt;= 9.0.0"</span><span class="p">,</span><span class="w"> </span><span class="s2">"pydantic &gt;= 2.0.0, &lt; 3.0.0"</span><span class="p">]</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="k">[project.entry-points.</span><span class="s2">"pixano_inference.models"</span><span class="k">]</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">numpy_detector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"pixano_numpy_detector.model"</span>
+</span></code></pre></div>
+<h2 id="2-model-class">2. Model class</h2>
+<p><strong>2.1 Base class.</strong> A model MUST subclass exactly one capability base from
+<code>pixano_inference.models</code>. The base fixes the capability, the HTTP route and the typed
+input/output:</p>
+<table>
+<thead>
+<tr>
+<th>Base class</th>
+<th>Capability</th>
+<th>Route</th>
+<th>Input → Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DetectionModel</code></td>
+<td><code>detection</code></td>
+<td><code>/v1/inference/detection</code></td>
+<td><code>DetectionInput</code> → <code>DetectionOutput</code></td>
+</tr>
+<tr>
+<td><code>SegmentationModel</code></td>
+<td><code>segmentation</code></td>
+<td><code>/v1/inference/segmentation</code></td>
+<td><code>SegmentationInput</code> → <code>SegmentationOutput</code></td>
+</tr>
+<tr>
+<td><code>TrackingModel</code></td>
+<td><code>tracking</code></td>
+<td><code>/v1/inference/tracking</code></td>
+<td><code>TrackingInput</code> → <code>TrackingOutput</code></td>
+</tr>
+<tr>
+<td><code>VLMModel</code></td>
+<td><code>vlm</code></td>
+<td><code>/v1/inference/vlm</code></td>
+<td><code>VLMInput</code> → <code>VLMOutput</code></td>
+</tr>
+<tr>
+<td><code>NERModel</code></td>
+<td><code>ner</code></td>
+<td><code>/v1/inference/ner</code></td>
+<td><code>NERInput</code> → <code>NEROutput</code></td>
+</tr>
+<tr>
+<td><code>EmbeddingModel</code></td>
+<td><code>embedding</code></td>
+<td><code>/v1/inference/embedding</code></td>
+<td><code>EmbeddingInput</code> → <code>EmbeddingOutput</code></td>
+</tr>
+</tbody>
+</table>
+<p>A subclass of <code>InferenceModel</code> that is not one of these is rejected by <code>ModelConfig</code>.</p>
+<p><strong>2.2 Registration.</strong> The class MUST be decorated with <code>@register_model("Name")</code>. <code>Name</code> is
+what configs put in <code>model_class</code>; it MUST be unique across the installed packages (a second
+registration of the same name raises, and that package fails to load).</p>
+<p><strong>2.3 Construction.</strong> The constructor is <code>__init__(self, config: ModelDeploymentConfig)</code>. An
+override MUST call <code>super().__init__(config)</code> and MUST NOT load weights or import the
+framework: the replica constructs the model and immediately calls <code>load_model()</code> (§2.4), so
+the constructor only initializes attributes.</p>
+<p><strong>2.4 <code>load_model()</code>.</strong> Called once per replica, in the Serve actor's <code>__init__</code>. It MUST leave
+the model ready for <code>predict()</code>. It reads its settings from <code>self.config.model_params</code> (a
+<code>dict</code>, see §3) and its resources from <code>self.config.resources</code> (<code>num_gpus</code>, <code>num_cpus</code>). A
+failure here fails the deployment: at startup with <code>--config</code>, or as the error of
+<code>POST /v1/models</code>.</p>
+<p><strong>2.5 <code>predict(input)</code>.</strong> MUST accept the base class's input type and return its output type,
+synchronously. Calls on one replica are serialized by the server, so the model need not be
+thread-safe. Anything raised fails that request with a <code>500</code> error envelope (the exception is
+logged server-side, its text is not returned); a call that outlives the deployment's
+<code>timeout_s</code> fails with <code>504</code>.</p>
+<p><strong>2.6 <code>predict_batch(inputs)</code>.</strong> MAY be overridden. It is used instead of <code>predict()</code> only when
+the deployment sets <code>max_batch_size &gt; 1</code>, and MUST return one output per input, in order. The
+default runs <code>predict()</code> sequentially.</p>
+<p><strong>2.7 <code>unload()</code> and <code>metadata</code>.</strong> <code>unload()</code> MAY release resources; the server calls it when a
+replica is torn down. The <code>metadata</code> property MAY be extended with a <code>dict</code>; it is served by
+the replica's <code>get_metadata()</code> handle method and is not part of the HTTP API.</p>
+<p><strong>2.8 Lazy framework imports.</strong> Importing the package MUST NOT import the ML framework.
+Import it inside <code>load_model()</code> / <code>predict()</code> / <code>unload()</code>. Discovery imports every installed
+model package, so an eager import slows every start; and a broken framework install would then
+hide the whole package instead of failing one deployment with a clear error.</p>
+<p><strong>2.9 Media.</strong> Image fields (<code>image</code> in the detection, segmentation and embedding inputs) are a
+URL, a <code>data:</code> URI or a server-local path. The model MUST resolve them with
+<code>pixano_inference.utils.media.convert_string_to_image</code> (videos:
+<code>convert_string_video_to_bytes_or_path</code>), which enforces the server's media policy: private
+addresses are refused for URLs, local paths are allowed only under
+<code>PIXANO_INFERENCE_MEDIA_ROOTS</code>, and sizes are capped.</p>
+<p><strong>2.10 Device.</strong> <code>self.config.resources.num_gpus &gt; 0</code> means the deployment was given a GPU;
+the model chooses the device from it. <code>pixano_inference_torch.resolve_device(self.config)</code>
+does this for PyTorch (CUDA, then Apple MPS, else CPU).</p>
+<p>In the example (<code>model.py</code>), 2.1 to 2.5 and 2.9; no framework, so 2.8 and 2.10 are moot:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nd">@register_model</span><span class="p">(</span><span class="s2">"NumpyDetector"</span><span class="p">)</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">NumpyDetector</span><span class="p">(</span><span class="n">DetectionModel</span><span class="p">):</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">load_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"threshold"</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="n">DetectionInput</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DetectionOutput</span><span class="p">:</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">convert_string_to_image</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">image</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        <span class="o">...</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>        <span class="k">return</span> <span class="n">DetectionOutput</span><span class="p">(</span><span class="n">boxes</span><span class="o">=</span><span class="p">[</span><span class="n">box</span><span class="p">],</span> <span class="n">scores</span><span class="o">=</span><span class="p">[</span><span class="n">score</span><span class="p">],</span> <span class="n">classes</span><span class="o">=</span><span class="p">[</span><span class="s2">"object"</span><span class="p">],</span> <span class="n">masks</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</span></code></pre></div>
+<p>In the yolo example, 2.8 and 2.10: <code>from ultralytics import YOLO</code> sits inside <code>load_model()</code>,
+which picks <code>"cuda"</code> only when <code>num_gpus &gt; 0</code> and CUDA is available, and <code>unload()</code> frees the
+model and the CUDA cache.</p>
+<h2 id="3-parameters">3. Parameters</h2>
+<p><strong>3.1 Typed params.</strong> A model SHOULD define a params class: a subclass of
+<code>pixano_inference.configs.BaseModelParams</code>, registered with
+<code>@register_model_params("Name")</code> under the model's registered name. <code>BaseModelParams</code> forbids
+unknown fields and requires <code>path</code> (a checkpoint id or location; give it a default if the
+model has none). With a params class registered, <code>ModelConfig(model_params={...})</code> validates
+the dict, applies the defaults and rejects typos, and a config that omits <code>model_params</code>
+entirely gets the defaults.</p>
+<p><strong>3.2 Without typed params.</strong> <code>model_params</code> is passed through as given. <code>load_model()</code> then
+owns validation.</p>
+<p><strong>3.3 In the replica.</strong> <code>self.config.model_params</code> is always a plain <code>dict</code>: the params dumped
+by the config, never the params object.</p>
+<p>In the example:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nd">@register_model_params</span><span class="p">(</span><span class="s2">"NumpyDetector"</span><span class="p">)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">NumpyDetectorParams</span><span class="p">(</span><span class="n">BaseModelParams</span><span class="p">):</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"numpy-detector"</span>           <span class="c1"># no checkpoint: names the deployment when `name` is omitted</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span></code></pre></div>
+<h2 id="4-configuration">4. Configuration</h2>
+<p>A deployment config is a Python file with a <code>models</code> list of <code>ModelConfig</code>; the server loads
+it with <code>--config</code>, or receives the same fields through <code>POST /v1/models</code> after startup.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td>Unique deployment name (the <code>model</code> a client sends). Defaults to the last segment of <code>path</code>.</td>
+</tr>
+<tr>
+<td><code>model_class</code></td>
+<td>The registered name (§2.2), as a string: no import needed.</td>
+</tr>
+<tr>
+<td><code>model_params</code></td>
+<td>A params object or a dict, validated as in §3.</td>
+</tr>
+<tr>
+<td><code>deployment</code></td>
+<td><code>DeploymentConfig</code>: <code>num_gpus</code>, <code>num_cpus</code>, <code>min_replicas</code>, <code>max_replicas</code>, <code>max_batch_size</code>, <code>timeout_s</code>, …</td>
+</tr>
+</tbody>
+</table>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pixano_inference.configs</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeploymentConfig</span><span class="p">,</span> <span class="n">ModelConfig</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">models</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">ModelConfig</span><span class="p">(</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">"numpy-detector"</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        <span class="n">model_class</span><span class="o">=</span><span class="s2">"NumpyDetector"</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>        <span class="n">model_params</span><span class="o">=</span><span class="p">{</span><span class="s2">"threshold"</span><span class="p">:</span> <span class="mi">20</span><span class="p">},</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>        <span class="n">deployment</span><span class="o">=</span><span class="n">DeploymentConfig</span><span class="p">(</span><span class="n">num_gpus</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_cpus</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="p">),</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="p">]</span>
+</span></code></pre></div>
+<h2 id="5-distribution">5. Distribution</h2>
+<p><strong>5.1 Installed, not shipped.</strong> The package MUST be installed in the environment the server
+runs in (Ray Serve workers import it from there). Loose source directories and <code>PYTHONPATH</code>
+are not an integration mechanism.</p>
+<p><strong>5.2 Any source.</strong> Publishing is optional. The package installs from PyPI or a private index,
+from a git URL (<code>#subdirectory=</code> for a monorepo), from a local directory, or from a directory
+of wheels; <code>uv pip install</code> also follows the package's <code>[tool.uv.sources]</code>.</p>
+<p><strong>5.3 Core version.</strong> The package SHOULD constrain <code>pixano-inference</code> to the versions whose
+contract it was written against.</p>
+<h2 id="6-conformance">6. Conformance</h2>
+<p>A package conforms when the following hold. The example's <code>tests/test_model.py</code> covers the
+first three; the yolo example's <code>tests/test_discovery.py</code> covers the fourth.</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>How</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Discovered through its entry point</td>
+<td><code>load_plugin_models()["loaded"]</code> contains the entry point; <code>ModelClassRegistry.has("Name")</code></td>
+</tr>
+<tr>
+<td>Params validate and default</td>
+<td><code>ModelConfig(name="x", model_class="Name").to_deployment_config().model_params</code></td>
+</tr>
+<tr>
+<td><code>predict()</code> returns the capability's output</td>
+<td>Call the model directly on a small input</td>
+</tr>
+<tr>
+<td>Importing the package loads no framework</td>
+<td><code>python -c "import sys, my_pkg; print([m for m in ('torch',) if m in sys.modules])"</code></td>
+</tr>
+<tr>
+<td>Lock file matches the metadata</td>
+<td><code>uv lock --check --project &lt;package&gt;</code></td>
+</tr>
+<tr>
+<td>Serves end to end</td>
+<td>Start the server from the package's environment and call the route</td>
+</tr>
+</tbody>
+</table>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>uv<span class="w"> </span>run<span class="w"> </span>--project<span class="w"> </span>examples/numpy_detector<span class="w"> </span>pytest<span class="w"> </span>examples/numpy_detector/tests
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>uv<span class="w"> </span>lock<span class="w"> </span>--check<span class="w"> </span>--project<span class="w"> </span>examples/numpy_detector
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>uv<span class="w"> </span>run<span class="w"> </span>--project<span class="w"> </span>examples/numpy_detector<span class="w"> </span>pixano-inference<span class="w"> </span>--config<span class="w"> </span>models.py
+</span></code></pre></div>
 
 
 
@@ -3869,10 +3309,10 @@ importing this module does not require it.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.tabs", "navigation.tabs.sticky", "navigation.tracking", "navigation.top", "navigation.indexes", "toc.integrate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tabs", "navigation.tabs.sticky", "navigation.tracking", "navigation.top", "navigation.indexes", "toc.integrate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
