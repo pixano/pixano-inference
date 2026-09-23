@@ -132,7 +132,8 @@ with its own `pyproject.toml`, `uv.lock` and tests, plugged in at runtime.
 
 - Published wheels are PyPI-clean (no direct/VCS references); the git-only `sam-2` dependency
   lives in the SAM package's dev group and the Docker image only. The core sdist contains the
-  core sources only.
+  core sources only. Model packages pin the core to `>= 0.6.0, < 0.7.0`, and the core pins the
+  client to `>= 0.1.0, < 0.2.0`: a package never resolves a core of another contract.
 - CI tests the core with no ML framework installed, every model package from its own lock file
   and environment, a Ray Serve integration job, the three install-from-source paths, the
   standalone client, the OpenAPI schema and a Docker build-and-smoke. The release workflow

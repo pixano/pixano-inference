@@ -82,7 +82,7 @@ group. The value is the module to import (importing it runs `@register_model`):
 ```toml
 [project]
 name = "my-pkg"
-dependencies = ["pixano-inference", "torch"]  # the core plus whatever the model imports
+dependencies = ["pixano-inference >= 0.6.0, < 0.7.0", "torch"]  # the core plus whatever the model imports
 
 [project.entry-points."pixano_inference.models"]
 my_detector = "my_pkg.model"        # or "my_pkg.model:MyDetector" to point at the class
@@ -108,7 +108,8 @@ package's locked dependencies. The first-party packages under `packages/` work t
 
 ### Depending on the core
 
-`dependencies = ["pixano-inference"]` resolves the core from PyPI. To build against a
+`dependencies = ["pixano-inference >= 0.6.0, < 0.7.0"]` resolves the core from PyPI, pinned to
+the contract the package was written against. To build against a
 specific commit, a fork, or a core version that is not published, point `uv` at git:
 
 ```toml

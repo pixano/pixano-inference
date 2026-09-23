@@ -59,7 +59,7 @@ In the example (`pyproject.toml`):
 [project]
 name = "pixano-numpy-detector"
 requires-python = ">=3.10,<3.14"
-dependencies = ["pixano-inference", "numpy >= 1.26.0, < 3.0.0", "Pillow >= 9.0.0", "pydantic >= 2.0.0, < 3.0.0"]
+dependencies = ["pixano-inference >= 0.6.0, < 0.7.0", "numpy >= 1.26.0, < 3.0.0", "Pillow >= 9.0.0", "pydantic >= 2.0.0, < 3.0.0"]
 
 [project.entry-points."pixano_inference.models"]
 numpy_detector = "pixano_numpy_detector.model"
@@ -206,7 +206,7 @@ from a git URL (`#subdirectory=` for a monorepo), from a local directory, or fro
 of wheels; `uv pip install` also follows the package's `[tool.uv.sources]`.
 
 **5.3 Core version.** The package SHOULD constrain `pixano-inference` to the versions whose
-contract it was written against.
+contract it was written against (`>= 0.6.0, < 0.7.0` today), as the first-party packages do.
 
 ## 6. Conformance
 

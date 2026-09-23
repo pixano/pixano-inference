@@ -6,7 +6,7 @@ requires-python = ">=3.10,<3.14"
 license = { file = "LICENSE" }
 readme = "README.md"
 dependencies = [
-  "pixano-inference",
+  "pixano-inference >= 0.6.0, < 0.7.0",
   # NOTE: ultralytics is AGPL-3.0. Deploying it as a network service carries source-disclosure
   # obligations (AGPL section 13). Review the licence before using it in production.
   "torch >= 2.3.0, < 3.0.0",
