@@ -620,6 +620,8 @@
       
         
       
+        
+      
     
     
     
@@ -715,6 +717,34 @@
     
   
     Custom Models Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ray_serve/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
   
 
     
@@ -3616,6 +3646,33 @@ local-path media is denied outright.</p>
             <td>
               <div class="doc-md-description">
                 <p>Maximum size for a fetched video.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="pixano_inference.server_settings.ServerSettings.media_max_image_pixels">media_max_image_pixels</span></code></td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Decompression-bomb cap, in pixels, applied to decoded images.
+The byte caps above do not bound this: a few-KB file can decode to gigapixels.
+0 disables the check.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="pixano_inference.server_settings.ServerSettings.media_allowed_image_formats">media_allowed_image_formats</span></code></td>
+            <td>
+                  <code><span title="typing.Annotated">Annotated</span>[<span title="list">list</span>[<span title="str">str</span>], <span title="pydantic_settings.NoDecode">NoDecode</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Pillow format names (e.g. <code>JPEG</code>, <code>PNG</code>) accepted when
+decoding. Restricting this keeps request bytes away from Pillow's rarely-used
+decoders, which is where most of its memory-safety advisories land. Empty means
+allow every format Pillow supports.</p>
               </div>
             </td>
           </tr>

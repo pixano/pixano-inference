@@ -622,6 +622,8 @@
       
         
       
+        
+      
     
     
     
@@ -969,6 +971,34 @@
     
   
     Custom Models Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
   
 
     
@@ -3664,11 +3694,11 @@ Here is a minimal example deploying SAM2 for image segmentation:</p>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">models</span> <span class="o">=</span> <span class="p">[</span>
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">ModelConfig</span><span class="p">(</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;sam2-image&quot;</span><span class="p">,</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>        <span class="n">model_class</span><span class="o">=</span><span class="s2">&quot;Sam2ImageModel&quot;</span><span class="p">,</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">"sam2-image"</span><span class="p">,</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>        <span class="n">model_class</span><span class="o">=</span><span class="s2">"Sam2ImageModel"</span><span class="p">,</span>
 </span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>        <span class="n">model_params</span><span class="o">=</span><span class="n">Sam2ImageParams</span><span class="p">(</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>            <span class="n">path</span><span class="o">=</span><span class="s2">&quot;facebook/sam2-hiera-base-plus&quot;</span><span class="p">,</span>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>            <span class="n">torch_dtype</span><span class="o">=</span><span class="s2">&quot;bfloat16&quot;</span><span class="p">,</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>            <span class="n">path</span><span class="o">=</span><span class="s2">"facebook/sam2-hiera-base-plus"</span><span class="p">,</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>            <span class="n">torch_dtype</span><span class="o">=</span><span class="s2">"bfloat16"</span><span class="p">,</span>
 </span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>        <span class="p">),</span>
 </span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>        <span class="n">deployment</span><span class="o">=</span><span class="n">DeploymentConfig</span><span class="p">(</span>
 </span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>            <span class="n">num_gpus</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
@@ -3692,7 +3722,7 @@ This is useful for testing but not recommended for production.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pixano_inference.ray</span><span class="w"> </span><span class="kn">import</span> <span class="n">InferenceServer</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">server</span> <span class="o">=</span> <span class="n">InferenceServer</span><span class="p">()</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="n">server</span><span class="o">.</span><span class="n">register_from_config</span><span class="p">(</span><span class="s2">&quot;models.py&quot;</span><span class="p">)</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="n">server</span><span class="o">.</span><span class="n">register_from_config</span><span class="p">(</span><span class="s2">"models.py"</span><span class="p">)</span>
 </span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="n">server</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="verify-the-deployment">Verify the deployment</h2>
@@ -3705,9 +3735,9 @@ This is useful for testing but not recommended for production.</p>
 <p>You should see your model in the response:</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="p">[</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="p">{</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sam2-image&quot;</span><span class="p">,</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="nt">&quot;capability&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;segmentation&quot;</span><span class="p">,</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">    </span><span class="nt">&quot;model_class&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Sam2ImageModel&quot;</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sam2-image"</span><span class="p">,</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="nt">"capability"</span><span class="p">:</span><span class="w"> </span><span class="s2">"segmentation"</span><span class="p">,</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">    </span><span class="nt">"model_class"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sam2ImageModel"</span>
 </span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">  </span><span class="p">}</span>
 </span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="p">]</span>
 </span></code></pre></div>
@@ -3717,13 +3747,13 @@ This is useful for testing but not recommended for production.</p>
 </span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="nv">IMAGE_B64</span><span class="o">=</span><span class="k">$(</span>base64<span class="w"> </span>-i<span class="w"> </span>your_image.png<span class="k">)</span>
 </span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
 </span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:7463/inference/segmentation/<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{</span>
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="s1">    &quot;model&quot;: &quot;sam2-image&quot;,</span>
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="s1">    &quot;image&quot;: &quot;data:image/png;base64,&#39;</span><span class="s2">&quot;</span><span class="nv">$IMAGE_B64</span><span class="s2">&quot;</span><span class="s1">&#39;&quot;,</span>
-</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="s1">    &quot;points&quot;: [[[200, 175]]],</span>
-</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="s1">    &quot;labels&quot;: [[1]]</span>
-</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="s1">  }&#39;</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">  </span>-H<span class="w"> </span><span class="s2">"Content-Type: application/json"</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">'{</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="s1">    "model": "sam2-image",</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="s1">    "image": "data:image/png;base64,'</span><span class="s2">"</span><span class="nv">$IMAGE_B64</span><span class="s2">"</span><span class="s1">'",</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="s1">    "points": [[[200, 175]]],</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="s1">    "labels": [[1]]</span>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="s1">  }'</span>
 </span></code></pre></div>
 <h3 id="with-the-python-client">With the Python client</h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
@@ -3732,24 +3762,24 @@ This is useful for testing but not recommended for production.</p>
 </span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>
 </span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>
 </span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>    <span class="n">client</span> <span class="o">=</span> <span class="n">PixanoInferenceClient</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;http://localhost:7463&quot;</span><span class="p">)</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>    <span class="n">client</span> <span class="o">=</span> <span class="n">PixanoInferenceClient</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">"http://localhost:7463"</span><span class="p">)</span>
 </span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>
 </span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>    <span class="n">request</span> <span class="o">=</span> <span class="n">SegmentationRequest</span><span class="p">(</span>
-</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>        <span class="n">model</span><span class="o">=</span><span class="s2">&quot;sam2-image&quot;</span><span class="p">,</span>
-</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>        <span class="n">image</span><span class="o">=</span><span class="s2">&quot;data:image/png;base64,...&quot;</span><span class="p">,</span>  <span class="c1"># Base64-encoded image</span>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>        <span class="n">model</span><span class="o">=</span><span class="s2">"sam2-image"</span><span class="p">,</span>
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>        <span class="n">image</span><span class="o">=</span><span class="s2">"data:image/png;base64,..."</span><span class="p">,</span>  <span class="c1"># Base64-encoded image</span>
 </span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>        <span class="n">points</span><span class="o">=</span><span class="p">[[[</span><span class="mi">200</span><span class="p">,</span> <span class="mi">175</span><span class="p">]]],</span>              <span class="c1"># Point prompt (x, y)</span>
 </span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>        <span class="n">labels</span><span class="o">=</span><span class="p">[[</span><span class="mi">1</span><span class="p">]],</span>                       <span class="c1"># 1 = foreground</span>
 </span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>    <span class="p">)</span>
 </span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>    <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">segmentation</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
 </span><span id="__span-13-16"><a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a>
-</span><span id="__span-13-17"><a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Status: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-13-18"><a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing time: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">processing_time</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
-</span><span id="__span-13-19"><a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Masks: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">masks</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-13-20"><a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Scores: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">scores</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-13-17"><a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Status: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="__span-13-18"><a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Processing time: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">processing_time</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s"</span><span class="p">)</span>
+</span><span id="__span-13-19"><a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Masks: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">masks</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="__span-13-20"><a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Scores: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">scores</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span><span id="__span-13-21"><a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a>
 </span><span id="__span-13-22"><a id="__codelineno-13-22" name="__codelineno-13-22" href="#__codelineno-13-22"></a>    <span class="c1"># Decode a mask to a numpy array</span>
 </span><span id="__span-13-23"><a id="__codelineno-13-23" name="__codelineno-13-23" href="#__codelineno-13-23"></a>    <span class="n">mask</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">masks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">to_mask</span><span class="p">()</span>
-</span><span id="__span-13-24"><a id="__codelineno-13-24" name="__codelineno-13-24" href="#__codelineno-13-24"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mask shape: </span><span class="si">{</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-13-24"><a id="__codelineno-13-24" name="__codelineno-13-24" href="#__codelineno-13-24"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Mask shape: </span><span class="si">{</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span><span id="__span-13-25"><a id="__codelineno-13-25" name="__codelineno-13-25" href="#__codelineno-13-25"></a>
 </span><span id="__span-13-26"><a id="__codelineno-13-26" name="__codelineno-13-26" href="#__codelineno-13-26"></a>
 </span><span id="__span-13-27"><a id="__codelineno-13-27" name="__codelineno-13-27" href="#__codelineno-13-27"></a><span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
@@ -3812,21 +3842,21 @@ Ray actor with dedicated resources:</p>
 </span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>
 </span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="n">models</span> <span class="o">=</span> <span class="p">[</span>
 </span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>    <span class="n">ModelConfig</span><span class="p">(</span>
-</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;sam2-image&quot;</span><span class="p">,</span>
-</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>        <span class="n">model_class</span><span class="o">=</span><span class="s2">&quot;Sam2ImageModel&quot;</span><span class="p">,</span>
-</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>        <span class="n">model_params</span><span class="o">=</span><span class="n">Sam2ImageParams</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;facebook/sam2-hiera-base-plus&quot;</span><span class="p">),</span>
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">"sam2-image"</span><span class="p">,</span>
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>        <span class="n">model_class</span><span class="o">=</span><span class="s2">"Sam2ImageModel"</span><span class="p">,</span>
+</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>        <span class="n">model_params</span><span class="o">=</span><span class="n">Sam2ImageParams</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">"facebook/sam2-hiera-base-plus"</span><span class="p">),</span>
 </span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>        <span class="n">deployment</span><span class="o">=</span><span class="n">DeploymentConfig</span><span class="p">(</span><span class="n">num_gpus</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_batch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">),</span>
 </span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a>    <span class="p">),</span>
 </span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a>    <span class="n">ModelConfig</span><span class="p">(</span>
-</span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;sam2-video&quot;</span><span class="p">,</span>
-</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a>        <span class="n">model_class</span><span class="o">=</span><span class="s2">&quot;Sam2VideoModel&quot;</span><span class="p">,</span>
-</span><span id="__span-14-20"><a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a>        <span class="n">model_params</span><span class="o">=</span><span class="n">Sam2VideoParams</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;facebook/sam2-hiera-large&quot;</span><span class="p">),</span>
+</span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">"sam2-video"</span><span class="p">,</span>
+</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a>        <span class="n">model_class</span><span class="o">=</span><span class="s2">"Sam2VideoModel"</span><span class="p">,</span>
+</span><span id="__span-14-20"><a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a>        <span class="n">model_params</span><span class="o">=</span><span class="n">Sam2VideoParams</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">"facebook/sam2-hiera-large"</span><span class="p">),</span>
 </span><span id="__span-14-21"><a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a>        <span class="n">deployment</span><span class="o">=</span><span class="n">DeploymentConfig</span><span class="p">(</span><span class="n">num_gpus</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_batch_size</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
 </span><span id="__span-14-22"><a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a>    <span class="p">),</span>
 </span><span id="__span-14-23"><a id="__codelineno-14-23" name="__codelineno-14-23" href="#__codelineno-14-23"></a>    <span class="n">ModelConfig</span><span class="p">(</span>
-</span><span id="__span-14-24"><a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;grounding-dino&quot;</span><span class="p">,</span>
-</span><span id="__span-14-25"><a id="__codelineno-14-25" name="__codelineno-14-25" href="#__codelineno-14-25"></a>        <span class="n">model_class</span><span class="o">=</span><span class="s2">&quot;GroundingDINOModel&quot;</span><span class="p">,</span>
-</span><span id="__span-14-26"><a id="__codelineno-14-26" name="__codelineno-14-26" href="#__codelineno-14-26"></a>        <span class="n">model_params</span><span class="o">=</span><span class="n">GroundingDINOParams</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;IDEA-Research/grounding-dino-base&quot;</span><span class="p">),</span>
+</span><span id="__span-14-24"><a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">"grounding-dino"</span><span class="p">,</span>
+</span><span id="__span-14-25"><a id="__codelineno-14-25" name="__codelineno-14-25" href="#__codelineno-14-25"></a>        <span class="n">model_class</span><span class="o">=</span><span class="s2">"GroundingDINOModel"</span><span class="p">,</span>
+</span><span id="__span-14-26"><a id="__codelineno-14-26" name="__codelineno-14-26" href="#__codelineno-14-26"></a>        <span class="n">model_params</span><span class="o">=</span><span class="n">GroundingDINOParams</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">"IDEA-Research/grounding-dino-base"</span><span class="p">),</span>
 </span><span id="__span-14-27"><a id="__codelineno-14-27" name="__codelineno-14-27" href="#__codelineno-14-27"></a>        <span class="n">deployment</span><span class="o">=</span><span class="n">DeploymentConfig</span><span class="p">(</span><span class="n">num_gpus</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_batch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">),</span>
 </span><span id="__span-14-28"><a id="__codelineno-14-28" name="__codelineno-14-28" href="#__codelineno-14-28"></a>    <span class="p">),</span>
 </span><span id="__span-14-29"><a id="__codelineno-14-29" name="__codelineno-14-29" href="#__codelineno-14-29"></a><span class="p">]</span>

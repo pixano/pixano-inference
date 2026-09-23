@@ -620,6 +620,8 @@
       
         
       
+        
+      
     
     
     
@@ -715,6 +717,34 @@
     
   
     Custom Models Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ray_serve/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
   
 
     
@@ -3565,18 +3595,18 @@ an <code>Authorization: Bearer &lt;key&gt;</code> header. Comparison is constant
 <span class="normal"><a href="#__codelineno-0-73">73</a></span>
 <span class="normal"><a href="#__codelineno-0-74">74</a></span>
 <span class="normal"><a href="#__codelineno-0-75">75</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="k">def</span><span class="w"> </span><span class="nf">make_api_key_dependency</span><span class="p">(</span><span class="n">settings</span><span class="p">:</span> <span class="n">ServerSettings</span><span class="p">):</span>
-</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a FastAPI dependency enforcing API-key auth for the given settings.</span>
+</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="w">    </span><span class="sd">"""Build a FastAPI dependency enforcing API-key auth for the given settings.</span>
 </span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a>
 </span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">    Args:</span>
 </span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">        settings: Server settings holding the accepted API keys.</span>
 </span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53"></a>
 </span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">    Returns:</span>
 </span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">        An async dependency callable. It is a no-op when no keys are configured.</span>
-</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="sd">    """</span>
 </span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="n">accepted</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">api_keys</span><span class="p">)</span>
 </span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a>
 </span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">require_api_key</span><span class="p">(</span>
-</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a>        <span class="n">x_api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Header</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;X-API-Key&quot;</span><span class="p">),</span>
+</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a>        <span class="n">x_api_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Header</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">alias</span><span class="o">=</span><span class="s2">"X-API-Key"</span><span class="p">),</span>
 </span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a>        <span class="n">authorization</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Header</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
 </span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">accepted</span><span class="p">:</span>
@@ -3585,11 +3615,11 @@ an <code>Authorization: Bearer &lt;key&gt;</code> header. Comparison is constant
 </span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="k">if</span> <span class="n">presented</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a>            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
 </span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a>                <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span>
-</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a>                <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Missing API key. Supply &#39;X-API-Key&#39; or &#39;Authorization: Bearer &lt;key&gt;&#39;.&quot;</span><span class="p">,</span>
-</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a>                <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;WWW-Authenticate&quot;</span><span class="p">:</span> <span class="s2">&quot;Bearer&quot;</span><span class="p">},</span>
+</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a>                <span class="n">detail</span><span class="o">=</span><span class="s2">"Missing API key. Supply 'X-API-Key' or 'Authorization: Bearer &lt;key&gt;'."</span><span class="p">,</span>
+</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a>                <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"WWW-Authenticate"</span><span class="p">:</span> <span class="s2">"Bearer"</span><span class="p">},</span>
 </span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a>            <span class="p">)</span>
 </span><span id="__span-0-72"><a id="__codelineno-0-72" name="__codelineno-0-72"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">_key_matches</span><span class="p">(</span><span class="n">presented</span><span class="p">,</span> <span class="n">accepted</span><span class="p">):</span>
-</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a>            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Invalid API key.&quot;</span><span class="p">)</span>
+</span><span id="__span-0-73"><a id="__codelineno-0-73" name="__codelineno-0-73"></a>            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid API key."</span><span class="p">)</span>
 </span><span id="__span-0-74"><a id="__codelineno-0-74" name="__codelineno-0-74"></a>
 </span><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="k">return</span> <span class="n">require_api_key</span>
 </span></code></pre></div></td></tr></table></div>
@@ -3627,18 +3657,18 @@ an <code>Authorization: Bearer &lt;key&gt;</code> header. Comparison is constant
 <span class="normal"><a href="#__codelineno-0-88">88</a></span>
 <span class="normal"><a href="#__codelineno-0-89">89</a></span>
 <span class="normal"><a href="#__codelineno-0-90">90</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-78"><a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="k">def</span><span class="w"> </span><span class="nf">warn_if_auth_disabled</span><span class="p">(</span><span class="n">settings</span><span class="p">:</span> <span class="n">ServerSettings</span><span class="p">,</span> <span class="n">host</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Emit a startup warning when auth is off, escalating on a non-loopback bind.&quot;&quot;&quot;</span>
+</span><span id="__span-0-79"><a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="w">    </span><span class="sd">"""Emit a startup warning when auth is off, escalating on a non-loopback bind."""</span>
 </span><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a>    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">auth_enabled</span><span class="p">:</span>
 </span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a>        <span class="k">return</span>
-</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="n">is_loopback</span> <span class="o">=</span> <span class="n">host</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="s2">&quot;::1&quot;</span><span class="p">}</span>
+</span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="n">is_loopback</span> <span class="o">=</span> <span class="n">host</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"127.0.0.1"</span><span class="p">,</span> <span class="s2">"localhost"</span><span class="p">,</span> <span class="s2">"::1"</span><span class="p">}</span>
 </span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="n">message</span> <span class="o">=</span> <span class="p">(</span>
-</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a>        <span class="s2">&quot;API-key authentication is DISABLED (no PIXANO_INFERENCE_API_KEYS configured). &quot;</span>
-</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a>        <span class="s2">&quot;Every inference and admin endpoint is open to anyone who can reach the server.&quot;</span>
+</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a>        <span class="s2">"API-key authentication is DISABLED (no PIXANO_INFERENCE_API_KEYS configured). "</span>
+</span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a>        <span class="s2">"Every inference and admin endpoint is open to anyone who can reach the server."</span>
 </span><span id="__span-0-86"><a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="p">)</span>
 </span><span id="__span-0-87"><a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="k">if</span> <span class="n">is_loopback</span><span class="p">:</span>
 </span><span id="__span-0-88"><a id="__codelineno-0-88" name="__codelineno-0-88"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
 </span><span id="__span-0-89"><a id="__codelineno-0-89" name="__codelineno-0-89"></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-90"><a id="__codelineno-0-90" name="__codelineno-0-90"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> The server is binding a non-loopback host (</span><span class="si">%s</span><span class="s2">).&quot;</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">host</span><span class="p">)</span>
+</span><span id="__span-0-90"><a id="__codelineno-0-90" name="__codelineno-0-90"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"</span><span class="si">%s</span><span class="s2"> The server is binding a non-loopback host (</span><span class="si">%s</span><span class="s2">)."</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">host</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>

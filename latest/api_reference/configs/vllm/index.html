@@ -620,6 +620,8 @@
       
         
       
+        
+      
     
     
     
@@ -715,6 +717,34 @@
     
   
     Custom Models Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../ray_serve/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
   
 
     
@@ -3546,21 +3576,21 @@
 <span class="normal"><a href="#__codelineno-0-268">268</a></span>
 <span class="normal"><a href="#__codelineno-0-269">269</a></span>
 <span class="normal"><a href="#__codelineno-0-270">270</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-253"><a id="__codelineno-0-253" name="__codelineno-0-253"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-254"><a id="__codelineno-0-254" name="__codelineno-0-254"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a new model by parsing and validating input data from keyword arguments.</span>
+</span><span id="__span-0-254"><a id="__codelineno-0-254" name="__codelineno-0-254"></a><span class="w">    </span><span class="sd">"""Create a new model by parsing and validating input data from keyword arguments.</span>
 </span><span id="__span-0-255"><a id="__codelineno-0-255" name="__codelineno-0-255"></a>
 </span><span id="__span-0-256"><a id="__codelineno-0-256" name="__codelineno-0-256"></a><span class="sd">    Raises [`ValidationError`][pydantic_core.ValidationError] if the input data cannot be</span>
 </span><span id="__span-0-257"><a id="__codelineno-0-257" name="__codelineno-0-257"></a><span class="sd">    validated to form a valid model.</span>
 </span><span id="__span-0-258"><a id="__codelineno-0-258" name="__codelineno-0-258"></a>
 </span><span id="__span-0-259"><a id="__codelineno-0-259" name="__codelineno-0-259"></a><span class="sd">    `self` is explicitly positional-only to allow `self` as a field name.</span>
-</span><span id="__span-0-260"><a id="__codelineno-0-260" name="__codelineno-0-260"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-260"><a id="__codelineno-0-260" name="__codelineno-0-260"></a><span class="sd">    """</span>
 </span><span id="__span-0-261"><a id="__codelineno-0-261" name="__codelineno-0-261"></a>    <span class="c1"># `__tracebackhide__` tells pytest and some other tools to omit this function from tracebacks</span>
 </span><span id="__span-0-262"><a id="__codelineno-0-262" name="__codelineno-0-262"></a>    <span class="n">__tracebackhide__</span> <span class="o">=</span> <span class="kc">True</span>
 </span><span id="__span-0-263"><a id="__codelineno-0-263" name="__codelineno-0-263"></a>    <span class="n">validated_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__pydantic_validator__</span><span class="o">.</span><span class="n">validate_python</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">self_instance</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
 </span><span id="__span-0-264"><a id="__codelineno-0-264" name="__codelineno-0-264"></a>    <span class="k">if</span> <span class="bp">self</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">validated_self</span><span class="p">:</span>
 </span><span id="__span-0-265"><a id="__codelineno-0-265" name="__codelineno-0-265"></a>        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-</span><span id="__span-0-266"><a id="__codelineno-0-266" name="__codelineno-0-266"></a>            <span class="s1">&#39;A custom validator is returning a value other than `self`.</span><span class="se">\n</span><span class="s1">&#39;</span>
-</span><span id="__span-0-267"><a id="__codelineno-0-267" name="__codelineno-0-267"></a>            <span class="s2">&quot;Returning anything other than `self` from a top level model validator isn&#39;t supported when validating via `__init__`.</span><span class="se">\n</span><span class="s2">&quot;</span>
-</span><span id="__span-0-268"><a id="__codelineno-0-268" name="__codelineno-0-268"></a>            <span class="s1">&#39;See the `model_validator` docs (https://docs.pydantic.dev/latest/concepts/validators/#model-validators) for more details.&#39;</span><span class="p">,</span>
+</span><span id="__span-0-266"><a id="__codelineno-0-266" name="__codelineno-0-266"></a>            <span class="s1">'A custom validator is returning a value other than `self`.</span><span class="se">\n</span><span class="s1">'</span>
+</span><span id="__span-0-267"><a id="__codelineno-0-267" name="__codelineno-0-267"></a>            <span class="s2">"Returning anything other than `self` from a top level model validator isn't supported when validating via `__init__`.</span><span class="se">\n</span><span class="s2">"</span>
+</span><span id="__span-0-268"><a id="__codelineno-0-268" name="__codelineno-0-268"></a>            <span class="s1">'See the `model_validator` docs (https://docs.pydantic.dev/latest/concepts/validators/#model-validators) for more details.'</span><span class="p">,</span>
 </span><span id="__span-0-269"><a id="__codelineno-0-269" name="__codelineno-0-269"></a>            <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
 </span><span id="__span-0-270"><a id="__codelineno-0-270" name="__codelineno-0-270"></a>        <span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>

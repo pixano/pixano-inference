@@ -620,6 +620,8 @@
       
         
       
+        
+      
     
     
     
@@ -715,6 +717,34 @@
     
   
     Custom Models Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../ray_serve/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
   
 
     
@@ -3618,8 +3648,8 @@ framework lazily.</p>
               <summary>Source code in <code>pixano_inference/frameworks/base.py</code></summary>
               <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-58">58</a></span>
 <span class="normal"><a href="#__codelineno-0-59">59</a></span>
-<span class="normal"><a href="#__codelineno-0-60">60</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="k">def</span><span class="w"> </span><span class="nf">from_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">:</span> <span class="s2">&quot;np.ndarray&quot;</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a numpy array to a framework array/tensor on *device* with *dtype*.&quot;&quot;&quot;</span>
+<span class="normal"><a href="#__codelineno-0-60">60</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="k">def</span><span class="w"> </span><span class="nf">from_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">:</span> <span class="s2">"np.ndarray"</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="w">    </span><span class="sd">"""Convert a numpy array to a framework array/tensor on *device* with *dtype*."""</span>
 </span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a>    <span class="o">...</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
@@ -3646,7 +3676,7 @@ framework lazily.</p>
               <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-42">42</a></span>
 <span class="normal"><a href="#__codelineno-0-43">43</a></span>
 <span class="normal"><a href="#__codelineno-0-44">44</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="k">def</span><span class="w"> </span><span class="nf">is_available</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Whether the underlying framework is importable in this environment.&quot;&quot;&quot;</span>
+</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="w">    </span><span class="sd">"""Whether the underlying framework is importable in this environment."""</span>
 </span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a>    <span class="o">...</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
@@ -3673,7 +3703,7 @@ framework lazily.</p>
               <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-46">46</a></span>
 <span class="normal"><a href="#__codelineno-0-47">47</a></span>
 <span class="normal"><a href="#__codelineno-0-48">48</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="k">def</span><span class="w"> </span><span class="nf">resolve_device</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_gpus</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the framework&#39;s device object for *num_gpus* requested GPUs.&quot;&quot;&quot;</span>
+</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="w">    </span><span class="sd">"""Return the framework's device object for *num_gpus* requested GPUs."""</span>
 </span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a>    <span class="o">...</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
@@ -3700,7 +3730,7 @@ framework lazily.</p>
               <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-50">50</a></span>
 <span class="normal"><a href="#__codelineno-0-51">51</a></span>
 <span class="normal"><a href="#__codelineno-0-52">52</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="k">def</span><span class="w"> </span><span class="nf">resolve_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Map a dtype string (e.g. ``&quot;float32&quot;``) to the framework&#39;s dtype.&quot;&quot;&quot;</span>
+</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="w">    </span><span class="sd">"""Map a dtype string (e.g. ``"float32"``) to the framework's dtype."""</span>
 </span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a>    <span class="o">...</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
@@ -3726,8 +3756,8 @@ framework lazily.</p>
               <summary>Source code in <code>pixano_inference/frameworks/base.py</code></summary>
               <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-54">54</a></span>
 <span class="normal"><a href="#__codelineno-0-55">55</a></span>
-<span class="normal"><a href="#__codelineno-0-56">56</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;np.ndarray&quot;</span><span class="p">:</span>
-</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a framework array/tensor to a numpy array (host memory).&quot;&quot;&quot;</span>
+<span class="normal"><a href="#__codelineno-0-56">56</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"np.ndarray"</span><span class="p">:</span>
+</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="w">    </span><span class="sd">"""Convert a framework array/tensor to a numpy array (host memory)."""</span>
 </span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a>    <span class="o">...</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
@@ -3770,7 +3800,7 @@ framework lazily.</p>
 <span class="normal"><a href="#__codelineno-0-110">110</a></span>
 <span class="normal"><a href="#__codelineno-0-111">111</a></span>
 <span class="normal"><a href="#__codelineno-0-112">112</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-103"><a id="__codelineno-0-103" name="__codelineno-0-103"></a><span class="k">def</span><span class="w"> </span><span class="nf">available_frameworks</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-</span><span id="__span-0-104"><a id="__codelineno-0-104" name="__codelineno-0-104"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the names of frameworks whose package is importable in this environment.&quot;&quot;&quot;</span>
+</span><span id="__span-0-104"><a id="__codelineno-0-104" name="__codelineno-0-104"></a><span class="w">    </span><span class="sd">"""Return the names of frameworks whose package is importable in this environment."""</span>
 </span><span id="__span-0-105"><a id="__codelineno-0-105" name="__codelineno-0-105"></a>    <span class="n">available</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span id="__span-0-106"><a id="__codelineno-0-106" name="__codelineno-0-106"></a>    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_ADAPTER_MODULES</span><span class="p">:</span>
 </span><span id="__span-0-107"><a id="__codelineno-0-107" name="__codelineno-0-107"></a>        <span class="k">try</span><span class="p">:</span>
@@ -3899,22 +3929,22 @@ framework lazily.</p>
 <span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
 <span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
 <span class="normal"><a href="#__codelineno-0-100">100</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-80"><a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_adapter</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrameworkAdapter</span><span class="p">:</span>
-</span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the adapter for framework *name*, importing its module lazily.</span>
+</span><span id="__span-0-81"><a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="w">    </span><span class="sd">"""Return the adapter for framework *name*, importing its module lazily.</span>
 </span><span id="__span-0-82"><a id="__codelineno-0-82" name="__codelineno-0-82"></a>
 </span><span id="__span-0-83"><a id="__codelineno-0-83" name="__codelineno-0-83"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="sd">        name: Framework name (``&quot;torch&quot;``, ``&quot;jax&quot;``, ``&quot;tensorflow&quot;``, ``&quot;mlx&quot;``).</span>
+</span><span id="__span-0-84"><a id="__codelineno-0-84" name="__codelineno-0-84"></a><span class="sd">        name: Framework name (``"torch"``, ``"jax"``, ``"tensorflow"``, ``"mlx"``).</span>
 </span><span id="__span-0-85"><a id="__codelineno-0-85" name="__codelineno-0-85"></a>
 </span><span id="__span-0-86"><a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="sd">    Returns:</span>
 </span><span id="__span-0-87"><a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="sd">        The registered :class:`FrameworkAdapter`.</span>
 </span><span id="__span-0-88"><a id="__codelineno-0-88" name="__codelineno-0-88"></a>
 </span><span id="__span-0-89"><a id="__codelineno-0-89" name="__codelineno-0-89"></a><span class="sd">    Raises:</span>
 </span><span id="__span-0-90"><a id="__codelineno-0-90" name="__codelineno-0-90"></a><span class="sd">        ValueError: If *name* is not a known framework.</span>
-</span><span id="__span-0-91"><a id="__codelineno-0-91" name="__codelineno-0-91"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-91"><a id="__codelineno-0-91" name="__codelineno-0-91"></a><span class="sd">    """</span>
 </span><span id="__span-0-92"><a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="n">key</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 </span><span id="__span-0-93"><a id="__codelineno-0-93" name="__codelineno-0-93"></a>    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_ADAPTERS</span><span class="p">:</span>
 </span><span id="__span-0-94"><a id="__codelineno-0-94" name="__codelineno-0-94"></a>        <span class="n">module_path</span> <span class="o">=</span> <span class="n">_ADAPTER_MODULES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 </span><span id="__span-0-95"><a id="__codelineno-0-95" name="__codelineno-0-95"></a>        <span class="k">if</span> <span class="n">module_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown framework &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;. Known: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_ADAPTER_MODULES</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+</span><span id="__span-0-96"><a id="__codelineno-0-96" name="__codelineno-0-96"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown framework '</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">'. Known: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_ADAPTER_MODULES</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
 </span><span id="__span-0-97"><a id="__codelineno-0-97" name="__codelineno-0-97"></a>        <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
 </span><span id="__span-0-98"><a id="__codelineno-0-98" name="__codelineno-0-98"></a>
 </span><span id="__span-0-99"><a id="__codelineno-0-99" name="__codelineno-0-99"></a>        <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">module_path</span><span class="p">)</span>
@@ -3944,7 +3974,7 @@ framework lazily.</p>
               <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-75">75</a></span>
 <span class="normal"><a href="#__codelineno-0-76">76</a></span>
 <span class="normal"><a href="#__codelineno-0-77">77</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-75"><a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="k">def</span><span class="w"> </span><span class="nf">register_adapter</span><span class="p">(</span><span class="n">adapter</span><span class="p">:</span> <span class="n">FrameworkAdapter</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a framework adapter instance (called by adapter modules on import).&quot;&quot;&quot;</span>
+</span><span id="__span-0-76"><a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="w">    </span><span class="sd">"""Register a framework adapter instance (called by adapter modules on import)."""</span>
 </span><span id="__span-0-77"><a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="n">_ADAPTERS</span><span class="p">[</span><span class="n">adapter</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">adapter</span>
 </span></code></pre></div></td></tr></table></div>
             </details>

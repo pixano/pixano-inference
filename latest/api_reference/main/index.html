@@ -620,6 +620,8 @@
       
         
       
+        
+      
     
     
     
@@ -715,6 +717,34 @@
     
   
     Custom Models Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ray_serve/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
   
 
     
@@ -2266,6 +2296,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#pixano_inference.main.serve--pin-the-gpu-count-when-rays-auto-detection-gets-it-wrong" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pin the GPU count when Ray's auto-detection gets it wrong
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3485,7 +3526,7 @@
 
 
 <h2 id="pixano_inference.main.serve" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">serve</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">7463</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strict_startup</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">serve</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">'127.0.0.1'</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">7463</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strict_startup</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_gpus</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 </h2>
 
@@ -3503,6 +3544,8 @@ it by name in the config). See the custom-models docs.</p>
 <p>pixano-inference --host 0.0.0.0 --port 7463</p>
 <h3 id="pixano_inference.main.serve--start-with-a-python-config-declaring-the-models-to-deploy">Start with a Python config declaring the models to deploy</h3>
 <p>pixano-inference --host 0.0.0.0 --port 7463 --config models.py</p>
+<h3 id="pixano_inference.main.serve--pin-the-gpu-count-when-rays-auto-detection-gets-it-wrong">Pin the GPU count when Ray's auto-detection gets it wrong</h3>
+<p>pixano-inference --config models.py --num-gpus 1</p>
 
 
             <details class="mkdocstrings-source">
@@ -3546,46 +3589,74 @@ it by name in the config). See the custom-models docs.</p>
 <span class="normal"><a href="#__codelineno-0-54">54</a></span>
 <span class="normal"><a href="#__codelineno-0-55">55</a></span>
 <span class="normal"><a href="#__codelineno-0-56">56</a></span>
-<span class="normal"><a href="#__codelineno-0-57">57</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="nd">@app</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#__codelineno-0-68">68</a></span>
+<span class="normal"><a href="#__codelineno-0-69">69</a></span>
+<span class="normal"><a href="#__codelineno-0-70">70</a></span>
+<span class="normal"><a href="#__codelineno-0-71">71</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="nd">@app</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
 </span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="k">def</span><span class="w"> </span><span class="nf">serve</span><span class="p">(</span>
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20"></a>    <span class="n">host</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">help</span><span class="o">=</span><span class="s2">&quot;Pixano Inference app URL host&quot;</span><span class="p">)]</span> <span class="o">=</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21"></a>    <span class="n">port</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">help</span><span class="o">=</span><span class="s2">&quot;Pixano Inference app URL port&quot;</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">7463</span><span class="p">,</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20"></a>    <span class="n">host</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">help</span><span class="o">=</span><span class="s2">"Pixano Inference app URL host"</span><span class="p">)]</span> <span class="o">=</span> <span class="s2">"127.0.0.1"</span><span class="p">,</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21"></a>    <span class="n">port</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">help</span><span class="o">=</span><span class="s2">"Pixano Inference app URL port"</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">7463</span><span class="p">,</span>
 </span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22"></a>    <span class="n">config</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23"></a>        <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">],</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">exists</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to Python config file (.py) for model deployments&quot;</span><span class="p">)</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23"></a>        <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">],</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">exists</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Path to Python config file (.py) for model deployments"</span><span class="p">)</span>
 </span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24"></a>    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25"></a>    <span class="n">strict_startup</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
 </span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26"></a>        <span class="nb">bool</span><span class="p">,</span>
-</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27"></a>        <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">help</span><span class="o">=</span><span class="s2">&quot;Fail startup if any configured model cannot be deployed (recommended for production).&quot;</span><span class="p">),</span>
+</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27"></a>        <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">help</span><span class="o">=</span><span class="s2">"Fail startup if any configured model cannot be deployed (recommended for production)."</span><span class="p">),</span>
 </span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28"></a>    <span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="p">):</span>
-</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Start the Pixano Inference server.</span>
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31"></a>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="sd">    Custom models are installable packages discovered via the ``pixano_inference.models``</span>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">    entry point (``pip install`` / ``uv pip install -e`` your model package, then reference</span>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="sd">    it by name in the config). See the custom-models docs.</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a>
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="sd">        # Start the server</span>
-</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="sd">        pixano-inference --host 0.0.0.0 --port 7463</span>
-</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39"></a>
-</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="sd">        # Start with a Python config declaring the models to deploy</span>
-</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="sd">        pixano-inference --host 0.0.0.0 --port 7463 --config models.py</span>
-</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">.observability</span><span class="w"> </span><span class="kn">import</span> <span class="n">configure_logging</span>
-</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">.ray</span><span class="w"> </span><span class="kn">import</span> <span class="n">InferenceServer</span><span class="p">,</span> <span class="n">RayServeConfig</span>
-</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">.server_settings</span><span class="w"> </span><span class="kn">import</span> <span class="n">ServerSettings</span>
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29"></a>    <span class="n">num_gpus</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
+</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30"></a>        <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31"></a>        <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span>
+</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a>            <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a>            <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a>                <span class="s2">"Number of GPUs to give Ray. Omit to let Ray auto-detect. Set it explicitly when "</span>
+</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a>                <span class="s2">"auto-detection is wrong -- Ray can report a GPU host as having a TPU, which makes "</span>
+</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a>                <span class="s2">"GPU deployments fail their resource check."</span>
+</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a>            <span class="p">),</span>
+</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38"></a>        <span class="p">),</span>
+</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40"></a><span class="p">):</span>
+</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="w">    </span><span class="sd">"""Start the Pixano Inference server.</span>
+</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a>
+</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="sd">    Custom models are installable packages discovered via the ``pixano_inference.models``</span>
+</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="sd">    entry point (``pip install`` / ``uv pip install -e`` your model package, then reference</span>
+</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="sd">    it by name in the config). See the custom-models docs.</span>
 </span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a>
-</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a>    <span class="c1"># Structured, request-id-aware logging driven by PIXANO_INFERENCE_LOG_LEVEL / _LOG_JSON.</span>
-</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a>    <span class="n">settings</span> <span class="o">=</span> <span class="n">ServerSettings</span><span class="p">()</span>
-</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a>    <span class="n">configure_logging</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">log_level</span><span class="p">,</span> <span class="n">json_logs</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">log_json</span><span class="p">)</span>
+</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">    Examples:</span>
+</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="sd">        # Start the server</span>
+</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">        pixano-inference --host 0.0.0.0 --port 7463</span>
 </span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a>
-</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a>    <span class="n">ray_config</span> <span class="o">=</span> <span class="n">RayServeConfig</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span> <span class="n">strict_startup</span><span class="o">=</span><span class="n">strict_startup</span><span class="p">)</span>
-</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a>    <span class="n">server</span> <span class="o">=</span> <span class="n">InferenceServer</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">ray_config</span><span class="p">)</span>
+</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">        # Start with a Python config declaring the models to deploy</span>
+</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="sd">        pixano-inference --host 0.0.0.0 --port 7463 --config models.py</span>
 </span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53"></a>
-</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a>        <span class="n">server</span><span class="o">.</span><span class="n">register_from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a>
-</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="n">server</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span> <span class="n">blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="sd">        # Pin the GPU count when Ray's auto-detection gets it wrong</span>
+</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">        pixano-inference --config models.py --num-gpus 1</span>
+</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a><span class="sd">    """</span>
+</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">.observability</span><span class="w"> </span><span class="kn">import</span> <span class="n">configure_logging</span>
+</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">.ray</span><span class="w"> </span><span class="kn">import</span> <span class="n">InferenceServer</span><span class="p">,</span> <span class="n">RayServeConfig</span>
+</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">.server_settings</span><span class="w"> </span><span class="kn">import</span> <span class="n">ServerSettings</span>
+</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60"></a>
+</span><span id="__span-0-61"><a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="c1"># Structured, request-id-aware logging driven by PIXANO_INFERENCE_LOG_LEVEL / _LOG_JSON.</span>
+</span><span id="__span-0-62"><a id="__codelineno-0-62" name="__codelineno-0-62"></a>    <span class="n">settings</span> <span class="o">=</span> <span class="n">ServerSettings</span><span class="p">()</span>
+</span><span id="__span-0-63"><a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="n">configure_logging</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">log_level</span><span class="p">,</span> <span class="n">json_logs</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">log_json</span><span class="p">)</span>
+</span><span id="__span-0-64"><a id="__codelineno-0-64" name="__codelineno-0-64"></a>
+</span><span id="__span-0-65"><a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="n">ray_config</span> <span class="o">=</span> <span class="n">RayServeConfig</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span> <span class="n">strict_startup</span><span class="o">=</span><span class="n">strict_startup</span><span class="p">,</span> <span class="n">num_gpus</span><span class="o">=</span><span class="n">num_gpus</span><span class="p">)</span>
+</span><span id="__span-0-66"><a id="__codelineno-0-66" name="__codelineno-0-66"></a>    <span class="n">server</span> <span class="o">=</span> <span class="n">InferenceServer</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">ray_config</span><span class="p">)</span>
+</span><span id="__span-0-67"><a id="__codelineno-0-67" name="__codelineno-0-67"></a>
+</span><span id="__span-0-68"><a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-69"><a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="n">server</span><span class="o">.</span><span class="n">register_from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</span><span id="__span-0-70"><a id="__codelineno-0-70" name="__codelineno-0-70"></a>
+</span><span id="__span-0-71"><a id="__codelineno-0-71" name="__codelineno-0-71"></a>    <span class="n">server</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span> <span class="n">blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>

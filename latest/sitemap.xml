@@ -2,274 +2,278 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api-reference/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/SUMMARY/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/client/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/jobs/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/main/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/observability/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/plugins/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/security/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/server_settings/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/api/v1/admin/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/api/v1/errors/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/api/v1/helpers/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/api/v1/inference/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/api/v1/jobs/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/api/v1/router/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/api/v1/schemas/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/api/v1/service/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/configs/base/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/configs/transformers/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/configs/vllm/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/frameworks/base/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/frameworks/jax/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/frameworks/mlx/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/frameworks/tensorflow/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/frameworks/torch/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/impls/_helpers/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/impls/transformers/grounding_dino/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/impls/transformers/vlm/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/impls/vllm/vlm/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/models/base/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/models/capabilities/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/models/detection/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/models/embedding/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/models/ner/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/models/registry/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/models/segmentation/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/models/tracking/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/models/vlm/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/ray/app/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/ray/config/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/ray/config_loader/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/ray/deployment/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/ray/server/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/ray/utils/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/schemas/base/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/schemas/inference/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/schemas/models/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/schemas/nd_array/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/schemas/rle/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/schemas/v1/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/utils/gpu/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/utils/media/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/utils/media_security/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/utils/package/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/api_reference/utils/url/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/deployment/docker/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/examples/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/examples/Grounding_%2B_SAM2/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/examples/Grounding_DINO/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/examples/SAM2_image/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/examples/SAM2_video/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/examples/VQA/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/getting_started/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/home/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/ray_serve/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/ray_serve/custom_models/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
     </url>
     <url>
          <loc>https://pixano.github.io/pixano-inference/latest/ray_serve/quickstart/</loc>
-         <lastmod>2026-07-26</lastmod>
+         <lastmod>2026-09-23</lastmod>
+    </url>
+    <url>
+         <loc>https://pixano.github.io/pixano-inference/latest/ray_serve/troubleshooting/</loc>
+         <lastmod>2026-09-23</lastmod>
     </url>
 </urlset>

@@ -8,9 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://pixano.github.io/pixano-inference/latest/deployment/docker/">
+        <link rel="canonical" href="https://pixano.github.io/pixano-inference/latest/ray_serve/troubleshooting/">
       
       
+        <link rel="prev" href="../custom_models/">
+      
+      
+        <link rel="next" href="../../examples/">
       
       
         
@@ -21,7 +25,7 @@
     
     
       
-        <title>Docker - Pixano-Inference Documentation</title>
+        <title>Troubleshooting - Pixano-Inference Documentation</title>
       
     
     
@@ -76,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#docker-deployment" class="md-skip">
+        <a href="#troubleshooting" class="md-skip">
           Skip to content
         </a>
       
@@ -115,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Docker
+              Troubleshooting
             
           </span>
         </div>
@@ -256,6 +260,8 @@
   
   
   
+    
+  
   
     
     
@@ -263,10 +269,12 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../../home/" class="md-tabs__link">
           
   
@@ -394,8 +402,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -415,17 +425,20 @@
     
     
       
+        
+        
+      
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -443,7 +456,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -594,6 +607,8 @@
                 
   
   
+    
+  
   
   
     
@@ -616,15 +631,15 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" checked>
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../ray_serve/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   
@@ -648,7 +663,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -668,7 +683,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ray_serve/quickstart/" class="md-nav__link">
+      <a href="../quickstart/" class="md-nav__link">
         
   
   
@@ -696,7 +711,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ray_serve/custom_models/" class="md-nav__link">
+      <a href="../custom_models/" class="md-nav__link">
         
   
   
@@ -721,10 +736,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../ray_serve/troubleshooting/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -740,6 +782,70 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-server-hangs-on-startup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The server hangs on startup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#on_read-bad-version-ray-assigned-the-same-port-twice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        on_read bad version — Ray assigned the same port twice
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ray-reports-a-tpu-or-no-gpu-on-a-gpu-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ray reports a TPU (or no GPU) on a GPU machine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-under-uv-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running under uv run
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -3384,127 +3490,78 @@
 # =================================
 --->
 
-<h1 id="docker-deployment">Docker deployment</h1>
-<p>The repository ships a production-oriented <code>Dockerfile</code> and <code>docker-compose.yml</code>. The default
-image is a GPU-capable server bundling PyTorch, the transformers backend, and the SAM2 plugin.</p>
-<h2 id="prerequisites">Prerequisites</h2>
-<ul>
-<li>Docker with the <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html">NVIDIA Container Toolkit</a>
-  for GPU access (the image uses CUDA-enabled torch wheels; no CUDA base image is needed).</li>
-<li>For CPU-only use, build the CPU variant (below) — no toolkit required.</li>
-</ul>
-<h2 id="quick-start">Quick start</h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># 1. (Recommended) set an API key so inference/admin routes require auth.</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">PIXANO_INFERENCE_API_KEYS</span><span class="o">=</span><span class="s2">"a-long-random-key"</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># 2. Edit docker/models.py to declare the models to deploy (defaults to SAM2 image).</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1"># 3. Build and run.</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>docker<span class="w"> </span>compose<span class="w"> </span>up<span class="w"> </span>--build
-</span></code></pre></div>
-<p>The compose file:</p>
-<ul>
-<li>binds the published port to <strong>127.0.0.1 by default</strong> (secure default) — to expose the
-  server off-host, change the mapping to <code>7463:7463</code> <strong>and set <code>PIXANO_INFERENCE_API_KEYS</code></strong>
-  (without a key every route is open). Other services on the same compose network reach it as
-  <code>http://pixano-inference:7463</code> regardless;</li>
-<li>persists the HuggingFace weight cache in the <code>pixano-weights</code> volume (<code>/data/hf</code>), so
-  restarts don't re-download weights;</li>
-<li>mounts <code>docker/models.py</code> read-only at <code>/config/models.py</code>;</li>
-<li>reserves all GPUs, sets <code>shm_size: 8gb</code> (Ray's object store lives in <code>/dev/shm</code>), <code>init: true</code>
-  (reap Ray's child processes), <code>restart: unless-stopped</code>, and a <code>stop_grace_period</code> matched to
-  the bounded graceful drain;</li>
-<li>wires a healthcheck to <code>/health</code> with a 600s start period (a cold first boot downloads model
-  weights). <code>/health</code> is liveness-only; use <code>/v1/ready</code> for readiness (503 until every model is
-  <code>RUNNING</code>).</li>
-</ul>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>curl<span class="w"> </span>-fsS<span class="w"> </span>http://localhost:7463/v1/ready
-</span></code></pre></div>
-<h2 id="run-without-compose">Run without compose</h2>
-<p>GPU image (needs the NVIDIA Container Toolkit; <code>--shm-size</code> for Ray, a config, and a weights
-volume):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>--gpus<span class="w"> </span>all<span class="w"> </span>--shm-size<span class="o">=</span>8g<span class="w"> </span>-p<span class="w"> </span><span class="m">127</span>.0.0.1:7463:7463<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">PIXANO_INFERENCE_API_KEYS</span><span class="o">=</span><span class="s2">"a-long-random-key"</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>-v<span class="w"> </span>pixano-weights:/data<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/docker/models.py:/config/models.py:ro"</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span>pixano-inference<span class="w"> </span>--host<span class="w"> </span><span class="m">0</span>.0.0.0<span class="w"> </span>--port<span class="w"> </span><span class="m">7463</span><span class="w"> </span>--config<span class="w"> </span>/config/models.py
-</span></code></pre></div>
-<p>CPU-only (build the CPU image above, use a <code>num_gpus=0</code> config, no <code>--gpus</code>):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>--shm-size<span class="o">=</span>2g<span class="w"> </span>-p<span class="w"> </span><span class="m">127</span>.0.0.1:7463:7463<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/docker/models.numpy.py:/config/models.py:ro"</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>pixano-inference:cpu<span class="w"> </span>--host<span class="w"> </span><span class="m">0</span>.0.0.0<span class="w"> </span>--port<span class="w"> </span><span class="m">7463</span><span class="w"> </span>--config<span class="w"> </span>/config/models.py
-</span></code></pre></div>
-<p>The default <code>docker/models.py</code> requests a GPU (<code>num_gpus=1</code>) and the compose file reserves an
-NVIDIA device, so the compose stack requires a GPU host. For CPU, use a config with
-<code>num_gpus=0</code> (like <code>docker/models.numpy.py</code>) and <code>docker run</code> without <code>--gpus</code>.</p>
-<h2 id="image-variants">Image variants</h2>
-<p>Build args let you tailor the image:</p>
+<h1 id="troubleshooting">Troubleshooting</h1>
+<h2 id="the-server-hangs-on-startup">The server hangs on startup</h2>
+<p>Startup is bounded and interruptible: <code>Ctrl-C</code> exits within a few seconds at any point, and every
+wait on Ray fails with a diagnostic rather than blocking forever. Two knobs on <code>RayServeConfig</code>
+control the budgets:</p>
 <table>
 <thead>
 <tr>
-<th>Build arg</th>
+<th>Setting</th>
 <th>Default</th>
-<th>Purpose</th>
+<th>Bounds</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>TORCH_INDEX_URL</code></td>
-<td><code>https://download.pytorch.org/whl/cu124</code></td>
-<td>torch wheels; empty skips torch</td>
+<td><code>serve_start_timeout_s</code></td>
+<td><code>120.0</code></td>
+<td>Waiting for Ray Serve's controller actor to come up.</td>
 </tr>
 <tr>
-<td><code>PIXANO_EXTRAS</code></td>
-<td><code>transformers</code></td>
-<td>core extras; empty for none</td>
-</tr>
-<tr>
-<td><code>INSTALL_SAM</code></td>
-<td><code>true</code></td>
-<td>bundle the SAM2 plugin + <code>sam-2</code></td>
-</tr>
-<tr>
-<td><code>INSTALL_EXAMPLE</code></td>
-<td><code>false</code></td>
-<td>bundle the numpy example plugin</td>
+<td><code>deploy_timeout_s</code></td>
+<td><code>600.0</code></td>
+<td>Waiting for one model's Serve application to reach <code>RUNNING</code>.</td>
 </tr>
 </tbody>
 </table>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># CPU-only image (torch CPU wheels, no GPU toolkit needed):</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>docker<span class="w"> </span>build<span class="w"> </span>--build-arg<span class="w"> </span><span class="nv">TORCH_INDEX_URL</span><span class="o">=</span>https://download.pytorch.org/whl/cpu<span class="w"> </span>-t<span class="w"> </span>pixano-inference:cpu<span class="w"> </span>.
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Minimal, framework-free image with the numpy example plugin:</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>docker<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">TORCH_INDEX_URL</span><span class="o">=</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">PIXANO_EXTRAS</span><span class="o">=</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">INSTALL_SAM</span><span class="o">=</span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">INSTALL_EXAMPLE</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span>-t<span class="w"> </span>pixano-inference:numpy<span class="w"> </span>.
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-p<span class="w"> </span><span class="m">7463</span>:7463<span class="w"> </span>--shm-size<span class="o">=</span>2g<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">  </span>-v<span class="w"> </span><span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/docker/models.numpy.py:/config/models.py:ro"</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">  </span>pixano-inference:numpy<span class="w"> </span>--host<span class="w"> </span><span class="m">0</span>.0.0.0<span class="w"> </span>--port<span class="w"> </span><span class="m">7463</span><span class="w"> </span>--config<span class="w"> </span>/config/models.py
+<p>These exist because Ray's own calls have no timeout: <code>serve.start()</code> does a bare <code>ray.get</code> on the
+controller, and <code>serve.run()</code> waits with <code>timeout_s=-1</code> regardless of its <code>blocking</code> argument. If a
+Ray node cannot schedule the controller, those calls never return on their own.</p>
+<p>If startup aborts with <strong>"the Ray node died (the raylet exited)"</strong>, the message names the
+<code>raylet.err</code> to read. The most common causes follow.</p>
+<h2 id="on_read-bad-version-ray-assigned-the-same-port-twice"><code>on_read bad version</code> — Ray assigned the same port twice</h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>(raylet) Runtime Env Agent timed out in 30000ms. Status: Disconnected: on_read bad version,
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>         bytes_transferred 0, address: &lt;ip&gt;, port: &lt;port&gt;
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>         reason_message: "Raylet could not connect to Runtime Env Agent"
 </span></code></pre></div>
-<h2 id="custom-models">Custom models</h2>
-<p>Custom models are installed as plugin packages (see the custom-models guide). To bundle your
-own model in the image, add an install line for it to the Dockerfile builder stage, e.g.:</p>
-<div class="language-dockerfile highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">RUN</span><span class="w"> </span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>my-model<span class="w">         </span>#<span class="w"> </span>from<span class="w"> </span>PyPI<span class="w"> </span>/<span class="w"> </span>a<span class="w"> </span>private<span class="w"> </span>index<span class="w"> </span>/<span class="w"> </span>a<span class="w"> </span>git<span class="w"> </span>URL
+<p>Ray picks free ports by binding a socket, reading the port number, then closing it — so a port can
+be handed out twice. When the raylet's object-manager gRPC server and the runtime-env agent land on
+the same port, the raylet's HTTP client reaches the gRPC (HTTP/2) server, fails to parse the reply,
+and kills the node 30 s in. Compare the ports in <code>raylet.out</code> (<code>ObjectManager server started,
+listening on port N</code>) with <code>runtime_env_agent.log</code> (<code>Listening to address ..., port N</code>) to confirm.</p>
+<p><code>ray.init()</code> does not expose <code>object_manager_port</code>, so the fix is to start the cluster yourself with
+explicit ports and point the server at it:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>ray<span class="w"> </span>start<span class="w"> </span>--head<span class="w"> </span>--node-ip-address<span class="o">=</span><span class="m">127</span>.0.0.1<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span>--object-manager-port<span class="o">=</span><span class="m">8076</span><span class="w"> </span>--runtime-env-agent-port<span class="o">=</span><span class="m">8077</span>
 </span></code></pre></div>
-<p>Then reference it by name in your <code>docker/models.py</code>.</p>
-<h2 id="notes">Notes</h2>
-<ul>
-<li>The container runs as a non-root user (<code>pixano</code>, uid 1000). The <code>pixano-weights</code> named
-  volume inherits that ownership automatically. If you instead bind-mount a <strong>host directory</strong>
-  at <code>/data</code>, make it writable by uid 1000 (e.g. <code>chown -R 1000:1000 ./cache</code>), or the HF cache
-  writes fail.</li>
-<li>The <code>sam-2</code> library is built from a pinned git commit during the image build (it is not on
-  PyPI). The builder has no CUDA toolkit, so <code>sam-2</code>'s optional native <code>_C</code> kernels are <strong>not</strong>
-  compiled — image segmentation works; SAM2's connected-components post-processing uses a slower
-  pure-PyTorch fallback. Add a CUDA toolchain to the builder if you need the kernels.</li>
-<li>SIGTERM triggers a bounded graceful drain (<code>serve.shutdown</code> + <code>ray.shutdown</code>) that completes
-  within <code>stop_grace_period</code>.</li>
-<li>For fully reproducible builds, pin the <code>uv</code> image tag and use the committed lockfile; the
-  Dockerfile pins the <code>sam-2</code> commit via the <code>SAM2_REF</code> build arg.</li>
-</ul>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">config</span> <span class="o">=</span> <span class="n">RayServeConfig</span><span class="p">(</span><span class="n">ray_address</span><span class="o">=</span><span class="s2">"auto"</span><span class="p">)</span>
+</span></code></pre></div>
+<h2 id="ray-reports-a-tpu-or-no-gpu-on-a-gpu-machine">Ray reports a TPU (or no GPU) on a GPU machine</h2>
+<p>Ray's accelerator autodetection probes for TPUs with <code>glob.glob("/dev/accel*")</code>. On modern Linux
+kernels <code>/dev/accel</code> exists as a plain DRM-subsystem directory with no TPU present, so Ray registers
+<code>TPU: 1.0</code> and never registers the NVIDIA GPU. Which accelerator wins varies from run to run,
+because Ray iterates its managers out of a <code>set</code>.</p>
+<p>The symptom is a deployment that fails its preflight check with
+<code>Insufficient GPUs to deploy '&lt;model&gt;': need 1, available 0</code> even though <code>nvidia-smi</code> and
+<code>torch.cuda.is_available()</code> both see the GPU. Check with:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">ray</span><span class="p">;</span> <span class="n">ray</span><span class="o">.</span><span class="n">init</span><span class="p">();</span> <span class="nb">print</span><span class="p">(</span><span class="n">ray</span><span class="o">.</span><span class="n">cluster_resources</span><span class="p">())</span>
+</span></code></pre></div>
+<p>Set the count explicitly so nothing is autodetected:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pixano-inference<span class="w"> </span>--config<span class="w"> </span>deploy/sam2.py<span class="w"> </span>--num-gpus<span class="w"> </span><span class="m">1</span>
+</span></code></pre></div>
+<p>or, from Python, <code>RayServeConfig(num_gpus=1)</code>. Both go straight to <code>ray.init()</code>, which skips
+autodetection for that resource.</p>
+<p>Measured against Ray 2.55.1 on a single-GPU host: autodetection reported the GPU in 1 run out of
+4, while <code>--num-gpus 1</code> reported it in 5 out of 5.</p>
+<h2 id="running-under-uv-run">Running under <code>uv run</code></h2>
+<p>Ray &gt;= 2.53 detects a <code>uv run</code> parent process and relaunches every worker through <code>uv run</code> inside an
+uploaded copy of the working directory. That copy excludes <code>pyproject.toml</code>, <code>uv.lock</code> and <code>.venv</code>
+(see <code>pixano_inference.ray.utils._DEFAULT_EXCLUDES</code>), leaving <code>uv</code> with no project to resolve, so
+the server disables Ray's hook before <code>ray.init()</code> and workers inherit the active interpreter
+instead. To opt back into Ray's behaviour, set <code>RAY_ENABLE_UV_RUN_RUNTIME_ENV=1</code> <strong>and</strong> remove the
+project files from the excludes.</p>
 
 
 
