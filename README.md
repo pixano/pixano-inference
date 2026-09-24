@@ -48,14 +48,14 @@ Create `models.py`:
 
 ```python
 from pixano_inference.configs import DeploymentConfig, ModelConfig
-from pixano_inference_grounding_dino import GroundingDINOParams
+from pixano_inference_sam import Sam2ImageParams
 
 models = [
     ModelConfig(
-        name="grounding-dino",
-        model_class="GroundingDINOModel",
-        model_params=GroundingDINOParams(path="IDEA-Research/grounding-dino-tiny"),
-        deployment=DeploymentConfig(num_gpus=0),  # Set to 1 to use a GPU
+        name="sam2-image",
+        model_class="Sam2ImageModel",
+        model_params=Sam2ImageParams(path="facebook/sam2-hiera-base-plus"),
+        deployment=DeploymentConfig(num_gpus=1, num_cpus=2),
     ),
 ]
 ```
