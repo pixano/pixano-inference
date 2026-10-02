@@ -11,11 +11,13 @@ The repository contains the core Python distribution, independent packages under
 - `src/pixano_inference/api/v1/`: FastAPI routes, request handling, and API schemas.
 - `src/pixano_inference/ray/`: Ray Serve application, deployments, configuration, and server lifecycle.
 - `src/pixano_inference/models/`: capability base classes and model registry; concrete models live in plugin packages.
-- `src/pixano_inference/configs/` and `src/pixano_inference/schemas/`: model configuration and shared data types.
+- `src/pixano_inference/schemas/`: the wire contract (capability input/output types, requests and responses, `NDArray`, `CompressedRLE`); it imports nothing else from the project.
+- `src/pixano_inference/configs/`: model and deployment configuration.
+- `src/pixano_inference/client.py`: HTTP client; it depends on the schemas only.
 - `src/pixano_inference/plugins.py`: discovery through the `pixano_inference.models` entry-point group.
-- `src/pixano_inference/main.py`: Typer CLI entry point.
+- `src/pixano_inference/main.py`: Typer CLI entry point; `cli.py` launches it and reports a missing `server` extra.
 - `src/pixano_inference/utils/`: media loading, media security, and other shared helpers.
-- `packages/pixano-inference-client/`: standalone HTTP client and wire schemas, without server dependencies.
+- `packages/pixano-inference-client/`: deprecated alias that re-exports the client and the schemas from the core.
 - `packages/pixano-inference-torch/`: optional PyTorch helpers.
 - Other `packages/pixano-inference-*/` directories: SAM2, CLIP, Grounding DINO, Transformers VLM, and vLLM implementations.
 - `tests/`: core unit tests and Ray Serve integration tests; package tests live alongside their own packages.
@@ -30,7 +32,8 @@ Before changing plugin discovery or implementing a model, read the [custom model
 Python 3.10–3.13, FastAPI, Pydantic v2, Ray Serve, and Typer form the server stack. Use `uv` for dependency management and Hatchling for builds. Documentation uses MkDocs Material.
 
 - Keep the core free of ML frameworks such as PyTorch, TensorFlow, JAX, MLX, Transformers, and vLLM.
-- Keep the standalone client usable without the core, Ray, FastAPI, or an ML framework installed.
+- Keep the base install (no extra) usable without Ray, FastAPI, Pillow, or an ML framework: `schemas`, `models`, `configs`, `client`, `plugins`, and `utils` must import with httpx, pydantic, and numpy only. The server stack belongs to the `server` extra; only `ray/`, `api/`, `jobs.py`, `main.py`, `security.py`, `observability.py`, and `server_settings.py` may import it.
+- Keep the layers apart: `schemas` imports no other project module, the client imports `schemas` only, and model packages import `models`, `configs`, and `schemas`, never `pixano_inference.ray`.
 - Declare model dependencies in the model package's `pyproject.toml`. Model packages must not import other model packages.
 - Discover models through entry points and registration decorators. Import frameworks lazily inside model lifecycle methods, as specified in the model contract.
 - Use the shared media-loading helpers so model inputs follow the server's URL, local-path, and size policies.
@@ -89,7 +92,7 @@ Add or update tests for behavior changes in the matching `tests/` directory. Use
 
 Tests marked `integration` start a real local Ray Serve runtime. The core integration suite uses CPU-only NumPy models; model-package integration tests may need additional dependencies or downloaded weights. Check the affected tests before running them.
 
-Preserve the framework-free core and lightweight client checks in `tests/test_core_framework_free.py` and `packages/pixano-inference-client/tests/test_import_light.py`. Validate client isolation in an environment containing only the client and its test dependencies, following the standalone-client CI job.
+Preserve the framework-free core and light-install checks in `tests/test_core_framework_free.py`, `tests/test_light_imports.py`, and `tests/test_light_install.py`. Validate the base install in an environment containing only the core without extras and its test dependencies, following the `light_install` CI job.
 
 Run checks relevant to the change and report any checks that could not run. Documentation-only changes need formatting and license-header checks, rather than model inference tests.
 

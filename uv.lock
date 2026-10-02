@@ -3246,25 +3246,12 @@ wheels = [
 name = "pixano-inference"
 source = { editable = "." }
 dependencies = [
-    { name = "fastapi" },
     { name = "httpx" },
-    { name = "jinja2" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' and python_full_version < '3.13' and sys_platform == 'linux'" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and sys_platform != 'linux') or (python_full_version >= '3.13' and sys_platform == 'linux')" },
-    { name = "pillow" },
-    { name = "prometheus-client" },
-    { name = "pycocotools" },
     { name = "pydantic" },
-    { name = "pydantic-settings" },
-    { name = "python-dotenv" },
-    { name = "python-multipart" },
-    { name = "pyyaml" },
-    { name = "ray", extra = ["serve"] },
-    { name = "requests" },
-    { name = "typer" },
     { name = "typing-extensions" },
-    { name = "uvicorn" },
 ]
 
 [package.optional-dependencies]
@@ -3290,6 +3277,21 @@ masks = [
 sam = [
     { name = "pixano-inference-sam" },
 ]
+server = [
+    { name = "fastapi" },
+    { name = "jinja2" },
+    { name = "pillow" },
+    { name = "prometheus-client" },
+    { name = "pycocotools" },
+    { name = "pydantic-settings" },
+    { name = "python-dotenv" },
+    { name = "python-multipart" },
+    { name = "pyyaml" },
+    { name = "ray", extra = ["serve"] },
+    { name = "requests" },
+    { name = "typer" },
+    { name = "uvicorn" },
+]
 test = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -3310,15 +3312,15 @@ vllm = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "pixano-inference", extra = ["docs", "test"] },
+    { name = "pixano-inference", extra = ["docs", "server", "test"] },
     { name = "pixano-numpy-detector" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "fastapi", specifier = ">=0.100.0" },
+    { name = "fastapi", marker = "extra == 'server'", specifier = ">=0.100.0" },
     { name = "httpx" },
-    { name = "jinja2", specifier = ">=3.1.6" },
+    { name = "jinja2", marker = "extra == 'server'", specifier = ">=3.1.6" },
     { name = "mike", marker = "extra == 'docs'", specifier = ">=2.1.0,<3.0.0" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6.0,<2.0.0" },
     { name = "mkdocs-gen-files", marker = "extra == 'docs'", specifier = ">=0.5.0" },
@@ -3327,39 +3329,39 @@ requires-dist = [
     { name = "mkdocs-redirects", marker = "extra == 'docs'", specifier = ">=1.2.1" },
     { name = "mkdocstrings-python", marker = "extra == 'docs'", specifier = ">=1.7.0" },
     { name = "numpy", specifier = ">=1.26.0,<3.0.0" },
-    { name = "pillow", specifier = ">=12.3.0" },
     { name = "pillow", marker = "extra == 'masks'", specifier = ">=9.0.0" },
+    { name = "pillow", marker = "extra == 'server'", specifier = ">=12.3.0" },
     { name = "pixano-inference-clip", marker = "extra == 'clip'", editable = "packages/pixano-inference-clip" },
     { name = "pixano-inference-grounding-dino", marker = "extra == 'grounding-dino'", editable = "packages/pixano-inference-grounding-dino" },
     { name = "pixano-inference-sam", marker = "extra == 'sam'", editable = "packages/pixano-inference-sam" },
     { name = "pixano-inference-torch", marker = "extra == 'torch'", editable = "packages/pixano-inference-torch" },
     { name = "pixano-inference-transformers-vlm", marker = "extra == 'transformers-vlm'", editable = "packages/pixano-inference-transformers-vlm" },
     { name = "pixano-inference-vllm", marker = "extra == 'vllm'", editable = "packages/pixano-inference-vllm" },
-    { name = "prometheus-client", specifier = ">=0.16.0" },
-    { name = "pycocotools" },
+    { name = "prometheus-client", marker = "extra == 'server'", specifier = ">=0.16.0" },
     { name = "pycocotools", marker = "extra == 'masks'" },
+    { name = "pycocotools", marker = "extra == 'server'" },
     { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
-    { name = "pydantic-settings", specifier = ">=2.14.2" },
+    { name = "pydantic-settings", marker = "extra == 'server'", specifier = ">=2.14.2" },
     { name = "pytest", marker = "extra == 'test'" },
     { name = "pytest-asyncio", marker = "extra == 'test'" },
     { name = "pytest-cov", marker = "extra == 'test'" },
     { name = "pytest-httpx", marker = "extra == 'test'" },
     { name = "pytest-mock", marker = "extra == 'test'" },
-    { name = "python-dotenv", specifier = ">=1.2.2,<2.0.0" },
-    { name = "python-multipart", specifier = ">=0.0.30" },
-    { name = "pyyaml", specifier = ">=6.0.0" },
-    { name = "ray", extras = ["serve"], specifier = ">=2.56.0,<3.0.0" },
-    { name = "requests", specifier = ">=2.33.0" },
+    { name = "python-dotenv", marker = "extra == 'server'", specifier = ">=1.2.2,<2.0.0" },
+    { name = "python-multipart", marker = "extra == 'server'", specifier = ">=0.0.30" },
+    { name = "pyyaml", marker = "extra == 'server'", specifier = ">=6.0.0" },
+    { name = "ray", extras = ["serve"], marker = "extra == 'server'", specifier = ">=2.56.0,<3.0.0" },
+    { name = "requests", marker = "extra == 'server'", specifier = ">=2.33.0" },
     { name = "responses", marker = "extra == 'test'" },
-    { name = "typer", specifier = ">=0.9.0" },
+    { name = "typer", marker = "extra == 'server'", specifier = ">=0.9.0" },
     { name = "typing-extensions" },
-    { name = "uvicorn", specifier = ">=0.31.0" },
+    { name = "uvicorn", marker = "extra == 'server'", specifier = ">=0.31.0" },
 ]
-provides-extras = ["clip", "docs", "grounding-dino", "masks", "sam", "test", "torch", "transformers-vlm", "vllm"]
+provides-extras = ["clip", "docs", "grounding-dino", "masks", "sam", "server", "test", "torch", "transformers-vlm", "vllm"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "pixano-inference", extras = ["test", "docs"] },
+    { name = "pixano-inference", extras = ["server", "test", "docs"] },
     { name = "pixano-numpy-detector", editable = "examples/numpy_detector" },
 ]
 
@@ -3370,7 +3372,7 @@ source = { editable = "packages/pixano-inference-clip" }
 dependencies = [
     { name = "open-clip-torch" },
     { name = "pillow" },
-    { name = "pixano-inference" },
+    { name = "pixano-inference", extra = ["server"] },
     { name = "pixano-inference-torch" },
     { name = "torch" },
 ]
@@ -3379,7 +3381,7 @@ dependencies = [
 requires-dist = [
     { name = "open-clip-torch", specifier = ">=2.24.0" },
     { name = "pillow", specifier = ">=9.0.0" },
-    { name = "pixano-inference", editable = "." },
+    { name = "pixano-inference", extras = ["server"], editable = "." },
     { name = "pixano-inference-torch", editable = "packages/pixano-inference-torch" },
     { name = "torch", specifier = ">=2.3.0,<3.0.0" },
 ]
@@ -3393,7 +3395,7 @@ version = "0.2.0"
 source = { editable = "packages/pixano-inference-grounding-dino" }
 dependencies = [
     { name = "accelerate" },
-    { name = "pixano-inference" },
+    { name = "pixano-inference", extra = ["server"] },
     { name = "pixano-inference-torch" },
     { name = "pydantic" },
     { name = "torch" },
@@ -3404,7 +3406,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "accelerate", specifier = ">=1.15.0" },
-    { name = "pixano-inference", editable = "." },
+    { name = "pixano-inference", extras = ["server"], editable = "." },
     { name = "pixano-inference-torch", editable = "packages/pixano-inference-torch" },
     { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
     { name = "torch", specifier = ">=2.3.0,<3.0.0" },
@@ -3424,7 +3426,7 @@ dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' and python_full_version < '3.13' and sys_platform == 'linux'" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and sys_platform != 'linux') or (python_full_version >= '3.13' and sys_platform == 'linux')" },
-    { name = "pixano-inference" },
+    { name = "pixano-inference", extra = ["server"] },
     { name = "pixano-inference-torch" },
     { name = "torch" },
 ]
@@ -3433,7 +3435,7 @@ dependencies = [
 requires-dist = [
     { name = "huggingface-hub" },
     { name = "numpy", specifier = ">=1.26.0,<3.0.0" },
-    { name = "pixano-inference", editable = "." },
+    { name = "pixano-inference", extras = ["server"], editable = "." },
     { name = "pixano-inference-torch", editable = "packages/pixano-inference-torch" },
     { name = "torch", specifier = ">=2.3.0,<3.0.0" },
 ]
@@ -3452,6 +3454,7 @@ dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' and python_full_version < '3.13' and sys_platform == 'linux'" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and sys_platform != 'linux') or (python_full_version >= '3.13' and sys_platform == 'linux')" },
+    { name = "pillow" },
     { name = "pixano-inference" },
     { name = "torch" },
 ]
@@ -3459,6 +3462,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "numpy", specifier = ">=1.26.0,<3.0.0" },
+    { name = "pillow", specifier = ">=9.0.0" },
     { name = "pixano-inference", editable = "." },
     { name = "torch", specifier = ">=2.3.0,<3.0.0" },
 ]
@@ -3473,7 +3477,7 @@ source = { editable = "packages/pixano-inference-transformers-vlm" }
 dependencies = [
     { name = "accelerate" },
     { name = "bitsandbytes" },
-    { name = "pixano-inference" },
+    { name = "pixano-inference", extra = ["server"] },
     { name = "pixano-inference-torch" },
     { name = "pydantic" },
     { name = "torch" },
@@ -3485,7 +3489,7 @@ dependencies = [
 requires-dist = [
     { name = "accelerate", specifier = ">=1.15.0" },
     { name = "bitsandbytes" },
-    { name = "pixano-inference", editable = "." },
+    { name = "pixano-inference", extras = ["server"], editable = "." },
     { name = "pixano-inference-torch", editable = "packages/pixano-inference-torch" },
     { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
     { name = "torch", specifier = ">=2.3.0,<3.0.0" },
@@ -3502,7 +3506,7 @@ version = "0.2.0"
 source = { editable = "packages/pixano-inference-vllm" }
 dependencies = [
     { name = "msgspec" },
-    { name = "pixano-inference" },
+    { name = "pixano-inference", extra = ["server"] },
     { name = "pydantic" },
     { name = "torch" },
     { name = "vllm", marker = "sys_platform == 'linux'" },
@@ -3511,7 +3515,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "msgspec" },
-    { name = "pixano-inference", editable = "." },
+    { name = "pixano-inference", extras = ["server"], editable = "." },
     { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
     { name = "torch", specifier = ">=2.3.0,<3.0.0" },
     { name = "vllm", marker = "sys_platform == 'linux'", specifier = ">=0.28.0" },
@@ -3529,7 +3533,7 @@ dependencies = [
     { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' and python_full_version < '3.13' and sys_platform == 'linux'" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and sys_platform != 'linux') or (python_full_version >= '3.13' and sys_platform == 'linux')" },
     { name = "pillow" },
-    { name = "pixano-inference" },
+    { name = "pixano-inference", extra = ["server"] },
     { name = "pydantic" },
 ]
 
@@ -3537,7 +3541,7 @@ dependencies = [
 requires-dist = [
     { name = "numpy", specifier = ">=1.26.0,<3.0.0" },
     { name = "pillow", specifier = ">=9.0.0" },
-    { name = "pixano-inference", editable = "." },
+    { name = "pixano-inference", extras = ["server"], editable = "." },
     { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
 ]
 

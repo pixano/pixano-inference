@@ -66,8 +66,10 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     # other through [tool.uv.sources] path entries, which uv would install EDITABLE (paths into
     # /build, lost once the runtime stage copies only /opt/venv). --no-sources installs them as
     # regular packages instead; listing them all on one command line lets each satisfy the
-    # others' requirements.
-    reqs="."; \
+    # others' requirements. The core is installed with its server extra (the base install is
+    # the client and the model API only); `set -f` keeps the shell from globbing the brackets.
+    set -f; \
+    reqs=".[server]"; \
     if [ -n "${MODEL_PACKAGES}" ]; then reqs="${reqs} ./packages/pixano-inference-torch"; fi; \
     for pkg in ${MODEL_PACKAGES}; do reqs="${reqs} ./packages/${pkg}"; done; \
     case " ${MODEL_PACKAGES} " in \

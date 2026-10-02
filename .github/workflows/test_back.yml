@@ -56,7 +56,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install .[test]
+          python -m pip install ".[server,test]"
           python -m pip install -e examples/numpy_detector  # framework-free example entry-point plugin
 
       - name: Assert no ML framework is installed
@@ -94,7 +94,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install .[test]
+          python -m pip install ".[server,test]"
           python -m pip install -e examples/numpy_detector  # example entry-point plugin
 
       - name: Run integration tests
@@ -144,7 +144,7 @@ jobs:
         run: |
           uv venv
           if [ "${{ matrix.package }}" = "packages/pixano-inference-vllm" ]; then
-            uv pip install --torch-backend=cpu -e ../.. msgspec torch pytest
+            uv pip install --torch-backend=cpu -e "../..[server]" msgspec torch pytest
             uv pip install --no-deps -e .
           else
             uv pip install --torch-backend=cpu -e . pytest
@@ -202,7 +202,7 @@ jobs:
         run: |
           python -m venv .venv-pip
           .venv-pip/bin/pip install --quiet torch --index-url https://download.pytorch.org/whl/cpu
-          .venv-pip/bin/pip install --quiet . ./packages/pixano-inference-torch ./packages/pixano-inference-sam
+          .venv-pip/bin/pip install --quiet ".[server]" ./packages/pixano-inference-torch ./packages/pixano-inference-sam
           .venv-pip/bin/python -c "from pixano_inference.plugins import load_plugin_models as l; r = l(); assert r == {'loaded': ['sam2'], 'failed': []}, r"
 
   docker_smoke:
@@ -257,7 +257,7 @@ jobs:
 
       - name: Check the committed OpenAPI schema is in sync
         run: |
-          uv sync --no-default-groups
+          uv sync --no-default-groups --extra server
           uv run python scripts/gen_openapi.py --check
 
   light_install:
@@ -277,19 +277,49 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
 
-      # The contract, the model API and the client are what an application or a model package
-      # imports: they must load without the server stack. The deprecated pixano-inference-client
-      # alias re-exports them; plain pip ignores uv sources, so the core is installed first.
-      - name: Install the core and the client alias
+      # The base install (no extra) is what an application calling a server gets: the wire
+      # contract, the model API and the client, on httpx/pydantic/numpy.
+      - name: Install the core without any extra
         run: |
           python -m pip install --upgrade pip
           python -m pip install . pytest
-          python -m pip install -e packages/pixano-inference-client
+
+      - name: Assert the server stack is not installed
+        run: |
+          python - <<'PY'
+          import importlib.util
+          server_only = ["ray", "fastapi", "starlette", "uvicorn", "typer", "pydantic_settings", "torch", "PIL", "pycocotools"]
+          present = [m for m in server_only if importlib.util.find_spec(m) is not None]
+          assert not present, f"the base install must not pull the server stack: {present}"
+          import pixano_inference.client, pixano_inference.schemas, pixano_inference.models
+          import pixano_inference.configs, pixano_inference.plugins, pixano_inference.utils
+          print("light install OK:", pixano_inference.client.PixanoInferenceClient)
+          PY
+
+      # Without the server extra the command explains what to install instead of crashing.
+      - name: Check the server command reports the missing extra
+        run: |
+          set +e
+          output=$(pixano-inference 2>&1); status=$?
+          set -e
+          echo "$output"
+          test "$status" -eq 1
+          echo "$output" | grep -q 'pixano-inference\[server\]'
+          ! echo "$output" | grep -q Traceback
 
       - name: Run the light-install tests
         run: |
           pytest tests/test_light_install.py tests/test_light_imports.py -v
 
-      - name: Run the client alias tests
+      # The deprecated pixano-inference-client alias re-exports the core and adds no dependency.
+      # Plain pip ignores uv sources, so it resolves the core already installed above.
+      - name: Install the client alias and run its tests
         run: |
+          python -m pip install -e packages/pixano-inference-client
           pytest packages/pixano-inference-client/tests -v
+          python -c "import importlib.util as u; assert u.find_spec('ray') is None and u.find_spec('fastapi') is None"
+
+      - name: Install the mask codecs and run the RLE tests
+        run: |
+          python -m pip install ".[masks]"
+          pytest tests/schemas/test_rle.py -v

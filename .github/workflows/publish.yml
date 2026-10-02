@@ -207,7 +207,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install .[docs]
+          pip install ".[server,docs]"
 
       - name: Publish documentation website
         run: mike deploy --push --update-aliases ${{ env.VERSION }} stable

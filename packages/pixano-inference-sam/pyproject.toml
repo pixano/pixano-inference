@@ -6,7 +6,7 @@ requires-python = ">=3.10,<3.14"
 license = { file = "LICENSE" }
 readme = "README.md"
 dependencies = [
-  "pixano-inference >= 0.7.0, < 0.8.0",
+  "pixano-inference[server] >= 0.7.0, < 0.8.0",
   "pixano-inference-torch >= 0.2.0",
   # sam-2 downloads Hugging Face checkpoints with huggingface_hub but does not declare it.
   "huggingface_hub",

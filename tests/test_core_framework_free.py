@@ -79,3 +79,29 @@ def test_core_distribution_declares_no_ml_framework():
     banned = set(_FRAMEWORKS) | {"transformers", "vllm", "ultralytics", "keras", "torchvision", "open-clip-torch"}
     declared = {Requirement(r).name.lower().replace("_", "-") for r in requires("pixano-inference") or []}
     assert not declared & banned, f"Core declares framework dependencies: {sorted(declared & banned)}"
+
+
+def _requirements_by_extra() -> dict[str | None, set[str]]:
+    """Names the core requires, keyed by the extra that brings them (``None`` for the base install)."""
+    by_extra: dict[str | None, set[str]] = {}
+    for raw in requires("pixano-inference") or []:
+        requirement = Requirement(raw)
+        name = requirement.name.lower().replace("_", "-")
+        marker = str(requirement.marker) if requirement.marker else ""
+        extras = [part.split("==")[1].strip(" \"'") for part in marker.split(" or ") if "extra ==" in part]
+        for extra in extras or [None]:
+            by_extra.setdefault(extra, set()).add(name)
+    return by_extra
+
+
+def test_base_install_is_the_client_and_the_contract_only():
+    """The base install must stay what an application calling a server needs: no server stack."""
+    assert _requirements_by_extra()[None] == {"httpx", "numpy", "pydantic", "typing-extensions"}
+
+
+def test_server_extra_brings_the_mask_codecs():
+    """A server can always encode and decode masks: the ``server`` extra includes ``masks``."""
+    by_extra = _requirements_by_extra()
+    assert by_extra["masks"] == {"pillow", "pycocotools"}
+    assert by_extra["masks"] <= by_extra["server"]
+    assert {"ray", "fastapi", "uvicorn", "typer"} <= by_extra["server"]

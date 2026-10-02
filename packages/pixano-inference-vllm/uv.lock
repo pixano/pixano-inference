@@ -2820,16 +2820,21 @@ wheels = [
 name = "pixano-inference"
 source = { editable = "../../" }
 dependencies = [
-    { name = "fastapi" },
     { name = "httpx" },
-    { name = "jinja2" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' and python_full_version < '3.13' and sys_platform == 'linux'" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and sys_platform != 'linux') or (python_full_version >= '3.13' and sys_platform == 'linux')" },
+    { name = "pydantic" },
+    { name = "typing-extensions" },
+]
+
+[package.optional-dependencies]
+server = [
+    { name = "fastapi" },
+    { name = "jinja2" },
     { name = "pillow" },
     { name = "prometheus-client" },
     { name = "pycocotools" },
-    { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "python-dotenv" },
     { name = "python-multipart" },
@@ -2837,15 +2842,14 @@ dependencies = [
     { name = "ray", extra = ["serve"] },
     { name = "requests" },
     { name = "typer" },
-    { name = "typing-extensions" },
     { name = "uvicorn" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "fastapi", specifier = ">=0.100.0" },
+    { name = "fastapi", marker = "extra == 'server'", specifier = ">=0.100.0" },
     { name = "httpx" },
-    { name = "jinja2", specifier = ">=3.1.6" },
+    { name = "jinja2", marker = "extra == 'server'", specifier = ">=3.1.6" },
     { name = "mike", marker = "extra == 'docs'", specifier = ">=2.1.0,<3.0.0" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6.0,<2.0.0" },
     { name = "mkdocs-gen-files", marker = "extra == 'docs'", specifier = ">=0.5.0" },
@@ -2854,39 +2858,39 @@ requires-dist = [
     { name = "mkdocs-redirects", marker = "extra == 'docs'", specifier = ">=1.2.1" },
     { name = "mkdocstrings-python", marker = "extra == 'docs'", specifier = ">=1.7.0" },
     { name = "numpy", specifier = ">=1.26.0,<3.0.0" },
-    { name = "pillow", specifier = ">=12.3.0" },
     { name = "pillow", marker = "extra == 'masks'", specifier = ">=9.0.0" },
+    { name = "pillow", marker = "extra == 'server'", specifier = ">=12.3.0" },
     { name = "pixano-inference-clip", marker = "extra == 'clip'", editable = "../pixano-inference-clip" },
     { name = "pixano-inference-grounding-dino", marker = "extra == 'grounding-dino'", editable = "../pixano-inference-grounding-dino" },
     { name = "pixano-inference-sam", marker = "extra == 'sam'", editable = "../pixano-inference-sam" },
     { name = "pixano-inference-torch", marker = "extra == 'torch'", editable = "../pixano-inference-torch" },
     { name = "pixano-inference-transformers-vlm", marker = "extra == 'transformers-vlm'", editable = "../pixano-inference-transformers-vlm" },
     { name = "pixano-inference-vllm", marker = "extra == 'vllm'", editable = "." },
-    { name = "prometheus-client", specifier = ">=0.16.0" },
-    { name = "pycocotools" },
+    { name = "prometheus-client", marker = "extra == 'server'", specifier = ">=0.16.0" },
     { name = "pycocotools", marker = "extra == 'masks'" },
+    { name = "pycocotools", marker = "extra == 'server'" },
     { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
-    { name = "pydantic-settings", specifier = ">=2.14.2" },
+    { name = "pydantic-settings", marker = "extra == 'server'", specifier = ">=2.14.2" },
     { name = "pytest", marker = "extra == 'test'" },
     { name = "pytest-asyncio", marker = "extra == 'test'" },
     { name = "pytest-cov", marker = "extra == 'test'" },
     { name = "pytest-httpx", marker = "extra == 'test'" },
     { name = "pytest-mock", marker = "extra == 'test'" },
-    { name = "python-dotenv", specifier = ">=1.2.2,<2.0.0" },
-    { name = "python-multipart", specifier = ">=0.0.30" },
-    { name = "pyyaml", specifier = ">=6.0.0" },
-    { name = "ray", extras = ["serve"], specifier = ">=2.56.0,<3.0.0" },
-    { name = "requests", specifier = ">=2.33.0" },
+    { name = "python-dotenv", marker = "extra == 'server'", specifier = ">=1.2.2,<2.0.0" },
+    { name = "python-multipart", marker = "extra == 'server'", specifier = ">=0.0.30" },
+    { name = "pyyaml", marker = "extra == 'server'", specifier = ">=6.0.0" },
+    { name = "ray", extras = ["serve"], marker = "extra == 'server'", specifier = ">=2.56.0,<3.0.0" },
+    { name = "requests", marker = "extra == 'server'", specifier = ">=2.33.0" },
     { name = "responses", marker = "extra == 'test'" },
-    { name = "typer", specifier = ">=0.9.0" },
+    { name = "typer", marker = "extra == 'server'", specifier = ">=0.9.0" },
     { name = "typing-extensions" },
-    { name = "uvicorn", specifier = ">=0.31.0" },
+    { name = "uvicorn", marker = "extra == 'server'", specifier = ">=0.31.0" },
 ]
-provides-extras = ["clip", "docs", "grounding-dino", "masks", "sam", "test", "torch", "transformers-vlm", "vllm"]
+provides-extras = ["clip", "docs", "grounding-dino", "masks", "sam", "server", "test", "torch", "transformers-vlm", "vllm"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "pixano-inference", extras = ["test", "docs"] },
+    { name = "pixano-inference", extras = ["server", "test", "docs"] },
     { name = "pixano-numpy-detector", editable = "../../examples/numpy_detector" },
 ]
 
@@ -2896,7 +2900,7 @@ version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "msgspec" },
-    { name = "pixano-inference" },
+    { name = "pixano-inference", extra = ["server"] },
     { name = "pydantic" },
     { name = "torch" },
     { name = "vllm", marker = "sys_platform == 'linux'" },
@@ -2910,7 +2914,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "msgspec" },
-    { name = "pixano-inference", editable = "../../" },
+    { name = "pixano-inference", extras = ["server"], editable = "../../" },
     { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
     { name = "torch", specifier = ">=2.3.0,<3.0.0" },
     { name = "vllm", marker = "sys_platform == 'linux'", specifier = ">=0.28.0" },

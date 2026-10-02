@@ -23,14 +23,14 @@ pip install "pixano-inference[masks]"   # plus the mask codecs (Pillow, pycocoto
 
 Replace the dependency and the imports. The classes are the same objects, so nothing else changes.
 
-| With `pixano-inference-client`                                    | With `pixano-inference`                                         |
-| ----------------------------------------------------------------- | --------------------------------------------------------------- |
-| `pip install pixano-inference-client`                             | `pip install pixano-inference`                                  |
-| `pip install pixano-inference-client[masks]`                      | `pip install "pixano-inference[masks]"`                         |
-| `from pixano_inference_client import SyncPixanoInferenceClient`   | `from pixano_inference.client import SyncPixanoInferenceClient` |
-| `from pixano_inference_client import PixanoInferenceError`        | `from pixano_inference.client import PixanoInferenceError`      |
+| With `pixano-inference-client`                                    | With `pixano-inference`                                            |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `pip install pixano-inference-client`                             | `pip install pixano-inference`                                     |
+| `pip install pixano-inference-client[masks]`                      | `pip install "pixano-inference[masks]"`                            |
+| `from pixano_inference_client import SyncPixanoInferenceClient`   | `from pixano_inference.client import SyncPixanoInferenceClient`    |
+| `from pixano_inference_client import PixanoInferenceError`        | `from pixano_inference.client import PixanoInferenceError`         |
 | `from pixano_inference_client import DetectionRequest, NDArray …` | `from pixano_inference.schemas import DetectionRequest, NDArray …` |
-| `from pixano_inference_client.rle import CompressedRLE`           | `from pixano_inference.schemas.rle import CompressedRLE`        |
+| `from pixano_inference_client.rle import CompressedRLE`           | `from pixano_inference.schemas.rle import CompressedRLE`           |
 
 ```python
 from pixano_inference.client import SyncPixanoInferenceClient

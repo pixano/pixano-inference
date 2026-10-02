@@ -14,8 +14,25 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+The wire contract moves back into the core, and the server becomes an extra: one distribution owns
+the model `Input`/`Output` types, the model API and the client, and an application that only calls
+a server installs it without Ray or FastAPI.
+
+> **Upgrading:** to run a server, install a model extra as before (`pixano-inference[sam]`, ...) or
+> `pixano-inference[server]` for your own models. Applications that call a server replace
+> `pixano-inference-client` with `pixano-inference` and import from `pixano_inference.client` and
+> `pixano_inference.schemas`.
+
 ### ⚠️ Breaking changes
 
+- **The server is the `server` extra.** `pip install pixano-inference` installs the client, the
+  wire schemas and the model API on httpx, pydantic and numpy only. Ray Serve, FastAPI, uvicorn
+  and the `pixano-inference` command come with `pixano-inference[server]`; mask encoding and
+  decoding (Pillow, pycocotools) with `pixano-inference[masks]`, which `server` includes. Every
+  first-party model package depends on `pixano-inference[server]`, so
+  `pip install "pixano-inference[sam]"` still yields a working server. A custom model package
+  that pins plain `pixano-inference` must switch to `pixano-inference[server]` to keep one.
+  Without the extra, the `pixano-inference` command prints how to install it.
 - **The wire contract and the client are defined in the core again.** The capability
   `Input`/`Output` types, `NDArray`, `CompressedRLE`, the request/response envelopes and the
   admin/job types live in `pixano_inference.schemas`, and the HTTP client in
@@ -42,6 +59,9 @@ All notable changes to this project are documented here. The format is based on
   under `packages/` or `examples/` pins a range that excludes the current core.
 - The release workflow publishes the model packages, then the core, then the
   `pixano-inference-client` alias.
+- CI installs the base distribution alone (`light_install`) and checks that the server stack is
+  absent, that the client, schemas, model API and configs import, and that the command reports
+  the missing extra. `pixano-inference-torch` depends on the base install only.
 
 ## [0.6.0] - 2026-09-23
 

@@ -6,7 +6,7 @@ requires-python = ">=3.10,<3.14"
 license = { file = "LICENSE" }
 readme = "README.md"
 dependencies = [
-  "pixano-inference >= 0.7.0, < 0.8.0",
+  "pixano-inference[server] >= 0.7.0, < 0.8.0",
   "pixano-inference-torch >= 0.2.0",
   "accelerate >= 1.15.0",
   "bitsandbytes",

@@ -6,8 +6,10 @@ requires-python = ">=3.10,<3.14"
 license = { file = "LICENSE" }
 readme = "README.md"
 dependencies = [
+  # The base install only (contract and model API): the helpers do not need the server.
   "pixano-inference >= 0.7.0, < 0.8.0",
   "numpy >= 1.26.0, < 3.0.0",
+  "Pillow >= 9.0.0",
   "torch >= 2.3.0, < 3.0.0",
 ]
 

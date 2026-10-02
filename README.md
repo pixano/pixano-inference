@@ -91,7 +91,8 @@ Run it in another terminal, using the same Python environment:
 python predict.py
 ```
 
-Applications calling an existing server only need [pixano-inference-client](packages/pixano-inference-client).
+Applications that only call an existing server need no extra: `pip install pixano-inference`
+installs the client and the wire schemas, without Ray or FastAPI.
 See the [documentation](https://pixano.github.io/pixano-inference/latest/) for the API,
 Docker deployment, and autoscaling.
 
@@ -107,8 +108,16 @@ Choose a model with an extra, for example `pip install "pixano-inference[sam]"`:
 | `transformers-vlm` | [Transformers VLM](packages/pixano-inference-transformers-vlm) | Hugging Face vision-language models          |
 | `vllm`             | [vLLM](packages/pixano-inference-vllm)                         | Vision-language models on Linux GPUs         |
 
-Each extra installs an independent model package. SAM also needs the upstream `sam-2`
-library; follow its package's installation instructions.
+Each extra installs an independent model package, which brings the server with it. SAM also
+needs the upstream `sam-2` library; follow its package's installation instructions.
+
+The base install has no server. Two more extras complete it:
+
+| Install                    | Provides                                                                |
+| -------------------------- | ----------------------------------------------------------------------- |
+| `pixano-inference`         | The client, the wire schemas and the model API (httpx, pydantic, numpy) |
+| `pixano-inference[masks]`  | The above plus mask encoding and decoding (Pillow, pycocotools)         |
+| `pixano-inference[server]` | The server and the `pixano-inference` command, to run your own model    |
 
 ## Development
 
