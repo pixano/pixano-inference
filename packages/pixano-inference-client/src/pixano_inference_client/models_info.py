@@ -4,22 +4,13 @@
 # License: CECILL-C
 # =================================
 
-"""Pydantic models for model configuration."""
+"""Deprecated alias of :mod:`pixano_inference.schemas.models`."""
 
-from pydantic import BaseModel
+# ruff: noqa: F401
+
+from pixano_inference.schemas.models import (
+    ModelInfo,
+)
 
 
-class ModelInfo(BaseModel):
-    """Model Information.
-
-    Attributes:
-        name: Name of the model.
-        capability: Capability of the model.
-        model_path: HuggingFace repo ID or local path.
-        model_class: Model class name (e.g. "Sam2ImageModel").
-    """
-
-    name: str
-    capability: str
-    model_path: str | None = None
-    model_class: str | None = None
+__all__ = ["ModelInfo"]

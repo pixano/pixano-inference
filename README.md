@@ -69,7 +69,8 @@ pixano-inference --config models.py
 Check [readiness](http://localhost:7463/v1/ready), then save this request as `predict.py`:
 
 ```python
-from pixano_inference_client import DetectionRequest, SyncPixanoInferenceClient
+from pixano_inference.client import SyncPixanoInferenceClient
+from pixano_inference.schemas import DetectionRequest
 
 client = SyncPixanoInferenceClient("http://localhost:7463")
 result = client.detection(

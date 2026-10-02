@@ -50,7 +50,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -e packages/pixano-inference-client  # hard core dep, not yet on PyPI
           pip install .[docs]
 
       - name: Publish documentation website

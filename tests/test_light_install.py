@@ -4,11 +4,11 @@
 # License: CECILL-C
 # =================================
 
-"""Guardrail: the standalone client stays light and self-contained.
+"""Guardrail: the client and the wire schemas work on a base install.
 
-Importing ``pixano_inference_client`` must NOT drag in the server stack (ray/fastapi/uvicorn)
-or any ML framework, and it must work with only httpx/pydantic/numpy installed — this is the
-whole point of shipping it as a separate distribution.
+An application that only calls a server installs ``pixano-inference`` without the ``server`` extra:
+httpx, pydantic and numpy. These tests use nothing else, so the ``light_install`` CI job runs them
+in an environment where Ray, FastAPI, Pillow and pycocotools are absent.
 """
 
 import subprocess
@@ -20,9 +20,9 @@ HEAVY_MODULES = ["ray", "ray.serve", "fastapi", "uvicorn", "starlette", "torch",
 
 def test_import_pulls_no_heavy_dependency():
     # Run in a fresh interpreter so the check is unaffected by whatever the surrounding test
-    # session already imported (importing the full pixano-inference server pulls ray/fastapi).
+    # session already imported (the server tests pull ray/fastapi).
     script = (
-        "import sys, pixano_inference_client\n"
+        "import sys, pixano_inference.client, pixano_inference.schemas\n"
         f"heavy = {HEAVY_MODULES!r}\n"
         "leaked = [m for m in heavy if m in sys.modules]\n"
         "assert not leaked, 'client pulled in heavy modules: ' + repr(leaked)\n"
@@ -36,7 +36,8 @@ def test_import_pulls_no_heavy_dependency():
 def test_build_request_and_parse_response_without_masks():
     """A request builds and an NDArray-binary response parses with no pycocotools/Pillow."""
     import numpy as np
-    from pixano_inference_client import DetectionRequest, EmbeddingResponse, NDArrayFloat
+
+    from pixano_inference.schemas import DetectionRequest, EmbeddingResponse, NDArrayFloat
 
     request = DetectionRequest(model="det", image="https://example.com/cat.jpg", classes=["cat"])
     body = request.model_dump(mode="json", by_alias=True)
@@ -59,7 +60,7 @@ def test_build_request_and_parse_response_without_masks():
 
 
 def test_client_construction_and_url_validation():
-    from pixano_inference_client import PixanoInferenceError, SyncPixanoInferenceClient
+    from pixano_inference.client import PixanoInferenceError, SyncPixanoInferenceClient
 
     client = SyncPixanoInferenceClient("http://localhost:7463/", api_key="secret")
     assert client.url == "http://localhost:7463"

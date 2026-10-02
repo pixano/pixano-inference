@@ -6,14 +6,14 @@
 
 """VLM (Vision-Language Model) base class.
 
-The I/O types live in :mod:`pixano_inference_client.vlm` and are re-exported here so
+The I/O types live in :mod:`pixano_inference.schemas.vlm` and are re-exported here so
 ``from pixano_inference.models.vlm import VLMInput`` keeps working.
 """
 
 from abc import abstractmethod
 from typing import ClassVar
 
-from pixano_inference_client.vlm import UsageInfo, VLMInput, VLMOutput  # noqa: F401
+from pixano_inference.schemas.vlm import UsageInfo, VLMInput, VLMOutput  # noqa: F401
 
 from .base import InferenceModel
 

@@ -6,14 +6,14 @@
 
 """NER (Named Entity Recognition) model base class.
 
-The I/O types live in :mod:`pixano_inference_client.ner` and are re-exported here so
+The I/O types live in :mod:`pixano_inference.schemas.ner` and are re-exported here so
 ``from pixano_inference.models.ner import NERInput`` keeps working.
 """
 
 from abc import abstractmethod
 from typing import ClassVar
 
-from pixano_inference_client.ner import NEREntity, NERInput, NEROutput  # noqa: F401
+from pixano_inference.schemas.ner import NEREntity, NERInput, NEROutput  # noqa: F401
 
 from .base import InferenceModel
 

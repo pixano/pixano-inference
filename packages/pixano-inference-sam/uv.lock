@@ -1598,12 +1598,12 @@ name = "pixano-inference"
 source = { editable = "../../" }
 dependencies = [
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "jinja2" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
     { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "pillow" },
-    { name = "pixano-inference-client", extra = ["masks"] },
     { name = "prometheus-client" },
     { name = "pycocotools" },
     { name = "pydantic" },
@@ -1614,12 +1614,14 @@ dependencies = [
     { name = "ray", extra = ["serve"] },
     { name = "requests" },
     { name = "typer" },
+    { name = "typing-extensions" },
     { name = "uvicorn" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.100.0" },
+    { name = "httpx" },
     { name = "jinja2", specifier = ">=3.1.6" },
     { name = "mike", marker = "extra == 'docs'", specifier = ">=2.1.0,<3.0.0" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6.0,<2.0.0" },
@@ -1630,7 +1632,7 @@ requires-dist = [
     { name = "mkdocstrings-python", marker = "extra == 'docs'", specifier = ">=1.7.0" },
     { name = "numpy", specifier = ">=1.26.0,<3.0.0" },
     { name = "pillow", specifier = ">=12.3.0" },
-    { name = "pixano-inference-client", extras = ["masks"], editable = "../pixano-inference-client" },
+    { name = "pillow", marker = "extra == 'masks'", specifier = ">=9.0.0" },
     { name = "pixano-inference-clip", marker = "extra == 'clip'", editable = "../pixano-inference-clip" },
     { name = "pixano-inference-grounding-dino", marker = "extra == 'grounding-dino'", editable = "../pixano-inference-grounding-dino" },
     { name = "pixano-inference-sam", marker = "extra == 'sam'", editable = "." },
@@ -1639,6 +1641,7 @@ requires-dist = [
     { name = "pixano-inference-vllm", marker = "extra == 'vllm'", editable = "../pixano-inference-vllm" },
     { name = "prometheus-client", specifier = ">=0.16.0" },
     { name = "pycocotools" },
+    { name = "pycocotools", marker = "extra == 'masks'" },
     { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
     { name = "pydantic-settings", specifier = ">=2.14.2" },
     { name = "pytest", marker = "extra == 'test'" },
@@ -1653,45 +1656,16 @@ requires-dist = [
     { name = "requests", specifier = ">=2.33.0" },
     { name = "responses", marker = "extra == 'test'" },
     { name = "typer", specifier = ">=0.9.0" },
+    { name = "typing-extensions" },
     { name = "uvicorn", specifier = ">=0.31.0" },
 ]
-provides-extras = ["clip", "docs", "grounding-dino", "sam", "test", "torch", "transformers-vlm", "vllm"]
+provides-extras = ["clip", "docs", "grounding-dino", "masks", "sam", "test", "torch", "transformers-vlm", "vllm"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "pixano-inference", extras = ["test", "docs"] },
     { name = "pixano-numpy-detector", editable = "../../examples/numpy_detector" },
 ]
-
-[[package]]
-name = "pixano-inference-client"
-version = "0.1.0"
-source = { editable = "../pixano-inference-client" }
-dependencies = [
-    { name = "httpx" },
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "pydantic" },
-    { name = "typing-extensions" },
-]
-
-[package.optional-dependencies]
-masks = [
-    { name = "pillow" },
-    { name = "pycocotools" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "httpx" },
-    { name = "numpy", specifier = ">=1.26.0,<3.0.0" },
-    { name = "pillow", marker = "extra == 'masks'", specifier = ">=9.0.0" },
-    { name = "pycocotools", marker = "extra == 'masks'" },
-    { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
-    { name = "typing-extensions" },
-]
-provides-extras = ["masks"]
 
 [[package]]
 name = "pixano-inference-sam"

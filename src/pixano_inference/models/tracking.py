@@ -7,14 +7,14 @@
 """Tracking model base class.
 
 The I/O and prompt types are the wire contract and live in
-:mod:`pixano_inference_client.tracking`; they are re-exported here so
+:mod:`pixano_inference.schemas.tracking`; they are re-exported here so
 ``from pixano_inference.models.tracking import TrackingInput`` (and the prompt types) keep working.
 """
 
 from abc import abstractmethod
 from typing import ClassVar
 
-from pixano_inference_client.tracking import (  # noqa: F401
+from pixano_inference.schemas.tracking import (  # noqa: F401
     TrackingBoxPrompt,
     TrackingInput,
     TrackingInterval,

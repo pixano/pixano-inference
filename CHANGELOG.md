@@ -14,11 +14,34 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+### ⚠️ Breaking changes
+
+- **The wire contract and the client are defined in the core again.** The capability
+  `Input`/`Output` types, `NDArray`, `CompressedRLE`, the request/response envelopes and the
+  admin/job types live in `pixano_inference.schemas`, and the HTTP client in
+  `pixano_inference.client`; `pixano_inference.models` re-exports the I/O types next to the
+  capability base classes. In 0.6 they were owned and versioned by `pixano-inference-client`,
+  so the contract a model implements was pinned by a package the model packages never named.
+  The core no longer depends on `pixano-inference-client`.
+- **`pixano-inference-client` is a deprecated alias.** Version 0.2.0 depends on
+  `pixano-inference >= 0.7, < 0.8` and re-exports the same names as 0.1.0, with a
+  `DeprecationWarning` on import. Import from `pixano_inference.client` and
+  `pixano_inference.schemas` instead. Do not combine `pixano-inference-client` 0.1 with
+  `pixano-inference` 0.7: each would carry its own copy of the wire types.
+
+### Changed
+
+- `ResourceConfig`, `AutoscalingConfig` and `ModelDeploymentConfig` live in
+  `pixano_inference.configs` (still importable from `pixano_inference.ray.config`), so a model
+  package no longer imports the Ray layer to type its constructor.
+
 ### Packaging / CI
 
 - **Contract 0.7.** The core is `0.7.0`; the model packages and the torch helpers are `0.2.0` and
   pin the core to `>= 0.7.0, < 0.8.0`. A test (`tests/test_release_pins.py`) fails when a package
   under `packages/` or `examples/` pins a range that excludes the current core.
+- The release workflow publishes the model packages, then the core, then the
+  `pixano-inference-client` alias.
 
 ## [0.6.0] - 2026-09-23
 
