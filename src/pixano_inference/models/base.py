@@ -16,7 +16,7 @@ from pydantic import BaseModel
 
 
 if TYPE_CHECKING:
-    from pixano_inference.ray.config import ModelDeploymentConfig
+    from pixano_inference.configs.deployment import ModelDeploymentConfig
 
 
 logger = logging.getLogger(__name__)

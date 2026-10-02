@@ -52,7 +52,9 @@ Example:
     ```
 """
 
-from .config import AutoscalingConfig, ModelDeploymentConfig, RayServeConfig, ResourceConfig
+from pixano_inference.configs.deployment import AutoscalingConfig, ModelDeploymentConfig, ResourceConfig
+
+from .config import RayServeConfig
 from .config_loader import ConfigLoader
 from .deployment import build_model_app
 from .server import InferenceServer

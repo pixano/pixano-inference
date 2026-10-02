@@ -46,7 +46,7 @@ Create a model class that extends one of the built-in base classes. For object d
 # model.py
 from pixano_inference.models.detection import DetectionInput, DetectionModel, DetectionOutput
 from pixano_inference.models.registry import register_model
-from pixano_inference.ray.config import ModelDeploymentConfig
+from pixano_inference.configs import ModelDeploymentConfig
 
 
 @register_model("YOLOModel")

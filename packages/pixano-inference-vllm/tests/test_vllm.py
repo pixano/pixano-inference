@@ -22,11 +22,10 @@ import pytest
 from pixano_inference_vllm import VLLMVLMModel, VLLMVLMParams
 from pydantic import ValidationError
 
-from pixano_inference.configs import ModelParamsRegistry
+from pixano_inference.configs import ModelDeploymentConfig, ModelParamsRegistry
 from pixano_inference.models.registry import ModelClassRegistry
 from pixano_inference.models.vlm import VLMInput
 from pixano_inference.plugins import load_plugin_models
-from pixano_inference.ray.config import ModelDeploymentConfig
 
 
 class _SamplingParams(msgspec.Struct):

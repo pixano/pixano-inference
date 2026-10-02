@@ -18,9 +18,9 @@ from typing import Any
 import numpy as np
 from pixano_inference_torch import resolve_device, resolve_torch_dtype
 
+from pixano_inference.configs import ModelDeploymentConfig
 from pixano_inference.models.registry import register_model
 from pixano_inference.models.tracking import TrackingInput, TrackingKeyframe, TrackingModel, TrackingOutput
-from pixano_inference.ray.config import ModelDeploymentConfig
 
 from ._deps import assert_sam2_installed
 from ._prompts import validate_prompts

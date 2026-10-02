@@ -23,9 +23,8 @@ from typing import Any
 from ray import serve
 from ray.serve.config import AutoscalingConfig as ServeAutoscalingConfig
 
+from pixano_inference.configs.deployment import ModelDeploymentConfig
 from pixano_inference.models.base import InferenceModel
-
-from .config import ModelDeploymentConfig
 
 
 logger = logging.getLogger(__name__)

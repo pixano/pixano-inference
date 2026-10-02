@@ -18,11 +18,10 @@ from PIL import Image
 from pixano_inference_transformers_vlm import TransformersVLMModel, TransformersVLMParams
 from pydantic import ValidationError
 
-from pixano_inference.configs import ModelParamsRegistry
+from pixano_inference.configs import ModelDeploymentConfig, ModelParamsRegistry
 from pixano_inference.models.registry import ModelClassRegistry
 from pixano_inference.models.vlm import VLMInput
 from pixano_inference.plugins import load_plugin_models
-from pixano_inference.ray.config import ModelDeploymentConfig
 
 
 def _data_uri() -> str:

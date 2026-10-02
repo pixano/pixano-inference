@@ -86,8 +86,8 @@ A subclass of `InferenceModel` that is not one of these is rejected by `ModelCon
 what configs put in `model_class`; it MUST be unique across the installed packages (a second
 registration of the same name raises, and that package fails to load).
 
-**2.3 Construction.** The constructor is `__init__(self, config: ModelDeploymentConfig)`. An
-override MUST call `super().__init__(config)` and MUST NOT load weights or import the
+**2.3 Construction.** The constructor is `__init__(self, config: ModelDeploymentConfig)`, with
+`ModelDeploymentConfig` imported from `pixano_inference.configs`. An override MUST call `super().__init__(config)` and MUST NOT load weights or import the
 framework: the replica constructs the model and immediately calls `load_model()` (§2.4), so
 the constructor only initializes attributes.
 

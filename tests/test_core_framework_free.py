@@ -30,6 +30,7 @@ _CORE_IMPORTS = (
     "import pixano_inference.schemas.nd_array",
     "import pixano_inference.schemas.inference",
     "import pixano_inference.configs",
+    "import pixano_inference.configs.deployment",
     "import pixano_inference.client",
     "import pixano_inference.utils",
     "import pixano_inference.ray",

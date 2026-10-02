@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     import torch
     from torch import Tensor
 
-    from pixano_inference.ray.config import ModelDeploymentConfig
+    from pixano_inference.configs import ModelDeploymentConfig
     from pixano_inference.schemas.nd_array import NDArray, NDArrayFloat
 
 

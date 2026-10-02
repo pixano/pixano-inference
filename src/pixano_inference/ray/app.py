@@ -27,13 +27,14 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from pixano_inference.__version__ import __version__
 from pixano_inference.api.v1 import register_v1_api
 from pixano_inference.api.v1.errors import register_exception_handlers
+from pixano_inference.configs.deployment import ModelDeploymentConfig
 from pixano_inference.jobs import JobManager, JobRecord
 from pixano_inference.models.registry import ModelClassRegistry
 from pixano_inference.schemas import ModelInfo
 from pixano_inference.security import make_api_key_dependency, warn_if_auth_disabled
 from pixano_inference.server_settings import ServerSettings
 
-from .config import ModelDeploymentConfig, RayServeConfig
+from .config import RayServeConfig
 from .deployment import build_model_app
 from .utils import build_runtime_env
 

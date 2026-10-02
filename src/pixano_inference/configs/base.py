@@ -10,13 +10,17 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
 from pixano_inference.models import ModelClassRegistry, infer_http_capability
 
-from ..ray.config import AutoscalingConfig, ModelDeploymentConfig, RayServeConfig, ResourceConfig
+from .deployment import AutoscalingConfig, ModelDeploymentConfig, ResourceConfig
+
+
+if TYPE_CHECKING:
+    from pixano_inference.ray.config import RayServeConfig
 
 
 logger = logging.getLogger(__name__)
@@ -332,6 +336,9 @@ class ServerConfig(BaseModel):
         Returns:
             A ``RayServeConfig`` instance with all models converted.
         """
+        # Imported here: the Ray package loads the server stack, which a config must not require.
+        from pixano_inference.ray.config import RayServeConfig
+
         return RayServeConfig(
             host=self.host,
             port=self.port,
