@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 from types import ModuleType
 
-from .config import ModelDeploymentConfig
+from pixano_inference.configs.deployment import ModelDeploymentConfig
 
 
 logger = logging.getLogger(__name__)

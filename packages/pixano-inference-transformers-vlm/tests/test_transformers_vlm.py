@@ -18,11 +18,10 @@ from PIL import Image
 from pixano_inference_transformers_vlm import TransformersVLMModel, TransformersVLMParams
 from pydantic import ValidationError
 
-from pixano_inference.configs import ModelParamsRegistry
+from pixano_inference.configs import ModelDeploymentConfig, ModelParamsRegistry
 from pixano_inference.models.registry import ModelClassRegistry
 from pixano_inference.models.vlm import VLMInput
 from pixano_inference.plugins import load_plugin_models
-from pixano_inference.ray.config import ModelDeploymentConfig
 
 
 def _data_uri() -> str:
@@ -107,6 +106,19 @@ def test_predict_chat_prompt_passes_text_and_images_by_keyword():
     assert calls["decode"] == [7, 8]
     assert out.generated_text == "a red square"
     assert (out.usage.prompt_tokens, out.usage.completion_tokens, out.usage.total_tokens) == (4, 2, 6)
+
+
+def test_predict_decodes_images_uploaded_as_raw_bytes():
+    """The binary route hands the model raw image bytes; they decode like any other reference."""
+    model = _model()
+    buffer = io.BytesIO()
+    Image.new("RGB", (8, 8), (0, 200, 0)).save(buffer, format="PNG")
+
+    out = model.predict(VLMInput(prompt="describe", images=[buffer.getvalue()], max_new_tokens=8))
+
+    images = model._processor.calls["call"]["images"]
+    assert len(images) == 1 and isinstance(images[0], Image.Image)
+    assert out.generated_text == "a red square"
 
 
 def test_string_prompt_requires_images():

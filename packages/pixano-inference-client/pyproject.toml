@@ -1,26 +1,30 @@
 [project]
 name = "pixano-inference-client"
-version = "0.1.0"
-description = "Lightweight client and wire schemas for the Pixano Inference /v1 API (no server deps)."
+version = "0.2.0"
+description = "Deprecated alias: the Pixano Inference client and wire schemas ship in the base install of pixano-inference."
 requires-python = ">=3.10,<3.14"
 license = { file = "LICENSE" }
 readme = "README.md"
 dependencies = [
-  "httpx",
-  "pydantic >= 2.0.0, < 3.0.0",
-  # Deliberately wider than the server's `numpy < 2.0.0` pin: the NDArray wire code is
-  # numpy-2-compatible, and consumers (e.g. the Pixano app) already run numpy 2.x.
-  "numpy >= 1.26.0, < 3.0.0",
-  "typing_extensions",
+  # The base install of the core is the client: pydantic, numpy and httpx, no server stack.
+  "pixano-inference >= 0.7.0, < 0.8.0",
 ]
 
 [project.optional-dependencies]
-# Only needed to encode/decode segmentation masks (CompressedRLE.from_mask/to_mask and
-# numeric-array RLE); parsing a normal compressed-bytes response does not require these.
 masks = [
-  "Pillow >= 9.0.0",
-  "pycocotools",
+  "pixano-inference[masks] >= 0.7.0, < 0.8.0",
 ]
+
+[dependency-groups]
+dev = [
+  "pytest",
+]
+
+[tool.uv.sources]
+pixano-inference = { path = "../..", editable = true }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [build-system]
 requires = ["hatchling"]

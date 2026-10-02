@@ -6,24 +6,31 @@
 
 """Image utilities."""
 
+from __future__ import annotations
+
 import base64
 import re
 from io import BytesIO
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
-from PIL import Image
 
 from .media_security import fetch_url_bytes, get_media_policy, is_http_url, resolve_local_path
 
 
-regex_media_base64 = r"^(data:[a-zA-Z]/[a-zA-Z]+;base64,)"
+if TYPE_CHECKING:
+    from PIL import Image
+
+
+# A media subtype may contain digits and ".", "+", "-" (video/mp4, image/svg+xml, video/x-msvideo).
+_MEDIA_SUBTYPE = r"[a-zA-Z0-9][a-zA-Z0-9.+-]*"
+regex_media_base64 = rf"^(data:[a-zA-Z]+/{_MEDIA_SUBTYPE};base64,)"
 
 
 def match_base64_media(string: str, media: str | None = None) -> re.Match[str] | None:
     """Match a base64 media."""
-    regex_media_base64 = rf"^(data:{media if media is not None else '[a-zA-Z]+'}/[a-zA-Z]+;base64,)"
+    regex_media_base64 = rf"^(data:{media if media is not None else '[a-zA-Z]+'}/{_MEDIA_SUBTYPE};base64,)"
     return re.match(regex_media_base64, string)
 
 
@@ -78,7 +85,16 @@ def _decode_image_under_policy(source: Any, policy: Any) -> Image.Image:
 
     Raises:
         ValueError: If the format is not allowed or the image exceeds the pixel cap.
+        ImportError: If Pillow is not installed (it comes with the ``server`` extra).
     """
+    # Imported here: a base install has no Pillow, and this module must still import.
+    try:
+        from PIL import Image
+    except ImportError as exc:
+        raise ImportError(
+            'Decoding an image requires Pillow. Install it with: pip install "pixano-inference[server]"'
+        ) from exc
+
     image = Image.open(source)
     allowed: frozenset[str] = getattr(policy, "allowed_image_formats", frozenset())
     fmt = (image.format or "").upper()

@@ -1,20 +1,23 @@
 [project]
 name = "pixano-yolo-detector"
 version = "0.1.0"
-description = "Ultralytics YOLO as a Pixano Inference custom-model plugin."
+description = "Ultralytics YOLO detection and YOLO + ByteTrack tracking as a Pixano Inference custom-model plugin."
 requires-python = ">=3.10,<3.14"
 license = { file = "LICENSE" }
 readme = "README.md"
 dependencies = [
-  "pixano-inference >= 0.6.0, < 0.7.0",
+  "pixano-inference[server] >= 0.7.0, < 0.8.0",
   # NOTE: ultralytics is AGPL-3.0. Deploying it as a network service carries source-disclosure
   # obligations (AGPL section 13). Review the licence before using it in production.
   "torch >= 2.3.0, < 3.0.0",
   "ultralytics",
+  # ByteTrack's assignment step. Ultralytics otherwise tries to pip-install it at the first track call.
+  "lap >= 0.5.12",
 ]
 
 [project.entry-points."pixano_inference.models"]
 yolo_detector = "pixano_yolo.model"
+yolo_bytetrack = "pixano_yolo.tracker"
 
 [dependency-groups]
 dev = [

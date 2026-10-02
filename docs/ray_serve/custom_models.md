@@ -82,7 +82,7 @@ group. The value is the module to import (importing it runs `@register_model`):
 ```toml
 [project]
 name = "my-pkg"
-dependencies = ["pixano-inference >= 0.6.0, < 0.7.0", "torch"]  # the core plus whatever the model imports
+dependencies = ["pixano-inference[server] >= 0.7.0, < 0.8.0", "torch"]  # the core with its server, plus whatever the model imports
 
 [project.entry-points."pixano_inference.models"]
 my_detector = "my_pkg.model"        # or "my_pkg.model:MyDetector" to point at the class
@@ -102,14 +102,16 @@ uv build && uv pip install --find-links dist my-pkg            # wheels copied t
 # pip install my-pkg                                           # from PyPI or a private index
 ```
 
-Since your package depends on `pixano-inference`, its own environment already contains the
-server: `uv sync && uv run pixano-inference --config models.py` runs it with exactly your
+Since your package depends on `pixano-inference[server]`, its own environment already contains
+the server: `uv sync && uv run pixano-inference --config models.py` runs it with exactly your
 package's locked dependencies. The first-party packages under `packages/` work this way.
 
 ### Depending on the core
 
-`dependencies = ["pixano-inference >= 0.6.0, < 0.7.0"]` resolves the core from PyPI, pinned to
-the contract the package was written against. To build against a
+`dependencies = ["pixano-inference[server] >= 0.7.0, < 0.8.0"]` resolves the core from PyPI,
+pinned to the contract the package was written against. The `server` extra is what lets the
+package's environment run the server; a library that only needs the model API and the schemas
+(no server) can depend on plain `pixano-inference`. To build against a
 specific commit, a fork, or a core version that is not published, point `uv` at git:
 
 ```toml

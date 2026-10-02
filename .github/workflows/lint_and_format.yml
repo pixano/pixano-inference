@@ -49,8 +49,7 @@ jobs:
           cache: "pip"
 
       # The pre-commit hooks (ruff, mypy via mirrors, license check) run in isolated
-      # environments and do not need the project installed — so we skip `pip install .`
-      # (which could not resolve the not-yet-published pixano-inference-client anyway).
+      # environments and do not need the project installed, so we skip `pip install .`.
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip

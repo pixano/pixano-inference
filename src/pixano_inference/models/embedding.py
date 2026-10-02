@@ -8,20 +8,22 @@
 
 A single capability that embeds **either** an image **or** text into a shared vector space
 (CLIP-style), so image and text embeddings are directly comparable (text-to-image search). The
-I/O types live in :mod:`pixano_inference_client.embedding` and are re-exported here so
+I/O types live in :mod:`pixano_inference.schemas.embedding` and are re-exported here so
 ``from pixano_inference.models.embedding import EmbeddingInput`` keeps working.
 """
 
-from abc import abstractmethod
 from typing import ClassVar
 
-from pixano_inference_client.embedding import EmbeddingInput, EmbeddingOutput  # noqa: F401
+from pixano_inference.schemas.embedding import EmbeddingInput, EmbeddingOutput  # noqa: F401
 
 from .base import InferenceModel
 
 
-class EmbeddingModel(InferenceModel):
+class EmbeddingModel(InferenceModel[EmbeddingInput, EmbeddingOutput]):
     """Base class for image/text embedding models (CLIP-style shared space).
+
+    ``predict`` receives an :class:`EmbeddingInput` (exactly one of image or text) and returns an
+    :class:`EmbeddingOutput` (a ``[num_inputs, dim]`` vector array).
 
     Example:
         ```python
@@ -37,14 +39,3 @@ class EmbeddingModel(InferenceModel):
     """
 
     capability_name: ClassVar[str] = "embedding"
-
-    @abstractmethod
-    def predict(self, input: EmbeddingInput) -> EmbeddingOutput:
-        """Compute embeddings for the given image(s) or text(s).
-
-        Args:
-            input: Embedding input with exactly one of image/text.
-
-        Returns:
-            Embedding output with a ``[num_inputs, dim]`` vector array.
-        """

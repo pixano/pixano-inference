@@ -18,9 +18,10 @@ For a framework-free (numpy-only) starting point, see [`../numpy_detector`](../n
 
 ## Install
 
-The example is a self-contained package that declares a `pixano_inference.models` entry
-point; installing it makes `YOLOModel` discoverable by name (and importable in every Ray
-Serve worker):
+The example is a self-contained package that declares `pixano_inference.models` entry
+points; installing it makes `YOLOModel` (detection) and `YOLOByteTrackModel` (multi-object
+tracking, see [Tracking by detection with ByteTrack](#tracking-by-detection-with-bytetrack))
+discoverable by name (and importable in every Ray Serve worker):
 
 ```bash
 uv sync --project examples/yolo    # its own environment: the Pixano Inference core + ultralytics
@@ -30,12 +31,15 @@ uv sync --project examples/yolo    # its own environment: the Pixano Inference c
 
 ```
 examples/yolo/
-    pyproject.toml                 # package metadata + the pixano_inference.models entry point
+    pyproject.toml                 # package metadata + the pixano_inference.models entry points
     src/pixano_yolo/
         __init__.py
         model.py                   # YOLOModel (extends DetectionModel, @register_model)
+        tracker.py                 # YOLOByteTrackModel (extends TrackingModel, @register_model)
     config.py                      # deployment config, references "YOLOModel" by name
     test_yolo.py                   # end-to-end client script
+    config_tracking.py             # deployment config for "YOLOByteTrackModel"
+    test_tracking.py               # end-to-end client script for tracking
 ```
 
 ## Step 1: Implement the Model
@@ -46,7 +50,7 @@ Create a model class that extends one of the built-in base classes. For object d
 # model.py
 from pixano_inference.models.detection import DetectionInput, DetectionModel, DetectionOutput
 from pixano_inference.models.registry import register_model
-from pixano_inference.ray.config import ModelDeploymentConfig
+from pixano_inference.configs import ModelDeploymentConfig
 
 
 @register_model("YOLOModel")
@@ -228,6 +232,136 @@ Response:
   }
 }
 ```
+
+## Tracking by detection with ByteTrack
+
+The same package ships a second model, `YOLOByteTrackModel`, built on the
+[track mode](https://docs.ultralytics.com/modes/track) of Ultralytics: YOLO detects the objects
+of each frame and [ByteTrack](https://arxiv.org/abs/2110.06864) links the detections into tracks.
+It extends `TrackingModel`, and unlike a promptable tracker (SAM2) it takes **no prompt**: the
+request carries only the video, and the model decides how many tracks there are and numbers them.
+
+```python
+# tracker.py (abridged)
+@register_model("YOLOByteTrackModel")
+class YOLOByteTrackModel(TrackingModel):
+
+    def predict(self, input: TrackingInput) -> TrackingOutput:
+        frames = []
+        for index, frame in enumerate(input.video):
+            image = convert_string_to_image(frame)
+            # persist=False starts a fresh tracker for this request; persist=True continues it.
+            result = self._model.track(image, persist=index > 0, tracker="bytetrack.yaml", verbose=False)[0]
+            frames.append(
+                TrackedFrame(
+                    frame_index=index,
+                    objects=[
+                        TrackedObject(track_id=int(i), box=xyxy.tolist(), score=float(s), class_name=result.names[int(c)])
+                        for i, xyxy, s, c in zip(result.boxes.id, result.boxes.xyxy, result.boxes.conf, result.boxes.cls)
+                    ],
+                )
+            )
+        return TrackingOutput(frames=frames)
+```
+
+The output is built the way the tracker produces it: one `TrackedFrame` per frame, holding one
+`TrackedObject` per track alive in that frame. The full implementation in
+[`src/pixano_yolo/tracker.py`](src/pixano_yolo/tracker.py) also accepts a single video file, filters by
+class name, and rejects a prompted request.
+
+Deploy it and run the test script (set `num_gpus=0` in `config_tracking.py` on a CPU-only machine):
+
+```bash
+uv run --project examples/yolo pixano-inference --config examples/yolo/config_tracking.py
+
+# In another terminal: track the people of the sample clip and save annotated frames
+uv run --project examples/yolo python examples/yolo/test_tracking.py \
+    --server-url http://127.0.0.1:7463 \
+    --classes person \
+    --output tracking_result.png
+```
+
+Example output:
+
+```
+Tracking
+Status: SUCCESS
+Processing time: 0.971s
+Frames: 30
+
+Frame 0:
+  track #1 class=person score=0.889 box=[309.0, 2.8, 517.6, 403.9]
+  track #2 class=person score=0.849 box=[143.1, 132.2, 293.4, 408.9]
+
+Tracks: 2
+  #1 class=person frames 0-29 (30 of 30)
+  #2 class=person frames 0-18 (19 of 30)
+```
+
+Track #2 ends at frame 18, when that child is hidden behind the other one: a track lives only
+while the detector sees its object (ByteTrack keeps a lost track for `track_buffer` frames and
+resumes it if the object comes back in time).
+
+With the Python client, send the frames and read the result by frame or by track:
+
+```python
+from pixano_inference.client import PixanoInferenceClient
+from pixano_inference.schemas import TrackingRequestV1
+
+client = PixanoInferenceClient.connect("http://localhost:7463")
+
+request = TrackingRequestV1(
+    model="yolo-bytetrack",
+    video=frames,            # frames as URLs, base64 data URIs or paths; or one video
+    classes=["person"],      # optional: class names to keep
+    box_threshold=None,      # optional: detector confidence floor (the tracker's default is 0.1)
+)
+result = await client.tracking(request)
+
+for frame in result.data.frames:
+    for tracked in frame.objects:
+        print(frame.frame_index, tracked.track_id, tracked.class_name, tracked.score, tracked.box)
+
+for track_id, track in result.data.tracks().items():   # the same result as trajectories
+    print(track_id, [frame_index for frame_index, _ in track])
+```
+
+The endpoint is `POST /v1/inference/tracking`. Request body:
+
+```json
+{
+  "model": "yolo-bytetrack",
+  "video": ["data:image/jpeg;base64,...", "data:image/jpeg;base64,..."],
+  "classes": ["person"]
+}
+```
+
+Response (`box` is `[x1, y1, x2, y2]` in pixels of the frame):
+
+```json
+{
+  "status": "SUCCESS",
+  "data": {
+    "frames": [
+      {
+        "frameIndex": 0,
+        "objects": [
+          {"trackId": 1, "box": [309.0, 2.8, 517.6, 403.9], "score": 0.889, "class": "person", "mask": null},
+          {"trackId": 2, "box": [143.1, 132.2, 293.4, 408.9], "score": 0.849, "class": "person", "mask": null}
+        ]
+      }
+    ]
+  }
+}
+```
+
+Notes:
+
+- Track IDs restart at 1 for every request; a request is one video.
+- Track mode keeps the detector confidence low (0.1) on purpose: ByteTrack also associates the
+  low-score boxes, which is what keeps a partly hidden object on its track. `box_threshold` raises
+  that floor.
+- `model_params["tracker"]` selects the Ultralytics tracker config (`bytetrack.yaml` by default).
 
 ## Available Base Classes
 

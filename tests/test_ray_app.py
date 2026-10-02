@@ -15,7 +15,7 @@ import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
-from pixano_inference.models.tracking import TrackingOutput
+from pixano_inference.models.tracking import TrackedFrame, TrackedObject, TrackingOutput
 from pixano_inference.ray import app as ray_app_module
 from pixano_inference.ray.app import DeploymentManager, create_ray_serve_app
 from pixano_inference.ray.config import ModelDeploymentConfig, RayServeConfig
@@ -39,11 +39,8 @@ class TestJobManager:
     """Async unit tests for the in-process JobManager (over Serve handles)."""
 
     async def test_job_completes(self):
-        result = TrackingOutput(
-            objects_ids=[1],
-            frame_indexes=[0],
-            masks=[CompressedRLE.from_mask(np.array([[1, 1], [0, 0]], dtype=np.uint8))],
-        )
+        mask = CompressedRLE.from_mask(np.array([[1, 1], [0, 0]], dtype=np.uint8))
+        result = TrackingOutput(frames=[TrackedFrame(frame_index=0, objects=[TrackedObject(track_id=1, mask=mask)])])
         manager = DeploymentManager(RayServeConfig(num_gpus=0))
         manager._configs["sam2-video"] = _make_tracking_config()
         manager._handles["sam2-video"] = FakeHandle(result)
@@ -55,7 +52,8 @@ class TestJobManager:
         job = manager.get_tracking_job(job_id)
         assert job.status == "completed"
         # JobManager stores the camelCase-serialized result.
-        assert job.result["frameIndexes"] == [0]
+        assert job.result["frames"][0]["frameIndex"] == 0
+        assert job.result["frames"][0]["objects"][0]["trackId"] == 1
         assert job.processing_time >= 0.0
 
     async def test_job_records_failure(self):
@@ -75,7 +73,7 @@ class TestJobManager:
         manager = DeploymentManager(RayServeConfig(num_gpus=0))
         manager._configs["sam2-video"] = _make_tracking_config()
         manager._handles["sam2-video"] = FakeHandle(
-            TrackingOutput(objects_ids=[1], frame_indexes=[0], masks=[]),
+            TrackingOutput(frames=[]),
         )
         for _ in range(jobs_module.DEFAULT_MAX_JOBS + 5):
             jid = manager.submit_tracking_job("sam2-video", input_data=object())

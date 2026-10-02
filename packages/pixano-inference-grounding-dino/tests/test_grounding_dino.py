@@ -17,11 +17,10 @@ from PIL import Image
 from pixano_inference_grounding_dino import GroundingDINOModel, GroundingDINOParams
 from pydantic import ValidationError
 
-from pixano_inference.configs import ModelParamsRegistry
+from pixano_inference.configs import ModelDeploymentConfig, ModelParamsRegistry
 from pixano_inference.models.detection import DetectionInput
 from pixano_inference.models.registry import ModelClassRegistry
 from pixano_inference.plugins import load_plugin_models
-from pixano_inference.ray.config import ModelDeploymentConfig
 
 
 def _data_uri(size=(32, 16)) -> str:

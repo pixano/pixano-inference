@@ -17,6 +17,7 @@ from pixano_inference.configs import (
     BaseModelParams,
     DeploymentConfig,
     ModelConfig,
+    ModelDeploymentConfig,
     ModelParamsRegistry,
     ServerConfig,
     register_model_params,
@@ -24,7 +25,6 @@ from pixano_inference.configs import (
 from pixano_inference.models import InferenceModel, register_model
 from pixano_inference.models.detection import DetectionInput, DetectionModel, DetectionOutput
 from pixano_inference.models.segmentation import SegmentationInput, SegmentationModel, SegmentationOutput
-from pixano_inference.ray.config import ModelDeploymentConfig
 
 
 # Framework-free models registered by name, standing in for a model package's classes: the

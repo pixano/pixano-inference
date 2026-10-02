@@ -7,6 +7,7 @@
 """Tests for the /v1 async and sync clients."""
 
 import base64
+import json
 
 import numpy as np
 import pytest
@@ -138,6 +139,34 @@ async def test_retries_then_succeeds_on_503(httpx_mock: HTTPXMock):
     assert len(httpx_mock.get_requests()) == 2
 
 
+async def test_tracking_parses_tracks_by_frame(httpx_mock: HTTPXMock, simple_pixano_inference_client):
+    httpx_mock.add_response(
+        url=f"{URL}/v1/inference/tracking",
+        json={
+            "id": "trk-1",
+            "status": "SUCCESS",
+            "timestamp": "2026-01-01T00:00:00Z",
+            "processingTime": 0.1,
+            "metadata": {},
+            "data": {
+                "frames": [
+                    {"frameIndex": 0, "objects": [{"trackId": 4, "box": [1, 2, 3, 4], "score": 0.9, "class": "car"}]},
+                    {"frameIndex": 1, "objects": [{"trackId": 4, "box": [2, 2, 4, 4], "score": 0.8, "class": "car"}]},
+                ]
+            },
+        },
+    )
+
+    # Tracking by detection: the request names no object.
+    result = await simple_pixano_inference_client.tracking(TrackingRequestV1(model="bytetrack", video=["f0.png"]))
+
+    body = json.loads(httpx_mock.get_request().content)
+    assert body["objectsIds"] == [] and body["keyframes"] is None
+    tracked = result.data.frames[1].objects[0]
+    assert (tracked.track_id, tracked.class_name, tracked.box) == (4, "car", [2.0, 2.0, 4.0, 4.0])
+    assert [frame_index for frame_index, _ in result.data.tracks()[4]] == [0, 1]
+
+
 # --- Jobs ---------------------------------------------------------------------------
 
 
@@ -150,11 +179,11 @@ async def test_job_lifecycle(httpx_mock: HTTPXMock, simple_pixano_inference_clie
 
     httpx_mock.add_response(
         url=f"{URL}/v1/jobs/j1",
-        json={"jobId": "j1", "status": "completed", "data": {"frameIndexes": [0]}},
+        json={"jobId": "j1", "status": "completed", "data": {"frames": [{"frameIndex": 0, "objects": []}]}},
     )
     done = await simple_pixano_inference_client.wait_for_job("j1", poll_interval=0.0)
     assert done.status == "completed"
-    assert done.data == {"frameIndexes": [0]}
+    assert done.data == {"frames": [{"frameIndex": 0, "objects": []}]}
 
 
 # --- Admin / service ----------------------------------------------------------------

@@ -13,11 +13,20 @@ ML engineers should import from here when creating custom models.
 # ruff: noqa: F401
 
 from .base import InferenceModel
-from .capabilities import HTTP_CAPABILITY_BASES, infer_http_capability
+from .capabilities import (
+    CAPABILITIES,
+    HTTP_CAPABILITY_BASES,
+    BinaryUpload,
+    CapabilitySpec,
+    capability_of,
+    find_capability,
+    get_capability,
+    infer_http_capability,
+)
 from .detection import DetectionInput, DetectionModel, DetectionOutput
 from .embedding import EmbeddingInput, EmbeddingModel, EmbeddingOutput
 from .ner import NEREntity, NERInput, NERModel, NEROutput
 from .registry import ModelClassRegistry, register_model
 from .segmentation import SegmentationInput, SegmentationModel, SegmentationOutput
-from .tracking import TrackingInput, TrackingModel, TrackingOutput
+from .tracking import TrackedFrame, TrackedObject, TrackingInput, TrackingModel, TrackingOutput
 from .vlm import UsageInfo, VLMInput, VLMModel, VLMOutput

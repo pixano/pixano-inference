@@ -12,17 +12,19 @@ A release publishes nine distributions to PyPI and the versioned documentation, 
 `Publish` workflow, which runs when a GitHub release is published.
 
 1. Set the core version in `src/pixano_inference/__version__.py`, and bump the version of any
-   package under `packages/` whose contents changed (`pixano-inference-client`,
-   `pixano-inference-torch`, the model packages). An unchanged package keeps its version and
+   package under `packages/` whose contents changed (`pixano-inference-torch`, the model
+   packages, the `pixano-inference-client` alias). An unchanged package keeps its version and
    its upload is skipped. When the core's minor version changes, update the
-   `pixano-inference >= X, < Y` pin in every package under `packages/` and `examples/`.
+   `pixano-inference >= X, < Y` pin in every package under `packages/` and `examples/`;
+   `tests/test_release_pins.py` fails on a pin that excludes the new version.
 2. Turn the `[Unreleased]` section of `CHANGELOG.md` into `[<version>] - <date>`.
 3. Merge, then publish a GitHub release whose tag is `v<version>`. The workflow refuses a tag
    that does not match `__version__`.
 
-The workflow publishes the client first, then the torch helpers and the model packages, then
-the core last, so a run that fails midway never leaves a core on PyPI whose extras cannot
-resolve. Re-run the failed jobs from the Actions tab; uploads that already exist are skipped.
+The workflow publishes the torch helpers and the model packages first, then the core, so a run
+that fails midway never leaves a core on PyPI whose extras cannot resolve. The deprecated
+`pixano-inference-client` alias goes last, because it depends on the core it re-exports. Re-run
+the failed jobs from the Actions tab; uploads that already exist are skipped.
 
 Projects can be brought online in stages. List the packages whose PyPI project has no trusted
 publisher yet in the repository variable `PYPI_SKIP_PACKAGES` (Settings → Secrets and

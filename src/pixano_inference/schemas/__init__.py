@@ -4,10 +4,21 @@
 # License: CECILL-C
 # =================================
 
-# ruff: noqa: F401
-# ruff: noqa: D104
+"""The wire contract of the /v1 API.
 
-from .base import BaseRequest, BaseResponse, CamelModel
+Everything a server, a model implementation and a client exchange is defined here: the wire value
+types (``NDArray``, ``CompressedRLE``), the capability ``Input``/``Output`` types that a model's
+``predict`` consumes and returns, the HTTP request/response envelopes, and the admin and job types.
+
+This package depends on pydantic and numpy only, and imports nothing else from
+``pixano_inference``: the model API, the client and the server all build on it.
+"""
+
+# ruff: noqa: F401
+
+from .base import BaseRequest, BaseResponse
+from .detection import DetectionInput, DetectionOutput
+from .embedding import EmbeddingInput, EmbeddingOutput
 from .inference import (
     DetectionRequest,
     DetectionResponse,
@@ -24,4 +35,25 @@ from .inference import (
 )
 from .models import ModelInfo
 from .nd_array import NDArray, NDArrayFloat
-from .rle import CompressedRLE
+from .ner import NEREntity, NERInput, NEROutput
+from .rle import CompressedRLE, mask_to_rle, rle_to_mask
+from .segmentation import SegmentationInput, SegmentationOutput
+from .tracking import (
+    TrackedFrame,
+    TrackedObject,
+    TrackingBoxPrompt,
+    TrackingInput,
+    TrackingInterval,
+    TrackingKeyframe,
+    TrackingOutput,
+    TrackingPointPrompt,
+)
+from .v1 import (
+    DeployModelRequest,
+    JobStatus,
+    ModelStatusInfo,
+    TrackingKeyframeV1,
+    TrackingPrompts,
+    TrackingRequestV1,
+)
+from .vlm import UsageInfo, VLMInput, VLMOutput

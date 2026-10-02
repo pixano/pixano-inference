@@ -13,7 +13,7 @@
 === "uv (recommended)"
 
     ```bash
-    uv add pixano-inference
+    uv add "pixano-inference[server]"
     ```
 
     For a development install, clone the repo and sync:
@@ -26,19 +26,29 @@
 === "pip"
 
     ```bash
-    pip install pixano-inference
+    pip install "pixano-inference[server]"
     ```
 
     For a development install:
 
     ```bash
     cd pixano-inference
-    pip install -e .
+    pip install -e ".[server]"
     ```
+
+The `server` extra installs the server (Ray Serve, the HTTP API and the `pixano-inference`
+command). Without it, `pixano-inference` is the client, the wire schemas and the model API only
+(httpx, pydantic and numpy), which is all an application that calls an existing server needs:
+
+```bash
+pip install pixano-inference            # client and schemas, no server
+pip install "pixano-inference[masks]"   # plus mask encoding and decoding (Pillow, pycocotools)
+```
 
 The core is framework-free: it ships no model and depends on no ML framework. Each model is a
 separate package that brings its own framework, and the server discovers every installed model
-package automatically. Each extra of the core installs one model package:
+package automatically. Each model extra of the core installs one model package, and with it the
+server:
 
 ```bash
 pip install pixano-inference[sam,grounding-dino]

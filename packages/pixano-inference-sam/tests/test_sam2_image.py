@@ -14,8 +14,8 @@ import pytest
 from PIL import Image
 from pixano_inference_sam.image import Sam2ImageModel
 
+from pixano_inference.configs import ModelDeploymentConfig
 from pixano_inference.models.segmentation import SegmentationInput
-from pixano_inference.ray.config import ModelDeploymentConfig
 from pixano_inference.schemas.rle import CompressedRLE
 
 

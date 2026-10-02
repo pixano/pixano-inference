@@ -21,7 +21,7 @@ from pixano_inference_torch import (
     vector_to_tensor,
 )
 
-from pixano_inference.ray.config import ModelDeploymentConfig, ResourceConfig
+from pixano_inference.configs import ModelDeploymentConfig, ResourceConfig
 from pixano_inference.schemas.nd_array import NDArrayFloat
 
 
