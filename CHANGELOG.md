@@ -39,7 +39,8 @@ a server installs it without Ray or FastAPI.
   `pixano_inference.client`; `pixano_inference.models` re-exports the I/O types next to the
   capability base classes. In 0.6 they were owned and versioned by `pixano-inference-client`,
   so the contract a model implements was pinned by a package the model packages never named.
-  The core no longer depends on `pixano-inference-client`.
+  The core no longer depends on `pixano-inference-client`. The camelCase base model
+  (`CamelModel` in 0.6) is private to the schemas (`_BaseModel`) and no longer exported.
 - **`pixano-inference-client` is a deprecated alias.** Version 0.2.0 depends on
   `pixano-inference >= 0.7, < 0.8` and re-exports the same names as 0.1.0, with a
   `DeprecationWarning` on import. Import from `pixano_inference.client` and

@@ -18,7 +18,6 @@ from pixano_inference.client import PixanoInferenceClient, PixanoInferenceError,
 from pixano_inference.schemas import (
     BaseRequest,
     BaseResponse,
-    CamelModel,
     CompressedRLE,
     DeployModelRequest,
     DetectionInput,
@@ -62,6 +61,9 @@ from pixano_inference.schemas import (
     mask_to_rle,
     rle_to_mask,
 )
+
+# 0.1.0 exported the camelCase base model under this name; the core keeps it private.
+from pixano_inference.schemas.base import _BaseModel as CamelModel
 
 
 warnings.warn(

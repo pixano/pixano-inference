@@ -14,11 +14,11 @@ from pathlib import Path
 
 from pydantic import model_validator
 
-from .base import CamelModel
+from .base import _BaseModel
 from .nd_array import NDArrayFloat
 
 
-class EmbeddingInput(CamelModel):
+class EmbeddingInput(_BaseModel):
     """Input for embedding computation.
 
     Exactly one of ``image`` or ``text`` must be provided. Either may be a single value or a
@@ -44,7 +44,7 @@ class EmbeddingInput(CamelModel):
         return self
 
 
-class EmbeddingOutput(CamelModel):
+class EmbeddingOutput(_BaseModel):
     """Output for embedding computation.
 
     Attributes:

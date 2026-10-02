@@ -9,10 +9,10 @@
 from pathlib import Path
 from typing import Any
 
-from .base import CamelModel
+from .base import _BaseModel
 
 
-class UsageInfo(CamelModel):
+class UsageInfo(_BaseModel):
     """Usage metadata for generation.
 
     Attributes:
@@ -26,7 +26,7 @@ class UsageInfo(CamelModel):
     total_tokens: int
 
 
-class VLMInput(CamelModel):
+class VLMInput(_BaseModel):
     """Input for vision-language model generation.
 
     Attributes:
@@ -43,7 +43,7 @@ class VLMInput(CamelModel):
     temperature: float = 1.0
 
 
-class VLMOutput(CamelModel):
+class VLMOutput(_BaseModel):
     """Output for vision-language model generation.
 
     Attributes:

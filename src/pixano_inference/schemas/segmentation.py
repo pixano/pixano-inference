@@ -10,12 +10,12 @@ from pathlib import Path
 
 from pydantic import field_validator
 
-from .base import CamelModel
+from .base import _BaseModel
 from .nd_array import NDArrayFloat
 from .rle import CompressedRLE
 
 
-class SegmentationInput(CamelModel):
+class SegmentationInput(_BaseModel):
     """Input for image segmentation.
 
     Attributes:
@@ -66,7 +66,7 @@ class SegmentationInput(CamelModel):
         return v
 
 
-class SegmentationOutput(CamelModel):
+class SegmentationOutput(_BaseModel):
     """Output for image segmentation.
 
     Attributes:

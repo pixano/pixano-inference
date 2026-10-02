@@ -81,6 +81,9 @@ SUBMODULES = {
 }
 
 # ``pixano_inference_client.__all__`` as published in 0.1.0.
+# Names the alias still exports although the core made the object private.
+RENAMED_IN_CORE = {"CamelModel": "_BaseModel"}
+
 TOP_LEVEL_NAMES = sorted(
     name
     for submodule, (_, names) in SUBMODULES.items()
@@ -109,13 +112,17 @@ def test_top_level_names_are_the_0_1_0_names_and_the_core_objects():
 
     import pixano_inference.client
     import pixano_inference.schemas
+    import pixano_inference.schemas.base
 
     assert sorted(pixano_inference_client.__all__) == TOP_LEVEL_NAMES
     for name in pixano_inference_client.__all__:
-        core_module = (
-            pixano_inference.client if "Client" in name or name.endswith("Error") else pixano_inference.schemas
-        )
-        assert getattr(pixano_inference_client, name) is getattr(core_module, name), name
+        if name in RENAMED_IN_CORE:
+            core_object = getattr(pixano_inference.schemas.base, RENAMED_IN_CORE[name])
+        elif "Client" in name or name.endswith("Error"):
+            core_object = getattr(pixano_inference.client, name)
+        else:
+            core_object = getattr(pixano_inference.schemas, name)
+        assert getattr(pixano_inference_client, name) is core_object, name
 
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
@@ -127,7 +134,7 @@ def test_submodule_exposes_the_core_objects(submodule):
 
     assert sorted(alias_module.__all__) == sorted(names)
     for name in names:
-        assert getattr(alias_module, name) is getattr(core_module, name), name
+        assert getattr(alias_module, name) is getattr(core_module, RENAMED_IN_CORE.get(name, name)), name
 
 
 def test_importing_the_alias_loads_no_server_module():

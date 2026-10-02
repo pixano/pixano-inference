@@ -10,11 +10,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .base import CamelModel
+from .base import _BaseModel
 from .rle import CompressedRLE
 
 
-class DetectionInput(CamelModel):
+class DetectionInput(_BaseModel):
     """Input for detection.
 
     When ``classes`` is provided the model runs in **open-vocabulary** mode
@@ -35,7 +35,7 @@ class DetectionInput(CamelModel):
     text_threshold: float = 0.5
 
 
-class DetectionOutput(CamelModel):
+class DetectionOutput(_BaseModel):
     """Output for detection.
 
     ``masks`` is populated when the model performs instance segmentation

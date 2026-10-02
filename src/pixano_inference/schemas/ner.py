@@ -6,10 +6,10 @@
 
 """NER (Named Entity Recognition) I/O types."""
 
-from .base import CamelModel
+from .base import _BaseModel
 
 
-class NERInput(CamelModel):
+class NERInput(_BaseModel):
     """Input for named entity recognition.
 
     Attributes:
@@ -19,7 +19,7 @@ class NERInput(CamelModel):
     text: str
 
 
-class NEREntity(CamelModel):
+class NEREntity(_BaseModel):
     """A single recognized entity.
 
     Attributes:
@@ -37,7 +37,7 @@ class NEREntity(CamelModel):
     score: float
 
 
-class NEROutput(CamelModel):
+class NEROutput(_BaseModel):
     """Output for named entity recognition.
 
     Attributes:

@@ -16,7 +16,7 @@ This package depends on pydantic and numpy only, and imports nothing else from
 
 # ruff: noqa: F401
 
-from .base import BaseRequest, BaseResponse, CamelModel
+from .base import BaseRequest, BaseResponse
 from .detection import DetectionInput, DetectionOutput
 from .embedding import EmbeddingInput, EmbeddingOutput
 from .inference import (

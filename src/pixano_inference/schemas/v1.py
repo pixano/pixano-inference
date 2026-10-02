@@ -17,7 +17,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Literal
 
-from .base import BaseRequest, CamelModel
+from .base import BaseRequest, _BaseModel
 from .rle import CompressedRLE
 from .tracking import (
     TrackingBoxPrompt,
@@ -28,7 +28,7 @@ from .tracking import (
 )
 
 
-class TrackingPrompts(CamelModel):
+class TrackingPrompts(_BaseModel):
     """Prompt payload for a single keyframe (points/box XOR mask)."""
 
     points: list[TrackingPointPrompt] | None = None
@@ -36,7 +36,7 @@ class TrackingPrompts(CamelModel):
     mask: CompressedRLE | None = None
 
 
-class TrackingKeyframeV1(CamelModel):
+class TrackingKeyframeV1(_BaseModel):
     """A keyframe with nested prompts, matching the Pixano frontend contract.
 
     Frame indices are 0-based **relative to the submitted media window**.
@@ -83,7 +83,7 @@ class TrackingRequestV1(BaseRequest):
         )
 
 
-class DeployModelRequest(CamelModel):
+class DeployModelRequest(_BaseModel):
     """Admin request to deploy a model at runtime (mirrors a config-file ModelConfig)."""
 
     name: str | None = None
@@ -92,7 +92,7 @@ class DeployModelRequest(CamelModel):
     deployment: dict[str, Any] = {}
 
 
-class ModelStatusInfo(CamelModel):
+class ModelStatusInfo(_BaseModel):
     """Model listing entry with its live Serve status."""
 
     name: str
@@ -102,7 +102,7 @@ class ModelStatusInfo(CamelModel):
     status: str
 
 
-class JobStatus(CamelModel):
+class JobStatus(_BaseModel):
     """Status envelope for an asynchronous job."""
 
     job_id: str

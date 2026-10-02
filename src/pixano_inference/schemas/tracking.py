@@ -11,11 +11,11 @@ from typing import Literal
 
 from pydantic import field_validator, model_validator
 
-from .base import CamelModel
+from .base import _BaseModel
 from .rle import CompressedRLE
 
 
-class TrackingPointPrompt(CamelModel):
+class TrackingPointPrompt(_BaseModel):
     """Point prompt for a tracking keyframe."""
 
     x: int
@@ -23,7 +23,7 @@ class TrackingPointPrompt(CamelModel):
     label: Literal[0, 1]
 
 
-class TrackingBoxPrompt(CamelModel):
+class TrackingBoxPrompt(_BaseModel):
     """Box prompt for a tracking keyframe."""
 
     x: int
@@ -32,7 +32,7 @@ class TrackingBoxPrompt(CamelModel):
     height: int
 
 
-class TrackingInterval(CamelModel):
+class TrackingInterval(_BaseModel):
     """Optional propagation window relative to the provided video frames."""
 
     start_frame: int
@@ -40,7 +40,7 @@ class TrackingInterval(CamelModel):
     direction: Literal["forward", "backward"] = "forward"
 
 
-class TrackingKeyframe(CamelModel):
+class TrackingKeyframe(_BaseModel):
     """Prompt payload for a single tracking keyframe."""
 
     frame_index: int
@@ -58,7 +58,7 @@ class TrackingKeyframe(CamelModel):
         return self
 
 
-class TrackingInput(CamelModel):
+class TrackingInput(_BaseModel):
     """Input for video mask generation / tracking.
 
     Attributes:
@@ -118,7 +118,7 @@ class TrackingInput(CamelModel):
         return self
 
 
-class TrackingOutput(CamelModel):
+class TrackingOutput(_BaseModel):
     """Output for video mask generation / tracking.
 
     Attributes:

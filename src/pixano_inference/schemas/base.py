@@ -17,10 +17,11 @@ from pydantic.alias_generators import to_camel
 T = TypeVar("T", bound=BaseModel)
 
 
-class CamelModel(BaseModel):
-    """Base model whose fields serialize as camelCase on the wire.
+class _BaseModel(BaseModel):
+    """Pydantic ``BaseModel`` whose fields serialize as camelCase on the wire.
 
-    Fields stay snake_case in Python; ``populate_by_name=True`` means both the camelCase
+    Internal to the schemas: every wire type derives from it, but it is not part of the public
+    API. Fields stay snake_case in Python; ``populate_by_name=True`` means both the camelCase
     alias and the snake_case name are accepted on input, so existing Python callers keep
     working while the HTTP contract (and generated TypeScript client) is camelCase.
     """
@@ -28,7 +29,7 @@ class CamelModel(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True, arbitrary_types_allowed=True)
 
 
-class BaseRequest(CamelModel, ABC):
+class BaseRequest(_BaseModel, ABC):
     """Base request model.
 
     Attributes:
@@ -44,7 +45,7 @@ class BaseRequest(CamelModel, ABC):
         return base_model.model_validate(self.model_dump(include=set(base_model.model_fields.keys())))
 
 
-class BaseResponse(CamelModel, ABC):
+class BaseResponse(_BaseModel, ABC):
     """Base response envelope.
 
     Attributes:
