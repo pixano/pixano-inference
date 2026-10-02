@@ -10,7 +10,6 @@ The I/O types live in :mod:`pixano_inference.schemas.ner` and are re-exported he
 ``from pixano_inference.models.ner import NERInput`` keeps working.
 """
 
-from abc import abstractmethod
 from typing import ClassVar
 
 from pixano_inference.schemas.ner import NEREntity, NERInput, NEROutput  # noqa: F401
@@ -18,8 +17,11 @@ from pixano_inference.schemas.ner import NEREntity, NERInput, NEROutput  # noqa:
 from .base import InferenceModel
 
 
-class NERModel(InferenceModel):
+class NERModel(InferenceModel[NERInput, NEROutput]):
     """Base class for named entity recognition models.
+
+    ``predict`` receives a :class:`NERInput` (the text to analyse) and returns a :class:`NEROutput`
+    (the recognised entities).
 
     Example:
         ```python
@@ -34,14 +36,3 @@ class NERModel(InferenceModel):
     """
 
     capability_name: ClassVar[str] = "ner"
-
-    @abstractmethod
-    def predict(self, input: NERInput) -> NEROutput:
-        """Run named entity recognition.
-
-        Args:
-            input: NER input with text to analyse.
-
-        Returns:
-            NER output with recognised entities.
-        """

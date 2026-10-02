@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import get_type_hints
+from typing import get_args, get_origin, get_type_hints
 
 import pytest
 
@@ -52,6 +52,12 @@ def test_request_and_response_carry_the_capability_io_types(spec):
     assert get_type_hints(spec.request_type.to_input)["return"] is spec.input_type
     assert spec.response_type.model_fields["data"].annotation is spec.output_type
     assert "model" in spec.request_type.model_fields
+
+
+@_SPECS
+def test_model_base_is_parameterised_with_the_capability_io_types(spec):
+    (generic_base,) = [base for base in spec.model_base.__orig_bases__ if get_origin(base) is InferenceModel]
+    assert get_args(generic_base) == (spec.input_type, spec.output_type)
 
 
 @_SPECS

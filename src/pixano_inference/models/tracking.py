@@ -11,7 +11,6 @@ The I/O and prompt types are the wire contract and live in
 ``from pixano_inference.models.tracking import TrackingInput`` (and the prompt types) keep working.
 """
 
-from abc import abstractmethod
 from typing import ClassVar
 
 from pixano_inference.schemas.tracking import (  # noqa: F401
@@ -26,8 +25,11 @@ from pixano_inference.schemas.tracking import (  # noqa: F401
 from .base import InferenceModel
 
 
-class TrackingModel(InferenceModel):
+class TrackingModel(InferenceModel[TrackingInput, TrackingOutput]):
     """Base class for video mask generation / tracking models.
+
+    ``predict`` receives a :class:`TrackingInput` (video, prompts and object ids) and returns a
+    :class:`TrackingOutput` (object ids, frame indexes and masks).
 
     Example:
         ```python
@@ -43,14 +45,3 @@ class TrackingModel(InferenceModel):
     """
 
     capability_name: ClassVar[str] = "tracking"
-
-    @abstractmethod
-    def predict(self, input: TrackingInput) -> TrackingOutput:
-        """Run video mask generation / tracking.
-
-        Args:
-            input: Tracking input with video, prompts, and object IDs.
-
-        Returns:
-            Tracking output with objects_ids, frame_indexes, and masks.
-        """

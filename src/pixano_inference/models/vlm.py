@@ -10,7 +10,6 @@ The I/O types live in :mod:`pixano_inference.schemas.vlm` and are re-exported he
 ``from pixano_inference.models.vlm import VLMInput`` keeps working.
 """
 
-from abc import abstractmethod
 from typing import ClassVar
 
 from pixano_inference.schemas.vlm import UsageInfo, VLMInput, VLMOutput  # noqa: F401
@@ -18,8 +17,11 @@ from pixano_inference.schemas.vlm import UsageInfo, VLMInput, VLMOutput  # noqa:
 from .base import InferenceModel
 
 
-class VLMModel(InferenceModel):
+class VLMModel(InferenceModel[VLMInput, VLMOutput]):
     """Base class for vision-language models.
+
+    ``predict`` receives a :class:`VLMInput` (prompt, images and generation parameters) and returns
+    a :class:`VLMOutput` (generated text, usage and generation config).
 
     Example:
         ```python
@@ -35,14 +37,3 @@ class VLMModel(InferenceModel):
     """
 
     capability_name: ClassVar[str] = "vlm"
-
-    @abstractmethod
-    def predict(self, input: VLMInput) -> VLMOutput:
-        """Run vision-language generation.
-
-        Args:
-            input: VLM input with prompt, images, and generation parameters.
-
-        Returns:
-            VLM output with generated text, usage info, and generation config.
-        """

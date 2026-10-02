@@ -98,7 +98,9 @@ failure here fails the deployment: at startup with `--config`, or as the error o
 `POST /v1/models`.
 
 **2.5 `predict(input)`.** MUST accept the base class's input type and return its output type,
-synchronously. Calls on one replica are serialized by the server, so the model need not be
+synchronously. Each capability base class is `InferenceModel[Input, Output]` (for example
+`DetectionModel` is `InferenceModel[DetectionInput, DetectionOutput]`), so a type checker
+verifies the signature. Calls on one replica are serialized by the server, so the model need not be
 thread-safe. Anything raised fails that request with a `500` error envelope (the exception is
 logged server-side, its text is not returned); a call that outlives the deployment's
 `timeout_s` fails with `504`.

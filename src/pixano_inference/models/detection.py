@@ -13,7 +13,6 @@ in :mod:`pixano_inference.schemas.detection`; they are re-exported here so
 
 from __future__ import annotations
 
-from abc import abstractmethod
 from typing import ClassVar
 
 from pixano_inference.schemas.detection import DetectionInput, DetectionOutput  # noqa: F401
@@ -21,7 +20,7 @@ from pixano_inference.schemas.detection import DetectionInput, DetectionOutput  
 from .base import InferenceModel
 
 
-class DetectionModel(InferenceModel):
+class DetectionModel(InferenceModel[DetectionInput, DetectionOutput]):
     """Base class for detection and instance-segmentation models.
 
     Subclasses implement ``predict`` which receives a :class:`DetectionInput`
@@ -42,14 +41,3 @@ class DetectionModel(InferenceModel):
     """
 
     capability_name: ClassVar[str] = "detection"
-
-    @abstractmethod
-    def predict(self, input: DetectionInput) -> DetectionOutput:
-        """Run detection or instance segmentation.
-
-        Args:
-            input: Detection input with image, optional classes, and thresholds.
-
-        Returns:
-            Detection output with boxes, scores, classes, and optional masks.
-        """
