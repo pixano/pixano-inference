@@ -3387,7 +3387,7 @@ provides-extras = ["masks"]
 
 [[package]]
 name = "pixano-inference-clip"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "packages/pixano-inference-clip" }
 dependencies = [
     { name = "open-clip-torch" },
@@ -3411,7 +3411,7 @@ dev = [{ name = "pytest" }]
 
 [[package]]
 name = "pixano-inference-grounding-dino"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "packages/pixano-inference-grounding-dino" }
 dependencies = [
     { name = "accelerate" },
@@ -3439,7 +3439,7 @@ dev = [{ name = "pytest" }]
 
 [[package]]
 name = "pixano-inference-sam"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "packages/pixano-inference-sam" }
 dependencies = [
     { name = "huggingface-hub" },
@@ -3468,7 +3468,7 @@ dev = [
 
 [[package]]
 name = "pixano-inference-torch"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "packages/pixano-inference-torch" }
 dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -3490,7 +3490,7 @@ dev = [{ name = "pytest" }]
 
 [[package]]
 name = "pixano-inference-transformers-vlm"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "packages/pixano-inference-transformers-vlm" }
 dependencies = [
     { name = "accelerate" },
@@ -3520,7 +3520,7 @@ dev = [{ name = "pytest" }]
 
 [[package]]
 name = "pixano-inference-vllm"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "packages/pixano-inference-vllm" }
 dependencies = [
     { name = "msgspec" },

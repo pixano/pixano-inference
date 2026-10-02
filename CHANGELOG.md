@@ -12,6 +12,14 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Packaging / CI
+
+- **Contract 0.7.** The core is `0.7.0`; the model packages and the torch helpers are `0.2.0` and
+  pin the core to `>= 0.7.0, < 0.8.0`. A test (`tests/test_release_pins.py`) fails when a package
+  under `packages/` or `examples/` pins a range that excludes the current core.
+
 ## [0.6.0] - 2026-09-23
 
 Major release. The serving stack is rebuilt on **real Ray Serve** behind a versioned, camelCase
