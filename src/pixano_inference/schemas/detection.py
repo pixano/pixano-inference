@@ -23,13 +23,13 @@ class DetectionInput(CamelModel):
     mode, e.g. YOLO, prompt-free YOLOE).
 
     Attributes:
-        image: Image for detection (path, URL, or base64).
+        image: Image for detection (path, URL, base64, or raw bytes from the binary route).
         classes: Class names to detect.  ``None`` means closed-vocabulary.
         box_threshold: Confidence threshold for boxes.
         text_threshold: Confidence threshold for text matching (open-vocab only).
     """
 
-    image: str | Path
+    image: str | Path | bytes
     classes: list[str] | str | None = None
     box_threshold: float = 0.5
     text_threshold: float = 0.5

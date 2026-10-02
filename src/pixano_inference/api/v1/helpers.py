@@ -102,7 +102,9 @@ def build_binary_request(request_type: type[_RequestT], metadata: str, **extra_f
     try:
         return request_type.model_validate(payload)
     except ValidationError as exc:
-        raise HTTPException(status_code=422, detail=exc.errors()) from exc
+        # The payload holds the uploaded bytes: echoing it back as the error "input" would make
+        # the error body impossible to encode as JSON (and would return the upload to the caller).
+        raise HTTPException(status_code=422, detail=exc.errors(include_input=False)) from exc
 
 
 async def _read_metadata_upload(upload: Any) -> str | None:

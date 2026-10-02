@@ -186,6 +186,10 @@
               {
                 "format": "path",
                 "type": "string"
+              },
+              {
+                "contentMediaType": "application/octet-stream",
+                "type": "string"
               }
             ],
             "title": "Image"
@@ -1194,6 +1198,10 @@
                     },
                     {
                       "format": "path",
+                      "type": "string"
+                    },
+                    {
+                      "contentMediaType": "application/octet-stream",
                       "type": "string"
                     }
                   ]

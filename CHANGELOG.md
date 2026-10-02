@@ -60,6 +60,15 @@ a server installs it without Ray or FastAPI.
   fixes them (`DetectionModel` is `InferenceModel[DetectionInput, DetectionOutput]`) instead of
   re-declaring `predict` with a narrower signature. Existing models need no change.
 
+### Fixed
+
+- `POST /v1/inference/detection/binary` and `/vlm/binary` failed with a 500 on any real image:
+  `DetectionInput.image` and `VLMInput.images` did not accept bytes. Both now do, like the
+  segmentation, embedding and tracking inputs, and the OpenAPI schema lists the binary form.
+- A `/binary` upload rejected by validation returned a 500 instead of a 422, because the error
+  body echoed the uploaded bytes and could not be encoded as JSON. The error no longer includes
+  the input.
+
 ### Packaging / CI
 
 - **Contract 0.7.** The core is `0.7.0`; the model packages and the torch helpers are `0.2.0` and

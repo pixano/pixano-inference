@@ -31,13 +31,14 @@ class VLMInput(CamelModel):
 
     Attributes:
         prompt: Prompt for the generation. Can be a string or a list of dicts for chat templates.
-        images: Images for the generation. Can be None if images are passed in the prompt.
+        images: Images for the generation (paths, URLs, base64, or raw bytes from the binary route).
+            Can be None if images are passed in the prompt.
         max_new_tokens: Maximum number of new tokens to generate.
         temperature: Temperature for the generation.
     """
 
     prompt: str | list[dict[str, Any]]
-    images: list[str | Path] | None = None
+    images: list[str | Path | bytes] | None = None
     max_new_tokens: int
     temperature: float = 1.0
 
