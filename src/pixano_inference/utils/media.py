@@ -6,16 +6,21 @@
 
 """Image utilities."""
 
+from __future__ import annotations
+
 import base64
 import re
 from io import BytesIO
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
-from PIL import Image
 
 from .media_security import fetch_url_bytes, get_media_policy, is_http_url, resolve_local_path
+
+
+if TYPE_CHECKING:
+    from PIL import Image
 
 
 regex_media_base64 = r"^(data:[a-zA-Z]/[a-zA-Z]+;base64,)"
@@ -78,7 +83,16 @@ def _decode_image_under_policy(source: Any, policy: Any) -> Image.Image:
 
     Raises:
         ValueError: If the format is not allowed or the image exceeds the pixel cap.
+        ImportError: If Pillow is not installed (it comes with the ``server`` extra).
     """
+    # Imported here: a base install has no Pillow, and this module must still import.
+    try:
+        from PIL import Image
+    except ImportError as exc:
+        raise ImportError(
+            'Decoding an image requires Pillow. Install it with: pip install "pixano-inference[server]"'
+        ) from exc
+
     image = Image.open(source)
     allowed: frozenset[str] = getattr(policy, "allowed_image_formats", frozenset())
     fmt = (image.format or "").upper()

@@ -87,7 +87,7 @@ test=[
 ]
 
 [project.scripts]
-pixano-inference = "pixano_inference.main:app"
+pixano-inference = "pixano_inference.cli:main"
 
 [project.urls]
 "Homepage" = "https://github.com/pixano/pixano-inference"
