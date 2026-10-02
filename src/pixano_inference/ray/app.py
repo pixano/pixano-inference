@@ -29,6 +29,7 @@ from pixano_inference.api.v1 import register_v1_api
 from pixano_inference.api.v1.errors import register_exception_handlers
 from pixano_inference.configs.deployment import ModelDeploymentConfig
 from pixano_inference.jobs import JobManager, JobRecord
+from pixano_inference.models.capabilities import find_capability
 from pixano_inference.models.registry import ModelClassRegistry
 from pixano_inference.schemas import ModelInfo
 from pixano_inference.security import make_api_key_dependency, warn_if_auth_disabled
@@ -46,14 +47,8 @@ _WATCHDOG_POLL_S = 0.25
 _CLEANUP_TIMEOUT_S = 30.0
 # Startup drains have no in-flight requests to protect, so they get a short leash.
 _ABORT_DRAIN_TIMEOUT_S = 5.0
-_DEFAULT_TIMEOUTS: dict[str, float] = {
-    "segmentation": 60.0,
-    "detection": 60.0,
-    "vlm": 300.0,
-    "tracking": 600.0,
-    "ner": 60.0,
-    "embedding": 60.0,
-}
+# Timeout for a capability that has no entry in the capability table.
+_FALLBACK_TIMEOUT_S = 120.0
 
 
 class StartupAborted(RuntimeError):
@@ -437,7 +432,8 @@ class DeploymentManager:
         config = self._configs.get(name)
         if config is not None and config.timeout_s is not None:
             return config.timeout_s
-        return _DEFAULT_TIMEOUTS.get(capability, 120.0)
+        spec = find_capability(capability)
+        return spec.default_timeout_s if spec is not None else _FALLBACK_TIMEOUT_S
 
     # --- Readiness ------------------------------------------------------------------
 

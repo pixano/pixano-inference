@@ -23,6 +23,7 @@ from starlette.datastructures import UploadFile as StarletteUploadFile
 
 
 if TYPE_CHECKING:
+    from pixano_inference.models.capabilities import CapabilitySpec
     from pixano_inference.ray.app import DeploymentManager
 
 
@@ -150,3 +151,15 @@ async def build_binary_request_from_request(
         extra_fields[payload_key] = [await f.read() for f in uploads]
 
     return build_binary_request(request_type, metadata_text, **extra_fields)
+
+
+async def build_capability_binary_request(request: Request, spec: CapabilitySpec) -> Any:
+    """Parse a multipart request into the request model of the capability *spec*."""
+    if spec.binary is None:
+        raise RuntimeError(f"Capability '{spec.name}' does not accept binary uploads.")
+    return await build_binary_request_from_request(
+        request,
+        spec.request_type,
+        file_field=spec.binary.file_field,
+        payload_key=spec.binary.payload_key,
+    )

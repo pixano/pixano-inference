@@ -51,6 +51,11 @@ a server installs it without Ray or FastAPI.
 - `ResourceConfig`, `AutoscalingConfig` and `ModelDeploymentConfig` live in
   `pixano_inference.configs` (still importable from `pixano_inference.ray.config`), so a model
   package no longer imports the Ray layer to type its constructor.
+- Each capability is declared once, in `pixano_inference.models.capabilities.CAPABILITIES`: its
+  model base class, `Input`/`Output` types, request and response, default timeout and binary
+  upload field. The `/v1/inference/*` routes, the capability of a model class and the default
+  timeouts are derived from that table instead of being repeated by hand. The HTTP API and
+  `docs/openapi.json` are unchanged.
 
 ### Packaging / CI
 

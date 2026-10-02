@@ -13,8 +13,9 @@ from typing import TYPE_CHECKING, Any
 from fastapi import APIRouter, HTTPException, Request
 
 from pixano_inference.jobs import serialize_job
+from pixano_inference.models.capabilities import get_capability
 
-from .helpers import build_binary_request_from_request, get_validated_handle
+from .helpers import build_capability_binary_request, get_validated_handle
 from .schemas import TrackingRequestV1
 
 
@@ -25,9 +26,10 @@ if TYPE_CHECKING:
 def build_jobs_router(deployment_manager: DeploymentManager) -> APIRouter:
     """Build the tracking-jobs router bound to *deployment_manager*."""
     router = APIRouter(tags=["jobs"])
+    tracking = get_capability("tracking")
 
     def _submit(model: str, input_obj: Any) -> dict[str, Any]:
-        get_validated_handle(deployment_manager, model, "tracking")
+        get_validated_handle(deployment_manager, model, tracking.name)
         job_id = deployment_manager.submit_tracking_job(model, input_obj)
         job = deployment_manager.get_tracking_job(job_id)
         if job is None:
@@ -40,9 +42,7 @@ def build_jobs_router(deployment_manager: DeploymentManager) -> APIRouter:
 
     @router.post("/inference/tracking/jobs/binary", status_code=202)
     async def submit_tracking_job_binary(request: Request) -> dict[str, Any]:
-        parsed = await build_binary_request_from_request(
-            request, TrackingRequestV1, file_field="frames", payload_key="video"
-        )
+        parsed = await build_capability_binary_request(request, tracking)
         return _submit(parsed.model, parsed.to_input())
 
     @router.get("/jobs/{job_id}")
