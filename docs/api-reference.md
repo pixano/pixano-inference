@@ -79,7 +79,7 @@ Returns a list of `ModelInfo` objects:
 | ------ | -------------------------- | --------------------- | ---------------------- | ----------------------- |
 | `POST` | `/inference/segmentation/` | `SegmentationRequest` | `SegmentationResponse` | `client.segmentation()` |
 | `POST` | `/inference/detection/`    | `DetectionRequest`    | `DetectionResponse`    | `client.detection()`    |
-| `POST` | `/inference/tracking/`     | `TrackingRequest`     | `TrackingResponse`     | `client.tracking()`     |
+| `POST` | `/inference/tracking/`     | `TrackingRequestV1`   | `TrackingResponse`     | `client.tracking()`     |
 | `POST` | `/inference/vlm/`          | `VLMRequest`          | `VLMResponse`          | `client.vlm()`          |
 
 If a model exists but does not support the endpoint capability, the server

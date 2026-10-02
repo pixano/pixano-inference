@@ -47,6 +47,24 @@ a server installs it without Ray or FastAPI.
   `pixano_inference.schemas` instead. Do not combine `pixano-inference-client` 0.1 with
   `pixano-inference` 0.7: each would carry its own copy of the wire types.
 
+- **`TrackingOutput` is grouped by frame.** The response of `/v1/inference/tracking` (and the
+  `data` of a tracking job) is `{"frames": [{"frameIndex", "objects": [{"trackId", "box",
+"score", "class", "mask"}]}]}` instead of the parallel `objectsIds` / `frameIndexes` / `masks`
+  lists. Each frame lists the objects tracked in it; SAM2 fills `mask`, and `trackId` is the
+  object ID of the request. A consumer reads `frames[].objects[]`, or `TrackingOutput.tracks()`
+  for the same result grouped by track.
+
+### Added
+
+- **Multi-object tracking by detection.** The tracking output can carry what a
+  ByteTrack-style model produces: any number of tracks, each with a bounding box
+  (`[x1, y1, x2, y2]` in pixels), a score and a class per frame, with or without a mask. A
+  tracking request no longer has to name objects: `objectsIds`, `frameIndexes` and `keyframes`
+  are optional, and `classes` and `boxThreshold` select what a prompt-free model detects and
+  tracks. Prompted requests are validated as before, and a request with prompts but no object
+  ID is now rejected with a 422 when it is parsed (it failed inside the route before).
+  `Sam2VideoModel` still requires prompts.
+
 ### Changed
 
 - `ResourceConfig`, `AutoscalingConfig` and `ModelDeploymentConfig` live in
@@ -55,8 +73,8 @@ a server installs it without Ray or FastAPI.
 - Each capability is declared once, in `pixano_inference.models.capabilities.CAPABILITIES`: its
   model base class, `Input`/`Output` types, request and response, default timeout and binary
   upload field. The `/v1/inference/*` routes, the capability of a model class and the default
-  timeouts are derived from that table instead of being repeated by hand. The HTTP API and
-  `docs/openapi.json` are unchanged.
+  timeouts are derived from that table instead of being repeated by hand, with the same routes
+  and schemas.
 - `InferenceModel` is generic in its input and output types, and each capability base class
   fixes them (`DetectionModel` is `InferenceModel[DetectionInput, DetectionOutput]`) instead of
   re-declaring `predict` with a narrower signature. Existing models need no change.

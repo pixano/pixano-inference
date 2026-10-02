@@ -20,7 +20,14 @@ from pixano_inference_torch import resolve_device, resolve_torch_dtype
 
 from pixano_inference.configs import ModelDeploymentConfig
 from pixano_inference.models.registry import register_model
-from pixano_inference.models.tracking import TrackingInput, TrackingKeyframe, TrackingModel, TrackingOutput
+from pixano_inference.models.tracking import (
+    TrackedFrame,
+    TrackedObject,
+    TrackingInput,
+    TrackingKeyframe,
+    TrackingModel,
+    TrackingOutput,
+)
 
 from ._deps import assert_sam2_installed
 from ._prompts import validate_prompts
@@ -107,16 +114,23 @@ class Sam2VideoModel(TrackingModel):
             input: Tracking input with video, prompts, and object IDs.
 
         Returns:
-            Tracking output with objects_ids, frame_indexes, and masks.
+            Tracking output: for each frame, the mask of each prompted object.
+
+        Raises:
+            ValueError: If the request names no object. SAM2 tracks prompted objects; it does not
+                detect them.
         """
         import torch
-
-        from pixano_inference.schemas.rle import CompressedRLE
 
         objects_ids = input.objects_ids
         request_propagate = self._propagate if input.propagate is None else input.propagate
         frame_indexes = input.frame_indexes
 
+        if not objects_ids:
+            raise ValueError(
+                "Sam2VideoModel tracks prompted objects: provide objects_ids with one keyframe "
+                "(or point/box prompt) per object."
+            )
         if len(objects_ids) != len(frame_indexes):
             raise ValueError("objects_ids and frame_indexes must have the same length.")
 
@@ -181,20 +195,34 @@ class Sam2VideoModel(TrackingModel):
                     ):
                         self._merge_video_segments(video_segments, out_frame_idx, out_obj_ids, out_mask_logits)
 
-        out_objects_ids: list[int] = []
-        out_frame_indexes: list[int] = []
-        out_masks: list[CompressedRLE] = []
+        return self._build_output(video_segments)
 
-        for frame_index, object_masks in video_segments.items():
-            for object_id, mask in object_masks.items():
-                out_objects_ids.append(object_id)
-                out_frame_indexes.append(frame_index)
-                out_masks.append(CompressedRLE.from_mask(mask[0].astype(np.uint8)))
+    @staticmethod
+    def _build_output(video_segments: dict[int, dict[int, np.ndarray]]) -> TrackingOutput:
+        """Turn the masks of each frame into a tracking output.
+
+        Args:
+            video_segments: For each frame index, the ``(1, H, W)`` binary mask of each object ID.
+
+        Returns:
+            One tracked frame per frame index, in the order the frames were processed.
+        """
+        from pixano_inference.schemas.rle import CompressedRLE
 
         return TrackingOutput(
-            objects_ids=out_objects_ids,
-            frame_indexes=out_frame_indexes,
-            masks=out_masks,
+            frames=[
+                TrackedFrame(
+                    frame_index=int(frame_index),
+                    objects=[
+                        TrackedObject(
+                            track_id=int(object_id),
+                            mask=CompressedRLE.from_mask(mask[0].astype(np.uint8)),
+                        )
+                        for object_id, mask in object_masks.items()
+                    ],
+                )
+                for frame_index, object_masks in video_segments.items()
+            ]
         )
 
     def _apply_legacy_prompt(

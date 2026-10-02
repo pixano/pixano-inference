@@ -14,6 +14,8 @@ The I/O and prompt types are the wire contract and live in
 from typing import ClassVar
 
 from pixano_inference.schemas.tracking import (  # noqa: F401
+    TrackedFrame,
+    TrackedObject,
     TrackingBoxPrompt,
     TrackingInput,
     TrackingInterval,
@@ -26,21 +28,32 @@ from .base import InferenceModel
 
 
 class TrackingModel(InferenceModel[TrackingInput, TrackingOutput]):
-    """Base class for video mask generation / tracking models.
+    """Base class for video tracking models.
 
-    ``predict`` receives a :class:`TrackingInput` (video, prompts and object ids) and returns a
-    :class:`TrackingOutput` (object ids, frame indexes and masks).
+    ``predict`` receives a :class:`TrackingInput` and returns a :class:`TrackingOutput`: for each
+    frame, the objects tracked in it. A model is either prompted (the request names the objects with
+    points, boxes or masks, and the model returns their masks, as SAM2 does) or prompt-free
+    (tracking by detection: the request has no object, and the model creates the tracks and returns
+    their boxes and scores, as ByteTrack does).
 
     Example:
         ```python
         @register_model("my-tracker")
         class MyTracker(TrackingModel):
             def load_model(self):
-                self.model = load_weights(self.config.model_params["path"])
+                self.detector, self.tracker = load_detector(...), load_tracker(...)
 
             def predict(self, input: TrackingInput) -> TrackingOutput:
-                ...
-                return TrackingOutput(objects_ids=..., frame_indexes=..., masks=...)
+                frames = []
+                for index, image in enumerate(load_frames(input.video)):
+                    tracks = self.tracker.update(self.detector(image))
+                    frames.append(
+                        TrackedFrame(
+                            frame_index=index,
+                            objects=[TrackedObject(track_id=t.id, box=t.xyxy, score=t.score) for t in tracks],
+                        )
+                    )
+                return TrackingOutput(frames=frames)
         ```
     """
 

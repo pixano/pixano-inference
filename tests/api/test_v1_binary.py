@@ -52,7 +52,7 @@ _CASES = {
     ),
     "tracking": (
         {"model": "m", "objectsIds": [1], "frameIndexes": [0]},
-        TrackingOutput(objects_ids=[1], frame_indexes=[0], masks=[]),
+        TrackingOutput(frames=[]),
     ),
 }
 

@@ -4,12 +4,18 @@
 # License: CECILL-C
 # =================================
 
-"""Tracking I/O types."""
+"""Tracking I/O types.
+
+A tracking model follows objects through the frames of a video. It is either *prompted* (the
+request names the objects with points, boxes or masks, as SAM2 expects) or *prompt-free* (tracking
+by detection, as in ByteTrack: the model detects the objects and creates the tracks itself). Both
+return the same :class:`TrackingOutput`: for each frame, the objects tracked in it.
+"""
 
 from pathlib import Path
 from typing import Literal
 
-from pydantic import field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from .base import _BaseModel
 from .rle import CompressedRLE
@@ -59,7 +65,11 @@ class TrackingKeyframe(_BaseModel):
 
 
 class TrackingInput(_BaseModel):
-    """Input for video mask generation / tracking.
+    """Input for video tracking.
+
+    A prompted request names the objects to track: ``objects_ids`` with one keyframe (or one legacy
+    point/box prompt) per object. A prompt-free request gives only the video, and optionally
+    ``classes`` and ``box_threshold``: the model detects the objects and assigns the track ids.
 
     Attributes:
         video: Path to the video, list of frame paths, or base64 encoded video/frames.
@@ -69,8 +79,12 @@ class TrackingInput(_BaseModel):
         propagate: Whether to propagate masks beyond the prompted frames.
         interval: Optional propagation interval relative to the provided frame window.
         keyframes: Optional structured prompt payloads for each object.
-        objects_ids: IDs of the objects to generate masks for.
-        frame_indexes: Indexes of the prompted frames.
+        objects_ids: IDs of the prompted objects. Empty for a prompt-free request.
+        frame_indexes: Indexes of the prompted frames. Empty for a prompt-free request.
+        classes: Class names to detect and track (prompt-free tracking). ``None`` means the
+            model's own class set.
+        box_threshold: Minimum detection confidence for an object to be tracked (prompt-free
+            tracking). ``None`` means the model's default.
     """
 
     video: list[str | Path | bytes] | str | Path | bytes
@@ -80,8 +94,10 @@ class TrackingInput(_BaseModel):
     propagate: bool | None = None
     interval: TrackingInterval | None = None
     keyframes: list[TrackingKeyframe] | None = None
-    objects_ids: list[int]
-    frame_indexes: list[int]
+    objects_ids: list[int] = []
+    frame_indexes: list[int] = []
+    classes: list[str] | str | None = None
+    box_threshold: float | None = None
 
     @field_validator("points")
     @classmethod
@@ -105,28 +121,103 @@ class TrackingInput(_BaseModel):
     @field_validator("objects_ids")
     @classmethod
     def _check_objects_ids(cls, v: list[int]) -> list[int]:
-        if len(v) == 0:
-            raise ValueError("At least one object ID should be provided.")
         if len(v) != len(set(v)):
             raise ValueError("Object IDs should be unique.")
         return v
 
     @model_validator(mode="after")
-    def _check_keyframe_count(self) -> "TrackingInput":
+    def _check_prompts(self) -> "TrackingInput":
+        has_prompts = any(prompt is not None for prompt in (self.keyframes, self.points, self.labels, self.boxes))
+        if has_prompts and not self.objects_ids:
+            raise ValueError("Prompts require object IDs: provide one object ID per prompted object.")
         if self.keyframes is not None and len(self.keyframes) != len(self.objects_ids):
             raise ValueError("When keyframes are provided, there must be exactly one keyframe per object ID.")
         return self
 
 
-class TrackingOutput(_BaseModel):
-    """Output for video mask generation / tracking.
+class TrackedObject(_BaseModel):
+    """One tracked object in one frame.
+
+    A mask-based tracker (SAM2) fills ``mask``; a detection-based tracker (ByteTrack) fills ``box``
+    and ``score``. At least one of ``box`` and ``mask`` is present.
 
     Attributes:
-        objects_ids: IDs of the objects.
-        frame_indexes: Indexes of the frames where the objects are located.
-        masks: Masks for the objects.
+        track_id: Identity of the object across frames. A prompted model returns the object ID of
+            the request; a prompt-free model assigns it.
+        box: Bounding box ``[x1, y1, x2, y2]`` in pixels of the frame (top-left and bottom-right
+            corners), or ``None``.
+        score: Confidence of the object in this frame, or ``None``.
+        class_name: Class name of the object, or ``None``. Serialized as ``class``.
+        mask: Mask of the object in compressed-RLE format, or ``None``.
     """
 
-    objects_ids: list[int]
-    frame_indexes: list[int]
-    masks: list[CompressedRLE]
+    track_id: int
+    box: list[float] | None = Field(default=None, min_length=4, max_length=4)
+    score: float | None = None
+    class_name: str | None = Field(default=None, alias="class")
+    mask: CompressedRLE | None = None
+
+    @model_validator(mode="after")
+    def _check_location(self) -> "TrackedObject":
+        if self.box is None and self.mask is None:
+            raise ValueError("A tracked object needs a box or a mask.")
+        if self.box is not None:
+            x1, y1, x2, y2 = self.box
+            if x2 < x1 or y2 < y1:
+                raise ValueError("A box is [x1, y1, x2, y2] (two corners), not [x, y, width, height].")
+        return self
+
+
+class TrackedFrame(_BaseModel):
+    """The objects tracked in one frame.
+
+    Attributes:
+        frame_index: Index of the frame, 0-based and relative to the submitted video frames.
+        objects: Objects tracked in the frame, each track at most once.
+    """
+
+    frame_index: int
+    objects: list[TrackedObject] = []
+
+    @field_validator("objects")
+    @classmethod
+    def _check_unique_tracks(cls, v: list[TrackedObject]) -> list[TrackedObject]:
+        track_ids = [tracked.track_id for tracked in v]
+        if len(track_ids) != len(set(track_ids)):
+            raise ValueError("A track appears at most once in a frame.")
+        return v
+
+
+class TrackingOutput(_BaseModel):
+    """Output for video tracking: for each frame, the objects tracked in it.
+
+    This is the shape a tracker produces, one frame at a time: append one :class:`TrackedFrame` per
+    frame, holding one :class:`TrackedObject` per object alive in that frame. Use :meth:`tracks` to
+    read the same result as trajectories.
+
+    Attributes:
+        frames: Tracked frames, in the order the model processed them. A frame appears at most once;
+            a frame where nothing is tracked may be omitted or have no objects.
+    """
+
+    frames: list[TrackedFrame]
+
+    @field_validator("frames")
+    @classmethod
+    def _check_unique_frames(cls, v: list[TrackedFrame]) -> list[TrackedFrame]:
+        frame_indexes = [frame.frame_index for frame in v]
+        if len(frame_indexes) != len(set(frame_indexes)):
+            raise ValueError("A frame appears at most once in a tracking output.")
+        return v
+
+    def tracks(self) -> dict[int, list[tuple[int, TrackedObject]]]:
+        """Group the result by track.
+
+        Returns:
+            For each track ID, its ``(frame_index, object)`` pairs sorted by frame index.
+        """
+        tracks: dict[int, list[tuple[int, TrackedObject]]] = {}
+        for frame in sorted(self.frames, key=lambda frame: frame.frame_index):
+            for tracked in frame.objects:
+                tracks.setdefault(tracked.track_id, []).append((frame.frame_index, tracked))
+        return tracks

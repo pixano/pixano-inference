@@ -82,6 +82,15 @@ input/output:
 
 A subclass of `InferenceModel` that is not one of these is rejected by `ModelConfig`.
 
+A `TrackingModel` is either prompted or prompt-free. A prompted model (SAM2) receives
+`objects_ids` with one keyframe per object and returns their masks. A prompt-free model
+(tracking by detection, such as ByteTrack) receives only the video, optionally with `classes`
+and `box_threshold`, creates the tracks itself and returns their boxes and scores. Both return
+a `TrackingOutput` with one `TrackedFrame` per frame, each listing the `TrackedObject`s alive in
+that frame: a `track_id` with a `mask`, or a `box` (`[x1, y1, x2, y2]` in pixels of the frame)
+with a `score` and a `class_name`. A model that supports only one of the two request styles
+MUST raise a `ValueError` on the other.
+
 **2.2 Registration.** The class MUST be decorated with `@register_model("Name")`. `Name` is
 what configs put in `model_class`; it MUST be unique across the installed packages (a second
 registration of the same name raises, and that package fails to load).

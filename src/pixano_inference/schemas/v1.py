@@ -17,6 +17,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Literal
 
+from pydantic import model_validator
+
 from .base import BaseRequest, _BaseModel
 from .rle import CompressedRLE
 from .tracking import (
@@ -49,16 +51,28 @@ class TrackingKeyframeV1(_BaseModel):
 class TrackingRequestV1(BaseRequest):
     """Video-tracking request with nested keyframe prompts.
 
+    A prompted request gives ``objects_ids`` and one keyframe per object. A prompt-free request
+    (tracking by detection) gives only the video, and optionally ``classes`` and ``box_threshold``.
+
     Media is passed by value (URL/base64/frame list/path within an allowed media root);
     dataset-reference resolution belongs in the caller (the Pixano backend).
     """
 
     video: list[str | Path | bytes] | str | Path | bytes
-    objects_ids: list[int]
-    frame_indexes: list[int]
+    objects_ids: list[int] = []
+    frame_indexes: list[int] = []
     propagate: bool | None = None
     interval: TrackingInterval | None = None
     keyframes: list[TrackingKeyframeV1] | None = None
+    classes: list[str] | str | None = None
+    box_threshold: float | None = None
+
+    @model_validator(mode="after")
+    def _check_input(self) -> TrackingRequestV1:
+        # The consistency rules live on TrackingInput. Building it here rejects a bad request when
+        # its body is parsed (422) rather than inside the route handler.
+        self.to_input()
+        return self
 
     def to_input(self) -> TrackingInput:
         """Flatten the nested keyframes onto the internal :class:`TrackingInput`."""
@@ -80,6 +94,8 @@ class TrackingRequestV1(BaseRequest):
             propagate=self.propagate,
             interval=self.interval,
             keyframes=flat_keyframes,
+            classes=self.classes,
+            box_threshold=self.box_threshold,
         )
 
 

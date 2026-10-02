@@ -28,5 +28,5 @@ from .embedding import EmbeddingInput, EmbeddingModel, EmbeddingOutput
 from .ner import NEREntity, NERInput, NERModel, NEROutput
 from .registry import ModelClassRegistry, register_model
 from .segmentation import SegmentationInput, SegmentationModel, SegmentationOutput
-from .tracking import TrackingInput, TrackingModel, TrackingOutput
+from .tracking import TrackedFrame, TrackedObject, TrackingInput, TrackingModel, TrackingOutput
 from .vlm import UsageInfo, VLMInput, VLMModel, VLMOutput

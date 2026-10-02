@@ -39,6 +39,8 @@ from .ner import NEREntity, NERInput, NEROutput
 from .rle import CompressedRLE, mask_to_rle, rle_to_mask
 from .segmentation import SegmentationInput, SegmentationOutput
 from .tracking import (
+    TrackedFrame,
+    TrackedObject,
     TrackingBoxPrompt,
     TrackingInput,
     TrackingInterval,
