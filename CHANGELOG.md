@@ -81,6 +81,9 @@ a server installs it without Ray or FastAPI.
 
 ### Fixed
 
+- A base64 data URI whose media subtype contains a digit or `+`, `.`, `-` was not recognised as
+  base64 and was treated as a file path, so a video sent as `data:video/mp4;base64,...` was
+  rejected. Any `type/subtype` is now accepted.
 - `POST /v1/inference/detection/binary` and `/vlm/binary` failed with a 500 on any real image:
   `DetectionInput.image` and `VLMInput.images` did not accept bytes. Both now do, like the
   segmentation, embedding and tracking inputs, and the OpenAPI schema lists the binary form.

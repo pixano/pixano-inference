@@ -23,12 +23,14 @@ if TYPE_CHECKING:
     from PIL import Image
 
 
-regex_media_base64 = r"^(data:[a-zA-Z]/[a-zA-Z]+;base64,)"
+# A media subtype may contain digits and ".", "+", "-" (video/mp4, image/svg+xml, video/x-msvideo).
+_MEDIA_SUBTYPE = r"[a-zA-Z0-9][a-zA-Z0-9.+-]*"
+regex_media_base64 = rf"^(data:[a-zA-Z]+/{_MEDIA_SUBTYPE};base64,)"
 
 
 def match_base64_media(string: str, media: str | None = None) -> re.Match[str] | None:
     """Match a base64 media."""
-    regex_media_base64 = rf"^(data:{media if media is not None else '[a-zA-Z]+'}/[a-zA-Z]+;base64,)"
+    regex_media_base64 = rf"^(data:{media if media is not None else '[a-zA-Z]+'}/{_MEDIA_SUBTYPE};base64,)"
     return re.match(regex_media_base64, string)
 
 
