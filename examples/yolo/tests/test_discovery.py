@@ -12,9 +12,19 @@ from pixano_inference.plugins import load_plugin_models
 
 def test_discovered_through_its_entry_point():
     result = load_plugin_models()
-    assert "yolo_detector" in result["loaded"]
+    assert {"yolo_detector", "yolo_bytetrack"} <= set(result["loaded"])
     assert result["failed"] == []
     assert ModelClassRegistry.has("YOLOModel")
+    assert ModelClassRegistry.has("YOLOByteTrackModel")
+
+
+def test_each_model_declares_its_capability():
+    from pixano_yolo import YOLOByteTrackModel, YOLOModel
+
+    from pixano_inference.models import infer_http_capability
+
+    assert infer_http_capability(YOLOModel) == "detection"
+    assert infer_http_capability(YOLOByteTrackModel) == "tracking"
 
 
 def test_discovery_does_not_import_the_framework():

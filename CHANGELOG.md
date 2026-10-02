@@ -64,6 +64,10 @@ a server installs it without Ray or FastAPI.
   tracks. Prompted requests are validated as before, and a request with prompts but no object
   ID is now rejected with a 422 when it is parsed (it failed inside the route before).
   `Sam2VideoModel` still requires prompts.
+- **YOLO + ByteTrack example.** `examples/yolo` ships `YOLOByteTrackModel`, a tracking-by-detection
+  model built on the track mode of Ultralytics: it takes a list of frames or a single video and
+  returns the box, score and class of every track, frame by frame. `config_tracking.py` and
+  `test_tracking.py` deploy and call it.
 
 ### Changed
 
