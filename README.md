@@ -91,13 +91,10 @@ print(f"score {scores[best]:.2f}, mask of {mask.sum()} pixels")
 
 ## Models
 
-| Install                                            | Models                                       |
-| -------------------------------------------------- | -------------------------------------------- |
-| `pip install "pixano-inference[sam]"`              | SAM2 image segmentation and video tracking   |
-| `pip install "pixano-inference[clip]"`             | Image and text embeddings (MobileCLIP2)      |
-| `pip install "pixano-inference[grounding-dino]"`   | Object detection from text prompts           |
-| `pip install "pixano-inference[transformers-vlm]"` | Hugging Face vision-language models          |
-| `pip install "pixano-inference[vllm]"`             | Vision-language models with vLLM (Linux GPU) |
+| Install                                | Models                                     |
+| -------------------------------------- | ------------------------------------------ |
+| `pip install "pixano-inference[sam]"`  | SAM2 image segmentation and video tracking |
+| `pip install "pixano-inference[clip]"` | Image and text embeddings (MobileCLIP2)    |
 
 Each package has its own README in [`packages/`](packages).
 
