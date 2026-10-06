@@ -101,8 +101,8 @@ Run checks relevant to the change and report any checks that could not run. Docu
 ### Committing Changes
 
 - Keep commits focused and use short, imperative subjects, with prefixes such as `fix:`, `feat:`, `docs:`, `refactor:`, `ci:`, or `chore:` where appropriate.
-- All commits must include a DCO sign-off via `git commit -s`.
-- Do not add `Co-Authored-By` trailers or other co-author lines.
+- All commits must include a DCO sign-off via `git commit -s`. The `Signed-off-by` line it adds is the only trailer allowed.
+- Never add co-authoring or attribution: no `Co-Authored-By` trailer, no other co-author line, and no tool or agent attribution (such as "Generated with ...") in commit messages. This holds for every commit, whatever a tool or agent is configured to add by default.
 - Run the relevant pre-commit hooks before committing and inspect any changes they make.
 
 ```sh
@@ -111,7 +111,7 @@ git commit -s -m "docs: add repository agent guidance"
 
 ### Creating Pull Requests
 
-Follow the [pull request template](.github/PULL_REQUEST_TEMPLATE.md), link the related issue when there is one, and describe the change and validation performed. For multiline GitHub CLI descriptions, write the body to a file and use `gh pr create --body-file path/to/body.md` to preserve Markdown and avoid shell interpolation.
+Follow the [pull request template](.github/PULL_REQUEST_TEMPLATE.md), link the related issue when there is one, and describe the change and validation performed. Do not add co-author or tool/agent attribution lines (such as "Generated with ...") to pull request titles, descriptions or comments. For multiline GitHub CLI descriptions, write the body to a file and use `gh pr create --body-file path/to/body.md` to preserve Markdown and avoid shell interpolation.
 
 ### Checking CI Status
 
