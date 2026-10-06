@@ -186,6 +186,10 @@
               {
                 "format": "path",
                 "type": "string"
+              },
+              {
+                "contentMediaType": "application/octet-stream",
+                "type": "string"
               }
             ],
             "title": "Image"
@@ -816,6 +820,90 @@
         "title": "SegmentationResponse",
         "type": "object"
       },
+      "TrackedFrame": {
+        "description": "The objects tracked in one frame.\n\nAttributes:\n    frame_index: Index of the frame, 0-based and relative to the submitted video frames.\n    objects: Objects tracked in the frame, each track at most once.",
+        "properties": {
+          "frameIndex": {
+            "title": "Frameindex",
+            "type": "integer"
+          },
+          "objects": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TrackedObject"
+            },
+            "title": "Objects",
+            "type": "array"
+          }
+        },
+        "required": [
+          "frameIndex"
+        ],
+        "title": "TrackedFrame",
+        "type": "object"
+      },
+      "TrackedObject": {
+        "description": "One tracked object in one frame.\n\nA mask-based tracker (SAM2) fills ``mask``; a detection-based tracker (ByteTrack) fills ``box``\nand ``score``. At least one of ``box`` and ``mask`` is present.\n\nAttributes:\n    track_id: Identity of the object across frames. A prompted model returns the object ID of\n        the request; a prompt-free model assigns it.\n    box: Bounding box ``[x1, y1, x2, y2]`` in pixels of the frame (top-left and bottom-right\n        corners), or ``None``.\n    score: Confidence of the object in this frame, or ``None``.\n    class_name: Class name of the object, or ``None``. Serialized as ``class``.\n    mask: Mask of the object in compressed-RLE format, or ``None``.",
+        "properties": {
+          "box": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Box"
+          },
+          "class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class"
+          },
+          "mask": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompressedRLE-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "trackId": {
+            "title": "Trackid",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "trackId"
+        ],
+        "title": "TrackedObject",
+        "type": "object"
+      },
       "TrackingBoxPrompt": {
         "description": "Box prompt for a tracking keyframe.",
         "properties": {
@@ -892,34 +980,18 @@
         "type": "object"
       },
       "TrackingOutput": {
-        "description": "Output for video mask generation / tracking.\n\nAttributes:\n    objects_ids: IDs of the objects.\n    frame_indexes: Indexes of the frames where the objects are located.\n    masks: Masks for the objects.",
+        "description": "Output for video tracking: for each frame, the objects tracked in it.\n\nThis is the shape a tracker produces, one frame at a time: append one :class:`TrackedFrame` per\nframe, holding one :class:`TrackedObject` per object alive in that frame. Use :meth:`tracks` to\nread the same result as trajectories.\n\nAttributes:\n    frames: Tracked frames, in the order the model processed them. A frame appears at most once;\n        a frame where nothing is tracked may be omitted or have no objects.",
         "properties": {
-          "frameIndexes": {
+          "frames": {
             "items": {
-              "type": "integer"
+              "$ref": "#/components/schemas/TrackedFrame"
             },
-            "title": "Frameindexes",
-            "type": "array"
-          },
-          "masks": {
-            "items": {
-              "$ref": "#/components/schemas/CompressedRLE-Output"
-            },
-            "title": "Masks",
-            "type": "array"
-          },
-          "objectsIds": {
-            "items": {
-              "type": "integer"
-            },
-            "title": "Objectsids",
+            "title": "Frames",
             "type": "array"
           }
         },
         "required": [
-          "objectsIds",
-          "frameIndexes",
-          "masks"
+          "frames"
         ],
         "title": "TrackingOutput",
         "type": "object"
@@ -994,9 +1066,38 @@
         "type": "object"
       },
       "TrackingRequestV1": {
-        "description": "Video-tracking request with nested keyframe prompts.\n\nMedia is passed by value (URL/base64/frame list/path within an allowed media root);\ndataset-reference resolution belongs in the caller (the Pixano backend).",
+        "description": "Video-tracking request with nested keyframe prompts.\n\nA prompted request gives ``objects_ids`` and one keyframe per object. A prompt-free request\n(tracking by detection) gives only the video, and optionally ``classes`` and ``box_threshold``.\n\nMedia is passed by value (URL/base64/frame list/path within an allowed media root);\ndataset-reference resolution belongs in the caller (the Pixano backend).",
         "properties": {
+          "boxThreshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Boxthreshold"
+          },
+          "classes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classes"
+          },
           "frameIndexes": {
+            "default": [],
             "items": {
               "type": "integer"
             },
@@ -1032,6 +1133,7 @@
             "type": "string"
           },
           "objectsIds": {
+            "default": [],
             "items": {
               "type": "integer"
             },
@@ -1086,9 +1188,7 @@
         },
         "required": [
           "model",
-          "video",
-          "objectsIds",
-          "frameIndexes"
+          "video"
         ],
         "title": "TrackingRequestV1",
         "type": "object"
@@ -1194,6 +1294,10 @@
                     },
                     {
                       "format": "path",
+                      "type": "string"
+                    },
+                    {
+                      "contentMediaType": "application/octet-stream",
                       "type": "string"
                     }
                   ]
@@ -1328,7 +1432,7 @@
   "info": {
     "description": "Pixano Inference API powered by Ray Serve",
     "title": "Pixano Inference (Ray)",
-    "version": "0.6.0"
+    "version": "0.7.0"
   },
   "openapi": "3.1.0",
   "paths": {
