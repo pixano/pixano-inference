@@ -6,243 +6,146 @@
 # =================================
 --->
 
-# Custom Model Deployment: YOLO Detection
+# YOLO detector and tracker
 
-This tutorial deploys a third-party model (Ultralytics YOLO) as a Pixano Inference custom
-detection service, packaged as an **installable plugin** — the recommended way to extend the
-server (see [../../docs/ray_serve/custom_models.md](../../docs/ray_serve/custom_models.md)).
-For a framework-free (numpy-only) starting point, see [`../numpy_detector`](../numpy_detector).
+Two custom models for Pixano Inference, built on [Ultralytics YOLO](https://docs.ultralytics.com)
+and shipped as one installable package. Use it as a template for your own detector or tracker.
+
+| Model                | What it does                                                  | Endpoint                       | Source                                                     |
+| -------------------- | ------------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------- |
+| `YOLOModel`          | Detects the objects of an image                               | `POST /v1/inference/detection` | [`src/pixano_yolo/model.py`](src/pixano_yolo/model.py)     |
+| `YOLOByteTrackModel` | Detects and tracks every object of a video (YOLO + ByteTrack) | `POST /v1/inference/tracking`  | [`src/pixano_yolo/tracker.py`](src/pixano_yolo/tracker.py) |
 
 > **Licence note:** Ultralytics is AGPL-3.0. Deploying it as a network service carries
 > source-disclosure obligations (AGPL section 13). Review the licence before production use.
 
-## Install
+## Run it
 
-The example is a self-contained package that declares `pixano_inference.models` entry
-points; installing it makes `YOLOModel` (detection) and `YOLOByteTrackModel` (multi-object
-tracking, see [Tracking by detection with ByteTrack](#tracking-by-detection-with-bytetrack))
-discoverable by name (and importable in every Ray Serve worker):
+All commands are run from the repository root.
 
 ```bash
-uv sync --project examples/yolo    # its own environment: the Pixano Inference core + ultralytics
+# 1. Install the package in its own environment (the Pixano Inference server + ultralytics)
+uv sync --project examples/yolo
+
+# 2. Start a server with the detector...
+uv run --project examples/yolo pixano-inference --config examples/yolo/config.py
+#    ...or with the tracker
+uv run --project examples/yolo pixano-inference --config examples/yolo/config_tracking.py
+
+# 3. In another terminal, call it
+uv run --project examples/yolo python examples/yolo/test_yolo.py --image path/to/image.jpg
+uv run --project examples/yolo python examples/yolo/test_tracking.py --classes person
 ```
 
-## Project Structure
+The server is ready when it prints `Uvicorn running on http://127.0.0.1:7463`. The first start
+downloads the YOLO weights into the current directory.
 
-```
-examples/yolo/
-    pyproject.toml                 # package metadata + the pixano_inference.models entry points
-    src/pixano_yolo/
-        __init__.py
-        model.py                   # YOLOModel (extends DetectionModel, @register_model)
-        tracker.py                 # YOLOByteTrackModel (extends TrackingModel, @register_model)
-    config.py                      # deployment config, references "YOLOModel" by name
-    test_yolo.py                   # end-to-end client script
-    config_tracking.py             # deployment config for "YOLOByteTrackModel"
-    test_tracking.py               # end-to-end client script for tracking
-```
+Both configs ask for one GPU per replica; on a machine without a GPU, set `num_gpus=0` in the
+config. To serve both models from one server, put the two `ModelConfig` entries in one file.
 
-## Step 1: Implement the Model
+## The detector: `YOLOModel`
 
-Create a model class that extends one of the built-in base classes. For object detection, extend `DetectionModel`.
+A detector extends `DetectionModel`: it receives a `DetectionInput` (an image and a confidence
+threshold) and returns a `DetectionOutput` (boxes, scores and class names).
 
 ```python
-# model.py
-from pixano_inference.models.detection import DetectionInput, DetectionModel, DetectionOutput
-from pixano_inference.models.registry import register_model
-from pixano_inference.configs import ModelDeploymentConfig
-
-
+# src/pixano_yolo/model.py (simplified)
 @register_model("YOLOModel")
 class YOLOModel(DetectionModel):
 
-    def __init__(self, config: ModelDeploymentConfig) -> None:
-        super().__init__(config)
-        self._model = None
-
     def load_model(self) -> None:
-        """Called once when the Ray actor starts. Load weights here."""
+        """Called once when the replica starts: load the weights here."""
         from ultralytics import YOLO
 
-        path = dict(self._config.model_params).pop("path")
-
-        device = "cpu"
-        if self._config.resources.num_gpus > 0:
-            import torch
-            if torch.cuda.is_available():
-                device = "cuda"
-
-        self._model = YOLO(path)
-        self._model.to(device)
+        self._model = YOLO(self._config.model_params["path"])
 
     def predict(self, input: DetectionInput) -> DetectionOutput:
-        """Run inference on a single request."""
+        """Called for each request."""
         from pixano_inference.utils.media import convert_string_to_image
 
-        pil_image = convert_string_to_image(input.image)
-        results = self._model.predict(pil_image, conf=input.box_threshold)
-        result = results[0]
+        image = convert_string_to_image(input.image)  # URL, base64 or path -> PIL image
+        result = self._model.predict(image, conf=input.box_threshold)[0]
 
-        boxes, scores, class_names = [], [], []
-        if result.boxes is not None and len(result.boxes):
-            for box, conf, cls_id in zip(
-                result.boxes.xyxy.cpu().numpy(),
-                result.boxes.conf.cpu().numpy(),
-                result.boxes.cls.cpu().numpy(),
-            ):
-                boxes.append([int(round(c)) for c in box.tolist()])
-                scores.append(float(conf))
-                class_names.append(result.names[int(cls_id)])
-
-        return DetectionOutput(boxes=boxes, scores=scores, classes=class_names)
-
-    def unload(self) -> None:
-        """Free resources when the model is removed."""
-        if self._model is not None:
-            del self._model
-            self._model = None
-        gc.collect()
+        return DetectionOutput(
+            boxes=[[int(round(c)) for c in box] for box in result.boxes.xyxy.tolist()],  # [x1, y1, x2, y2]
+            scores=result.boxes.conf.tolist(),
+            classes=[result.names[int(c)] for c in result.boxes.cls.tolist()],
+        )
 ```
 
-Key points:
-
-- **`load_model()`** is called once when the Ray actor initializes. Download weights, load checkpoints, and move to device here.
-- **`predict()`** receives a typed `DetectionInput` and must return a `DetectionOutput`.
-- **`unload()`** is called when the model is removed. Free GPU memory and clean up.
-
-## Step 2: Write the Deployment Config
-
-Create a Python config file that defines a `models` list. Reference the model **by name** —
-the entry point already registered it, so no import is needed:
-
-```python
-# config.py
-from pixano_inference.configs import DeploymentConfig, ModelConfig
-
-models = [
-    ModelConfig(
-        name="yolo26s",
-        model_class="YOLOModel",
-        model_params={"path": "yolo26s.pt"},  # Passed to model via config
-        deployment=DeploymentConfig(
-            num_gpus=1,          # GPUs per replica (set 0 for CPU-only)
-            num_cpus=1,          # CPUs per replica
-            min_replicas=1,      # Keep a replica warm (0 enables scale-to-zero)
-            max_replicas=2,      # Max concurrent replicas
-        ),
-    ),
-]
-```
-
-## Step 3: Start the Server
-
-Because the package is installed, no `PYTHONPATH`/`--module-path` is needed — the model is
-discovered via its entry point and referenced by name in the config:
-
-```bash
-uv run --project examples/yolo pixano-inference --config examples/yolo/config.py
-```
-
-You should see:
+`test_yolo.py` sends one image and prints the detections:
 
 ```
-INFO:     Uvicorn running on http://127.0.0.1:7463 (Press CTRL+C to quit)
-```
-
-## Step 4: Run the End-to-End Test
-
-With the server running, use the included test script:
-
-```bash
-# With a real image
-uv run --project examples/yolo python examples/yolo/test_yolo.py \
-    --server-url http://127.0.0.1:7463 \
-    --model-name yolo26s \
-    --image path/to/image.jpg
-
-# With a synthetic test image (no --image flag)
-uv run --project examples/yolo python examples/yolo/test_yolo.py \
-    --server-url http://127.0.0.1:7463 \
-    --model-name yolo26s
-```
-
-Example output:
-
-```
-Detection
 Status: SUCCESS
-Processing time: 0.072s
+Processing time: 0.683s
 Detections: 5
-  [0] class=person, score=0.944, box=[668, 395, 810, 881]
-  [1] class=person, score=0.930, box=[48, 400, 247, 903]
-  [2] class=bus, score=0.928, box=[1, 229, 806, 742]
-  [3] class=person, score=0.559, box=[221, 406, 345, 862]
-  [4] class=person, score=0.428, box=[0, 553, 78, 876]
+  [0] class=bus, score=0.923, box=[6, 230, 802, 738]
+  [1] class=person, score=0.923, box=[668, 395, 809, 880]
+  [2] class=person, score=0.898, box=[48, 401, 247, 903]
+  [3] class=person, score=0.846, box=[221, 406, 345, 861]
+  [4] class=person, score=0.833, box=[0, 552, 78, 876]
 ```
 
-You can also use the Python client directly:
+From Python:
 
 ```python
-from pixano_inference.client import PixanoInferenceClient
+import base64
+from pathlib import Path
+
+from pixano_inference.client import SyncPixanoInferenceClient
 from pixano_inference.schemas import DetectionRequest
 
-client = PixanoInferenceClient.connect("http://localhost:7463")
 
-request = DetectionRequest(
-    model="yolo26s",
-    image="https://ultralytics.com/images/bus.jpg",  # URL, file path, or base64
-    box_threshold=0.3,
-)
-result = await client.detection(request)
+def data_uri(path: str) -> str:
+    return "data:image/jpeg;base64," + base64.b64encode(Path(path).read_bytes()).decode()
 
-for box, score, cls in zip(result.data.boxes, result.data.scores, result.data.classes):
-    print(f"{cls}: {score:.3f} {box}")
+
+client = SyncPixanoInferenceClient("http://localhost:7463")
+result = client.detection(DetectionRequest(model="yolo26s", image=data_uri("bus.jpg"), box_threshold=0.3))
+
+for box, score, name in zip(result.data.boxes, result.data.scores, result.data.classes):
+    print(f"{name}: {score:.3f} {box}")
 ```
 
-## HTTP API
-
-The detection endpoint is:
-
-```
-POST /inference/detection/
-```
-
-Request body:
+Over HTTP, `POST /v1/inference/detection` (`image` is an http(s) URL or a base64 data URI):
 
 ```json
 {
   "model": "yolo26s",
-  "image": "https://ultralytics.com/images/bus.jpg",
-  "box_threshold": 0.5
+  "image": "data:image/jpeg;base64,...",
+  "boxThreshold": 0.5
 }
 ```
 
-Response:
-
 ```json
 {
-  "id": "ray-yolo26s-1711817600",
+  "id": "ray-yolo26s-1d9cd9ce2b58",
   "status": "SUCCESS",
-  "processing_time": 0.072,
+  "processingTime": 0.062,
   "data": {
-    "boxes": [[668, 395, 810, 881], [48, 400, 247, 903]],
-    "scores": [0.944, 0.930],
-    "classes": ["person", "person"],
+    "boxes": [
+      [6, 230, 802, 738],
+      [668, 395, 809, 880]
+    ],
+    "scores": [0.923, 0.923],
+    "classes": ["bus", "person"],
     "masks": null
   }
 }
 ```
 
-## Tracking by detection with ByteTrack
+## The tracker: `YOLOByteTrackModel`
 
-The same package ships a second model, `YOLOByteTrackModel`, built on the
-[track mode](https://docs.ultralytics.com/modes/track) of Ultralytics: YOLO detects the objects
-of each frame and [ByteTrack](https://arxiv.org/abs/2110.06864) links the detections into tracks.
-It extends `TrackingModel`, and unlike a promptable tracker (SAM2) it takes **no prompt**: the
-request carries only the video, and the model decides how many tracks there are and numbers them.
+The tracker uses the [track mode](https://docs.ultralytics.com/modes/track) of Ultralytics: YOLO
+detects the objects of each frame and [ByteTrack](https://arxiv.org/abs/2110.06864) links the
+detections into tracks. The request carries **no prompt**, only the video: the model decides how
+many tracks there are and numbers them.
+
+A tracker extends `TrackingModel`: it receives a `TrackingInput` and returns a `TrackingOutput`
+with one `TrackedFrame` per frame, each listing the `TrackedObject`s seen in that frame.
 
 ```python
-# tracker.py (abridged)
+# src/pixano_yolo/tracker.py (simplified)
 @register_model("YOLOByteTrackModel")
 class YOLOByteTrackModel(TrackingModel):
 
@@ -252,41 +155,32 @@ class YOLOByteTrackModel(TrackingModel):
             image = convert_string_to_image(frame)
             # persist=False starts a fresh tracker for this request; persist=True continues it.
             result = self._model.track(image, persist=index > 0, tracker="bytetrack.yaml", verbose=False)[0]
-            frames.append(
-                TrackedFrame(
-                    frame_index=index,
-                    objects=[
-                        TrackedObject(track_id=int(i), box=xyxy.tolist(), score=float(s), class_name=result.names[int(c)])
-                        for i, xyxy, s, c in zip(result.boxes.id, result.boxes.xyxy, result.boxes.conf, result.boxes.cls)
-                    ],
-                )
-            )
+
+            objects = []
+            if result.boxes.id is not None:  # None when nothing is tracked in the frame
+                for track_id, box, score, cls in zip(
+                    result.boxes.id.tolist(),
+                    result.boxes.xyxy.tolist(),
+                    result.boxes.conf.tolist(),
+                    result.boxes.cls.tolist(),
+                ):
+                    objects.append(
+                        TrackedObject(track_id=int(track_id), box=box, score=score, class_name=result.names[int(cls)])
+                    )
+            frames.append(TrackedFrame(frame_index=index, objects=objects))
+
         return TrackingOutput(frames=frames)
 ```
 
-The output is built the way the tracker produces it: one `TrackedFrame` per frame, holding one
-`TrackedObject` per track alive in that frame. The full implementation in
-[`src/pixano_yolo/tracker.py`](src/pixano_yolo/tracker.py) also accepts a single video file, filters by
-class name, and rejects a prompted request.
+The full file also accepts a single video file, filters by class name, and rejects a request that
+carries prompts.
 
-Deploy it and run the test script (set `num_gpus=0` in `config_tracking.py` on a CPU-only machine):
-
-```bash
-uv run --project examples/yolo pixano-inference --config examples/yolo/config_tracking.py
-
-# In another terminal: track the people of the sample clip and save annotated frames
-uv run --project examples/yolo python examples/yolo/test_tracking.py \
-    --server-url http://127.0.0.1:7463 \
-    --classes person \
-    --output tracking_result.png
-```
-
-Example output:
+`test_tracking.py` sends the first frames of a sample clip (two children on a bed), prints the
+tracks and saves a few frames with the boxes drawn (`tracking_result.png`):
 
 ```
-Tracking
 Status: SUCCESS
-Processing time: 0.971s
+Processing time: 1.524s
 Frames: 30
 
 Frame 0:
@@ -298,35 +192,44 @@ Tracks: 2
   #2 class=person frames 0-18 (19 of 30)
 ```
 
-Track #2 ends at frame 18, when that child is hidden behind the other one: a track lives only
-while the detector sees its object (ByteTrack keeps a lost track for `track_buffer` frames and
-resumes it if the object comes back in time).
+Track #2 ends at frame 18, when that child is hidden behind the other one.
 
-With the Python client, send the frames and read the result by frame or by track:
+From Python:
 
 ```python
-from pixano_inference.client import PixanoInferenceClient
+import base64
+from pathlib import Path
+
+from pixano_inference.client import SyncPixanoInferenceClient
 from pixano_inference.schemas import TrackingRequestV1
 
-client = PixanoInferenceClient.connect("http://localhost:7463")
 
-request = TrackingRequestV1(
-    model="yolo-bytetrack",
-    video=frames,            # frames as URLs, base64 data URIs or paths; or one video
-    classes=["person"],      # optional: class names to keep
-    box_threshold=None,      # optional: detector confidence floor (the tracker's default is 0.1)
+def data_uri(path: Path) -> str:
+    return "data:image/jpeg;base64," + base64.b64encode(path.read_bytes()).decode()
+
+
+frames = sorted(Path("docs/assets/examples/sam2/bedroom").glob("*.jpg"))[:30]
+
+client = SyncPixanoInferenceClient("http://localhost:7463")
+result = client.tracking(
+    TrackingRequestV1(
+        model="yolo-bytetrack",
+        video=[data_uri(frame) for frame in frames],
+        classes=["person"],  # optional: the class names to keep
+    )
 )
-result = await client.tracking(request)
 
+# Frame by frame, as the model returns it
 for frame in result.data.frames:
     for tracked in frame.objects:
-        print(frame.frame_index, tracked.track_id, tracked.class_name, tracked.score, tracked.box)
+        print(frame.frame_index, tracked.track_id, tracked.class_name, f"{tracked.score:.2f}", tracked.box)
 
-for track_id, track in result.data.tracks().items():   # the same result as trajectories
-    print(track_id, [frame_index for frame_index, _ in track])
+# The same result, track by track
+for track_id, track in result.data.tracks().items():
+    print(f"track {track_id}: frames {[frame_index for frame_index, _ in track]}")
 ```
 
-The endpoint is `POST /v1/inference/tracking`. Request body:
+Over HTTP, `POST /v1/inference/tracking` (`video` is a list of frames, or a single video):
 
 ```json
 {
@@ -336,8 +239,6 @@ The endpoint is `POST /v1/inference/tracking`. Request body:
 }
 ```
 
-Response (`box` is `[x1, y1, x2, y2]` in pixels of the frame):
-
 ```json
 {
   "status": "SUCCESS",
@@ -346,8 +247,20 @@ Response (`box` is `[x1, y1, x2, y2]` in pixels of the frame):
       {
         "frameIndex": 0,
         "objects": [
-          {"trackId": 1, "box": [309.0, 2.8, 517.6, 403.9], "score": 0.889, "class": "person", "mask": null},
-          {"trackId": 2, "box": [143.1, 132.2, 293.4, 408.9], "score": 0.849, "class": "person", "mask": null}
+          {
+            "trackId": 1,
+            "box": [309.0, 2.8, 517.6, 403.9],
+            "score": 0.889,
+            "class": "person",
+            "mask": null
+          },
+          {
+            "trackId": 2,
+            "box": [143.1, 132.2, 293.4, 408.9],
+            "score": 0.849,
+            "class": "person",
+            "mask": null
+          }
         ]
       }
     ]
@@ -355,40 +268,83 @@ Response (`box` is `[x1, y1, x2, y2]` in pixels of the frame):
 }
 ```
 
-Notes:
+Good to know:
 
-- Track IDs restart at 1 for every request; a request is one video.
-- Track mode keeps the detector confidence low (0.1) on purpose: ByteTrack also associates the
-  low-score boxes, which is what keeps a partly hidden object on its track. `box_threshold` raises
+- A box is `[x1, y1, x2, y2]` in pixels of the frame.
+- Track IDs restart at 1 for every request: a request is one video.
+- A track lasts while the detector sees its object. ByteTrack keeps a lost track for a few frames
+  and resumes it if the object comes back in time; otherwise the object gets a new ID.
+- Track mode keeps the detector confidence low (0.1) on purpose: ByteTrack also uses the low-score
+  boxes, which keeps a partly hidden object on its track. `boxThreshold` in the request raises
   that floor.
 - `model_params["tracker"]` selects the Ultralytics tracker config (`bytetrack.yaml` by default).
 
-## Available Base Classes
+## How the package plugs into the server
 
-You can extend any of these base classes depending on your model's capability:
+Three pieces make a model available, and they are the same for both models.
 
-| Base Class | Capability | Input/Output | Use Case |
-|---|---|---|---|
-| `DetectionModel` | `detection` | `DetectionInput` / `DetectionOutput` | Object detection, instance segmentation |
-| `SegmentationModel` | `segmentation` | `SegmentationInput` / `SegmentationOutput` | Interactive/prompt-based segmentation |
-| `TrackingModel` | `tracking` | `TrackingInput` / `TrackingOutput` | Video object tracking |
-| `VLMModel` | `vlm` | `VLMInput` / `VLMOutput` | Vision-language models |
+**1. Register the class.** `@register_model("YOLOModel")` gives the model the name used in configs.
 
-All are in `pixano_inference.models`.
+**2. Declare an entry point** in [`pyproject.toml`](pyproject.toml). At startup the server imports
+every module listed in the `pixano_inference.models` group, which runs the decorators:
+
+```toml
+[project]
+dependencies = ["pixano-inference[server] >= 0.7.0, < 0.8.0", "torch >= 2.3.0, < 3.0.0", "ultralytics", "lap >= 0.5.12"]
+
+[project.entry-points."pixano_inference.models"]
+yolo_detector = "pixano_yolo.model"
+yolo_bytetrack = "pixano_yolo.tracker"
+```
+
+**3. Reference the model by name** in a config file. No import is needed:
+
+```python
+# config.py
+from pixano_inference.configs import DeploymentConfig, ModelConfig
+
+models = [
+    ModelConfig(
+        name="yolo26s",                       # the name clients use in their requests
+        model_class="YOLOModel",              # the registered class
+        model_params={"path": "yolo26s.pt"},  # passed to the model as self._config.model_params
+        deployment=DeploymentConfig(num_gpus=1, num_cpus=1, min_replicas=1, max_replicas=2),
+    ),
+]
+```
+
+To write a model for another capability (segmentation, vision-language, embeddings, ...), see the
+[custom models guide](../../docs/ray_serve/custom_models.md). For a starting point without any ML
+framework, see [`../numpy_detector`](../numpy_detector).
+
+## Files
+
+```
+examples/yolo/
+    pyproject.toml            # dependencies and the pixano_inference.models entry points
+    src/pixano_yolo/
+        model.py              # YOLOModel
+        tracker.py            # YOLOByteTrackModel
+    config.py                 # deploys YOLOModel as "yolo26s"
+    config_tracking.py        # deploys YOLOByteTrackModel as "yolo-bytetrack"
+    test_yolo.py              # client script for the detector
+    test_tracking.py          # client script for the tracker
+    tests/                    # unit tests (no weights needed)
+```
 
 ## Troubleshooting
 
-**Server hangs on startup (no "Uvicorn running" message)**
+**`Unknown model_class 'YOLOModel'`** or **`No module named 'ultralytics'`**
 
-The server deploys models synchronously before starting. If `num_gpus=1` but no GPU is available, the Ray actor cannot be scheduled and the server hangs. Fix: set `num_gpus=0` in `DeploymentConfig` for CPU-only machines.
+The server is not running from the package's environment. Start it with
+`uv run --project examples/yolo pixano-inference ...`, or install your package where the server runs.
 
-**`ModuleNotFoundError: No module named 'ultralytics'`**
+**`Model 'yolo26s' not found`**
 
-The plugin package pulls in ultralytics. Sync its environment (`uv sync --project examples/yolo`) and
-start the server from it (`uv run --project examples/yolo pixano-inference ...`).
+The name in the request must be the `name` of a `ModelConfig` in the config the server was started
+with: `yolo26s` in `config.py`, `yolo-bytetrack` in `config_tracking.py`.
 
-**`Unknown model_class 'YOLOModel'`**
+**The tracker answers with a 500 error**
 
-The plugin package is not installed in the server's environment. Start the server from the
-package's own environment (`uv run --project examples/yolo pixano-inference ...`), or
-`pip install` your published package where the server runs, so its entry point is discovered.
+It refuses a request that names objects or carries prompts, and a class name the detector does not
+know. The reason is in the server log.
