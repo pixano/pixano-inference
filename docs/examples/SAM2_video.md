@@ -81,7 +81,7 @@ import asyncio
 from pathlib import Path
 
 from pixano_inference.client import PixanoInferenceClient
-from pixano_inference.schemas import TrackingRequest
+from pixano_inference.schemas import TrackingRequestV1
 
 
 async def main():
@@ -89,13 +89,16 @@ async def main():
 
     frames = sorted([str(f) for f in Path("./docs/assets/examples/sam2/bedroom").glob("**/*") if f.is_file()])
 
-    request = TrackingRequest(
+    # One keyframe per object: a positive click on frame 0 for each of the two objects.
+    request = TrackingRequestV1(
         model="sam2-video",
         video=frames,
         objects_ids=[0, 2],
         frame_indexes=[0, 0],
-        points=[[[210, 350]], [[400, 500]]],
-        labels=[[1], [1]],
+        keyframes=[
+            {"frame_index": 0, "prompts": {"points": [{"x": 210, "y": 350, "label": 1}]}},
+            {"frame_index": 0, "prompts": {"points": [{"x": 400, "y": 500, "label": 1}]}},
+        ],
     )
     response = await client.tracking(request)
 
@@ -119,17 +122,15 @@ video_dir = Path("./docs/assets/examples/sam2/bedroom/")
 frame_names = [p for p in os.listdir(video_dir) if os.path.splitext(p)[-1] in [".jpg", ".jpeg", ".JPG", ".JPEG"]]
 frame_names.sort(key=lambda p: int(os.path.splitext(p)[0]))
 
+# The result lists, for each frame, the objects tracked in it.
 vis_frame_stride = 4
 plt.close("all")
-for out_frame_idx in range(0, len(frame_names), vis_frame_stride):
+for frame in response.data.frames:
+    if frame.frame_index % vis_frame_stride != 0:
+        continue
     plt.figure(figsize=(6, 4))
-    plt.title(f"frame {out_frame_idx}")
-    plt.imshow(Image.open(os.path.join(video_dir, frame_names[out_frame_idx])))
-    for out_obj_id, out_mask, frame_indx in zip(
-        response.data.objects_ids, response.data.masks, response.data.frame_indexes
-    ):
-        if frame_indx != out_frame_idx:
-            continue
-        out_mask = out_mask.to_mask()
-        show_mask(out_mask, plt.gca(), obj_id=out_obj_id)
+    plt.title(f"frame {frame.frame_index}")
+    plt.imshow(Image.open(os.path.join(video_dir, frame_names[frame.frame_index])))
+    for tracked in frame.objects:
+        show_mask(tracked.mask.to_mask(), plt.gca(), obj_id=tracked.track_id)
 ```

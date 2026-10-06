@@ -10,30 +10,34 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar
 
 from pydantic import BaseModel
 
 
 if TYPE_CHECKING:
-    from pixano_inference.ray.config import ModelDeploymentConfig
+    from pixano_inference.configs.deployment import ModelDeploymentConfig
 
 
 logger = logging.getLogger(__name__)
 
+InputT = TypeVar("InputT", bound=BaseModel)
+OutputT = TypeVar("OutputT", bound=BaseModel)
 
-class InferenceModel(ABC):
+
+class InferenceModel(ABC, Generic[InputT, OutputT]):
     """Abstract base class for all inference models deployed on Ray Serve.
 
-    Subclass this to implement custom inference models that can be deployed
-    on Ray Serve.
+    The class is generic in the type ``predict`` receives and the type it returns. Each capability
+    base class (``SegmentationModel``, ``DetectionModel``, ...) fixes both, so a model subclasses
+    the capability base and implements ``predict`` with that capability's ``Input`` and ``Output``.
 
     Example:
         ```python
         from pixano_inference.models import InferenceModel, register_model
 
         @register_model("my_model")
-        class MyModel(InferenceModel):
+        class MyModel(InferenceModel[MyInput, MyOutput]):
             def load_model(self) -> None:
                 self._model = ...  # Load your model
 
@@ -85,17 +89,17 @@ class InferenceModel(ABC):
         """
 
     @abstractmethod
-    def predict(self, input: BaseModel) -> BaseModel:
+    def predict(self, input: InputT) -> OutputT:
         """Run inference.
 
         Args:
-            input: Task-specific Input object (subclasses narrow this type).
+            input: The capability's Input object.
 
         Returns:
-            Task-specific Output object (subclasses narrow this type).
+            The capability's Output object.
         """
 
-    def predict_batch(self, inputs: list[BaseModel]) -> list[BaseModel]:
+    def predict_batch(self, inputs: list[InputT]) -> list[OutputT]:
         """Run inference on a batch of inputs.
 
         Only used when the deployment sets ``max_batch_size > 1``. The default runs

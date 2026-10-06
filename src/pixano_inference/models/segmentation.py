@@ -7,20 +7,22 @@
 """Segmentation model base class.
 
 The I/O types (:class:`SegmentationInput`/:class:`SegmentationOutput`) are the wire contract and
-live in :mod:`pixano_inference_client.segmentation`; they are re-exported here so
+live in :mod:`pixano_inference.schemas.segmentation`; they are re-exported here so
 ``from pixano_inference.models.segmentation import SegmentationInput`` keeps working.
 """
 
-from abc import abstractmethod
 from typing import ClassVar
 
-from pixano_inference_client.segmentation import SegmentationInput, SegmentationOutput  # noqa: F401
+from pixano_inference.schemas.segmentation import SegmentationInput, SegmentationOutput  # noqa: F401
 
 from .base import InferenceModel
 
 
-class SegmentationModel(InferenceModel):
+class SegmentationModel(InferenceModel[SegmentationInput, SegmentationOutput]):
     """Base class for image segmentation models.
+
+    ``predict`` receives a :class:`SegmentationInput` (image, prompts and options) and returns a
+    :class:`SegmentationOutput` (masks, scores and, optionally, embeddings).
 
     Example:
         ```python
@@ -36,14 +38,3 @@ class SegmentationModel(InferenceModel):
     """
 
     capability_name: ClassVar[str] = "segmentation"
-
-    @abstractmethod
-    def predict(self, input: SegmentationInput) -> SegmentationOutput:
-        """Run image segmentation.
-
-        Args:
-            input: Segmentation input with image, prompts, and options.
-
-        Returns:
-            Segmentation output with masks, scores, and optionally embeddings.
-        """

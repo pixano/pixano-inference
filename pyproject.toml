@@ -40,27 +40,41 @@ classifiers = [
   "Topic :: Software Development :: Libraries",
 ]
 dynamic = ["version"]
+# The base install is the wire contract (pixano_inference.schemas), the model API
+# (pixano_inference.models / configs) and the HTTP client: what an application calling a server
+# or a model package needs. The server itself is the `server` extra.
 dependencies = [
-  "pixano-inference-client[masks] >= 0.1.0, < 0.2.0",
-  "typer >= 0.9.0",
-  "fastapi >= 0.100.0",
+  "httpx",
   "numpy >= 1.26.0, < 3.0.0",
   "pydantic >= 2.0.0, < 3.0.0",
-  "pydantic_settings >= 2.14.2",
-  "Pillow >= 12.3.0",
-  "pycocotools",
-  "python-dotenv >= 1.2.2, < 2.0.0",
-  "python-multipart >= 0.0.30",
-  "requests >= 2.33.0",
-  "uvicorn >= 0.31.0",
-  "ray[serve] >= 2.56.0, < 3.0.0",
-  "jinja2 >= 3.1.6",
-  "pyyaml >= 6.0.0",
-  "prometheus-client >= 0.16.0",
+  "typing_extensions",
 ]
 readme = "README.md"
 
 [project.optional-dependencies]
+# Encoding/decoding segmentation masks (CompressedRLE.from_mask/to_mask and numeric-array RLE);
+# parsing a normal compressed-bytes response does not need these.
+masks = [
+  "Pillow >= 9.0.0",
+  "pycocotools",
+]
+# The server: Ray Serve, the /v1 HTTP API and the `pixano-inference` command. Every model
+# package depends on it, so `pip install "pixano-inference[sam]"` yields a working server.
+server = [
+  "fastapi >= 0.100.0",
+  "jinja2 >= 3.1.6",
+  "Pillow >= 12.3.0",
+  "prometheus-client >= 0.16.0",
+  "pycocotools",
+  "pydantic_settings >= 2.14.2",
+  "python-dotenv >= 1.2.2, < 2.0.0",
+  "python-multipart >= 0.0.30",
+  "pyyaml >= 6.0.0",
+  "ray[serve] >= 2.56.0, < 3.0.0",
+  "requests >= 2.33.0",
+  "typer >= 0.9.0",
+  "uvicorn >= 0.31.0",
+]
 # One extra per model package: a separate distribution that brings its own framework.
 sam = ["pixano-inference-sam"]
 clip = ["pixano-inference-clip"]
@@ -87,7 +101,7 @@ test=[
 ]
 
 [project.scripts]
-pixano-inference = "pixano_inference.main:app"
+pixano-inference = "pixano_inference.cli:main"
 
 [project.urls]
 "Homepage" = "https://github.com/pixano/pixano-inference"
@@ -155,12 +169,11 @@ environments = [
 
 [dependency-groups]
 dev = [
-  "pixano-inference[test,docs]",
+  "pixano-inference[server,test,docs]",
   "pixano-numpy-detector",
 ]
 
 [tool.uv.sources]
-pixano-inference-client = { path = "packages/pixano-inference-client", editable = true }
 pixano-inference-torch = { path = "packages/pixano-inference-torch", editable = true }
 pixano-inference-sam = { path = "packages/pixano-inference-sam", editable = true }
 pixano-inference-clip = { path = "packages/pixano-inference-clip", editable = true }

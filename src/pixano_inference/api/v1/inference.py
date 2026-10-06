@@ -4,97 +4,75 @@
 # License: CECILL-C
 # =================================
 
-"""/v1 synchronous inference routes (one per capability)."""
+"""/v1 synchronous inference routes, registered from the capability table.
+
+Each capability gets ``POST /inference/<name>`` (JSON body) and, when it accepts raw uploads,
+``POST /inference/<name>/binary`` (multipart). The request and response models, the upload fields
+and the capability name all come from :data:`pixano_inference.models.capabilities.CAPABILITIES`.
+"""
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Request
 
-from pixano_inference.schemas.inference import (
-    DetectionRequest,
-    DetectionResponse,
-    EmbeddingRequest,
-    EmbeddingResponse,
-    NERRequest,
-    NERResponse,
-    SegmentationRequest,
-    SegmentationResponse,
-    TrackingResponse,
-    VLMRequest,
-    VLMResponse,
-)
+from pixano_inference.models.capabilities import CAPABILITIES, CapabilitySpec
 
-from .helpers import build_binary_request_from_request, run_inference
-from .schemas import TrackingRequestV1
+from .helpers import build_capability_binary_request, run_inference
 
 
 if TYPE_CHECKING:
     from pixano_inference.ray.app import DeploymentManager
 
 
+_Endpoint = Callable[[Any], Awaitable[Any]]
+
+
+def _json_endpoint(deployment_manager: DeploymentManager, spec: CapabilitySpec) -> _Endpoint:
+    """Build the JSON route handler of *spec*."""
+
+    async def endpoint(request: Any) -> Any:
+        return await run_inference(deployment_manager, request.model, request.to_input(), spec.name)
+
+    # FastAPI reads the body model from the annotation. It is set here, as a class rather than a
+    # name, because the request type is only known per capability.
+    endpoint.__annotations__ = {"request": spec.request_type, "return": Any}
+    return endpoint
+
+
+def _binary_endpoint(deployment_manager: DeploymentManager, spec: CapabilitySpec) -> _Endpoint:
+    """Build the multipart route handler of *spec*."""
+
+    async def endpoint(request: Any) -> Any:
+        parsed = await build_capability_binary_request(request, spec)
+        return await run_inference(deployment_manager, parsed.model, parsed.to_input(), spec.name)
+
+    endpoint.__annotations__ = {"request": Request, "return": Any}
+    return endpoint
+
+
 def build_inference_router(deployment_manager: DeploymentManager) -> APIRouter:
     """Build the `/inference` router bound to *deployment_manager*."""
     router = APIRouter(prefix="/inference", tags=["inference"])
 
-    @router.post("/segmentation", response_model=SegmentationResponse)
-    async def segmentation(request: SegmentationRequest) -> Any:
-        return await run_inference(deployment_manager, request.model, request.to_input(), "segmentation")
-
-    @router.post("/segmentation/binary", response_model=SegmentationResponse)
-    async def segmentation_binary(request: Request) -> Any:
-        parsed = await build_binary_request_from_request(
-            request, SegmentationRequest, file_field="image", payload_key="image"
+    # The route name is part of the published OpenAPI document (operationId and summary).
+    for spec in CAPABILITIES:
+        router.add_api_route(
+            f"/{spec.name}",
+            _json_endpoint(deployment_manager, spec),
+            methods=["POST"],
+            response_model=spec.response_type,
+            name=spec.name,
         )
-        return await run_inference(deployment_manager, parsed.model, parsed.to_input(), "segmentation")
-
-    @router.post("/detection", response_model=DetectionResponse)
-    async def detection(request: DetectionRequest) -> Any:
-        return await run_inference(deployment_manager, request.model, request.to_input(), "detection")
-
-    @router.post("/detection/binary", response_model=DetectionResponse)
-    async def detection_binary(request: Request) -> Any:
-        parsed = await build_binary_request_from_request(
-            request, DetectionRequest, file_field="image", payload_key="image"
-        )
-        return await run_inference(deployment_manager, parsed.model, parsed.to_input(), "detection")
-
-    @router.post("/vlm", response_model=VLMResponse)
-    async def vlm(request: VLMRequest) -> Any:
-        return await run_inference(deployment_manager, request.model, request.to_input(), "vlm")
-
-    @router.post("/vlm/binary", response_model=VLMResponse)
-    async def vlm_binary(request: Request) -> Any:
-        parsed = await build_binary_request_from_request(
-            request, VLMRequest, file_field="images", payload_key="images"
-        )
-        return await run_inference(deployment_manager, parsed.model, parsed.to_input(), "vlm")
-
-    @router.post("/ner", response_model=NERResponse)
-    async def ner(request: NERRequest) -> Any:
-        return await run_inference(deployment_manager, request.model, request.to_input(), "ner")
-
-    @router.post("/embedding", response_model=EmbeddingResponse)
-    async def embedding(request: EmbeddingRequest) -> Any:
-        return await run_inference(deployment_manager, request.model, request.to_input(), "embedding")
-
-    @router.post("/embedding/binary", response_model=EmbeddingResponse)
-    async def embedding_binary(request: Request) -> Any:
-        parsed = await build_binary_request_from_request(
-            request, EmbeddingRequest, file_field="image", payload_key="image"
-        )
-        return await run_inference(deployment_manager, parsed.model, parsed.to_input(), "embedding")
-
-    @router.post("/tracking", response_model=TrackingResponse)
-    async def tracking(request: TrackingRequestV1) -> Any:
-        return await run_inference(deployment_manager, request.model, request.to_input(), "tracking")
-
-    @router.post("/tracking/binary", response_model=TrackingResponse)
-    async def tracking_binary(request: Request) -> Any:
-        parsed = await build_binary_request_from_request(
-            request, TrackingRequestV1, file_field="frames", payload_key="video"
-        )
-        return await run_inference(deployment_manager, parsed.model, parsed.to_input(), "tracking")
+        if spec.binary is not None:
+            router.add_api_route(
+                f"/{spec.name}/binary",
+                _binary_endpoint(deployment_manager, spec),
+                methods=["POST"],
+                response_model=spec.response_type,
+                name=f"{spec.name}_binary",
+            )
 
     return router

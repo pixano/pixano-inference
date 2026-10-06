@@ -35,3 +35,4 @@ from .base import (
     ServerConfig,
     register_model_params,
 )
+from .deployment import AutoscalingConfig, ModelDeploymentConfig, ResourceConfig

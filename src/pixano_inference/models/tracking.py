@@ -7,14 +7,15 @@
 """Tracking model base class.
 
 The I/O and prompt types are the wire contract and live in
-:mod:`pixano_inference_client.tracking`; they are re-exported here so
+:mod:`pixano_inference.schemas.tracking`; they are re-exported here so
 ``from pixano_inference.models.tracking import TrackingInput`` (and the prompt types) keep working.
 """
 
-from abc import abstractmethod
 from typing import ClassVar
 
-from pixano_inference_client.tracking import (  # noqa: F401
+from pixano_inference.schemas.tracking import (  # noqa: F401
+    TrackedFrame,
+    TrackedObject,
     TrackingBoxPrompt,
     TrackingInput,
     TrackingInterval,
@@ -26,31 +27,34 @@ from pixano_inference_client.tracking import (  # noqa: F401
 from .base import InferenceModel
 
 
-class TrackingModel(InferenceModel):
-    """Base class for video mask generation / tracking models.
+class TrackingModel(InferenceModel[TrackingInput, TrackingOutput]):
+    """Base class for video tracking models.
+
+    ``predict`` receives a :class:`TrackingInput` and returns a :class:`TrackingOutput`: for each
+    frame, the objects tracked in it. A model is either prompted (the request names the objects with
+    points, boxes or masks, and the model returns their masks, as SAM2 does) or prompt-free
+    (tracking by detection: the request has no object, and the model creates the tracks and returns
+    their boxes and scores, as ByteTrack does).
 
     Example:
         ```python
         @register_model("my-tracker")
         class MyTracker(TrackingModel):
             def load_model(self):
-                self.model = load_weights(self.config.model_params["path"])
+                self.detector, self.tracker = load_detector(...), load_tracker(...)
 
             def predict(self, input: TrackingInput) -> TrackingOutput:
-                ...
-                return TrackingOutput(objects_ids=..., frame_indexes=..., masks=...)
+                frames = []
+                for index, image in enumerate(load_frames(input.video)):
+                    tracks = self.tracker.update(self.detector(image))
+                    frames.append(
+                        TrackedFrame(
+                            frame_index=index,
+                            objects=[TrackedObject(track_id=t.id, box=t.xyxy, score=t.score) for t in tracks],
+                        )
+                    )
+                return TrackingOutput(frames=frames)
         ```
     """
 
     capability_name: ClassVar[str] = "tracking"
-
-    @abstractmethod
-    def predict(self, input: TrackingInput) -> TrackingOutput:
-        """Run video mask generation / tracking.
-
-        Args:
-            input: Tracking input with video, prompts, and object IDs.
-
-        Returns:
-            Tracking output with objects_ids, frame_indexes, and masks.
-        """

@@ -14,9 +14,9 @@ from typing import Any
 
 from pixano_inference_torch import resolve_device, should_compile
 
+from pixano_inference.configs import ModelDeploymentConfig
 from pixano_inference.models.detection import DetectionInput, DetectionModel, DetectionOutput
 from pixano_inference.models.registry import register_model
-from pixano_inference.ray.config import ModelDeploymentConfig
 
 
 logger = logging.getLogger(__name__)

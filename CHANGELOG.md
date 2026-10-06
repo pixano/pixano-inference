@@ -12,6 +12,100 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+The wire contract moves back into the core, and the server becomes an extra: one distribution owns
+the model `Input`/`Output` types, the model API and the client, and an application that only calls
+a server installs it without Ray or FastAPI.
+
+> **Upgrading:** to run a server, install a model extra as before (`pixano-inference[sam]`, ...) or
+> `pixano-inference[server]` for your own models. Applications that call a server replace
+> `pixano-inference-client` with `pixano-inference` and import from `pixano_inference.client` and
+> `pixano_inference.schemas`.
+
+### ⚠️ Breaking changes
+
+- **The server is the `server` extra.** `pip install pixano-inference` installs the client, the
+  wire schemas and the model API on httpx, pydantic and numpy only. Ray Serve, FastAPI, uvicorn
+  and the `pixano-inference` command come with `pixano-inference[server]`; mask encoding and
+  decoding (Pillow, pycocotools) with `pixano-inference[masks]`, which `server` includes. Every
+  first-party model package depends on `pixano-inference[server]`, so
+  `pip install "pixano-inference[sam]"` still yields a working server. A custom model package
+  that pins plain `pixano-inference` must switch to `pixano-inference[server]` to keep one.
+  Without the extra, the `pixano-inference` command prints how to install it.
+- **The wire contract and the client are defined in the core again.** The capability
+  `Input`/`Output` types, `NDArray`, `CompressedRLE`, the request/response envelopes and the
+  admin/job types live in `pixano_inference.schemas`, and the HTTP client in
+  `pixano_inference.client`; `pixano_inference.models` re-exports the I/O types next to the
+  capability base classes. In 0.6 they were owned and versioned by `pixano-inference-client`,
+  so the contract a model implements was pinned by a package the model packages never named.
+  The core no longer depends on `pixano-inference-client`. The camelCase base model
+  (`CamelModel` in 0.6) is private to the schemas (`_BaseModel`) and no longer exported.
+- **`pixano-inference-client` is a deprecated alias.** Version 0.2.0 depends on
+  `pixano-inference >= 0.7, < 0.8` and re-exports the same names as 0.1.0, with a
+  `DeprecationWarning` on import. Import from `pixano_inference.client` and
+  `pixano_inference.schemas` instead. Do not combine `pixano-inference-client` 0.1 with
+  `pixano-inference` 0.7: each would carry its own copy of the wire types.
+
+- **`TrackingOutput` is grouped by frame.** The response of `/v1/inference/tracking` (and the
+  `data` of a tracking job) is `{"frames": [{"frameIndex", "objects": [{"trackId", "box",
+"score", "class", "mask"}]}]}` instead of the parallel `objectsIds` / `frameIndexes` / `masks`
+  lists. Each frame lists the objects tracked in it; SAM2 fills `mask`, and `trackId` is the
+  object ID of the request. A consumer reads `frames[].objects[]`, or `TrackingOutput.tracks()`
+  for the same result grouped by track.
+
+### Added
+
+- **Multi-object tracking by detection.** The tracking output can carry what a
+  ByteTrack-style model produces: any number of tracks, each with a bounding box
+  (`[x1, y1, x2, y2]` in pixels), a score and a class per frame, with or without a mask. A
+  tracking request no longer has to name objects: `objectsIds`, `frameIndexes` and `keyframes`
+  are optional, and `classes` and `boxThreshold` select what a prompt-free model detects and
+  tracks. Prompted requests are validated as before, and a request with prompts but no object
+  ID is now rejected with a 422 when it is parsed (it failed inside the route before).
+  `Sam2VideoModel` still requires prompts.
+- **YOLO + ByteTrack example.** `examples/yolo` ships `YOLOByteTrackModel`, a tracking-by-detection
+  model built on the track mode of Ultralytics: it takes a list of frames or a single video and
+  returns the box, score and class of every track, frame by frame. `config_tracking.py` and
+  `test_tracking.py` deploy and call it.
+
+### Changed
+
+- `ResourceConfig`, `AutoscalingConfig` and `ModelDeploymentConfig` live in
+  `pixano_inference.configs` (still importable from `pixano_inference.ray.config`), so a model
+  package no longer imports the Ray layer to type its constructor.
+- Each capability is declared once, in `pixano_inference.models.capabilities.CAPABILITIES`: its
+  model base class, `Input`/`Output` types, request and response, default timeout and binary
+  upload field. The `/v1/inference/*` routes, the capability of a model class and the default
+  timeouts are derived from that table instead of being repeated by hand, with the same routes
+  and schemas.
+- `InferenceModel` is generic in its input and output types, and each capability base class
+  fixes them (`DetectionModel` is `InferenceModel[DetectionInput, DetectionOutput]`) instead of
+  re-declaring `predict` with a narrower signature. Existing models need no change.
+
+### Fixed
+
+- A base64 data URI whose media subtype contains a digit or `+`, `.`, `-` was not recognised as
+  base64 and was treated as a file path, so a video sent as `data:video/mp4;base64,...` was
+  rejected. Any `type/subtype` is now accepted.
+- `POST /v1/inference/detection/binary` and `/vlm/binary` failed with a 500 on any real image:
+  `DetectionInput.image` and `VLMInput.images` did not accept bytes. Both now do, like the
+  segmentation, embedding and tracking inputs, and the OpenAPI schema lists the binary form.
+- A `/binary` upload rejected by validation returned a 500 instead of a 422, because the error
+  body echoed the uploaded bytes and could not be encoded as JSON. The error no longer includes
+  the input.
+
+### Packaging / CI
+
+- **Contract 0.7.** The core is `0.7.0`; the model packages and the torch helpers are `0.2.0` and
+  pin the core to `>= 0.7.0, < 0.8.0`. A test (`tests/test_release_pins.py`) fails when a package
+  under `packages/` or `examples/` pins a range that excludes the current core.
+- The release workflow publishes the model packages, then the core, then the
+  `pixano-inference-client` alias.
+- CI installs the base distribution alone (`light_install`) and checks that the server stack is
+  absent, that the client, schemas, model API and configs import, and that the command reports
+  the missing extra. `pixano-inference-torch` depends on the base install only.
+
 ## [0.6.0] - 2026-09-23
 
 Major release. The serving stack is rebuilt on **real Ray Serve** behind a versioned, camelCase

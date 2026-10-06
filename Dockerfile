@@ -62,12 +62,14 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     # for both and their CUDA builds stay ABI-coherent (torchvision is required by
     # transformers and sam-2).
     if [ -n "${TORCH_INDEX_URL}" ]; then uv pip install torch torchvision --index-url "${TORCH_INDEX_URL}"; fi; \
-    # The local packages (core, client, torch helpers, models) are not on PyPI and point at each
+    # The local packages (core, torch helpers, models) point at each
     # other through [tool.uv.sources] path entries, which uv would install EDITABLE (paths into
     # /build, lost once the runtime stage copies only /opt/venv). --no-sources installs them as
     # regular packages instead; listing them all on one command line lets each satisfy the
-    # others' requirements.
-    reqs=". ./packages/pixano-inference-client"; \
+    # others' requirements. The core is installed with its server extra (the base install is
+    # the client and the model API only); `set -f` keeps the shell from globbing the brackets.
+    set -f; \
+    reqs=".[server]"; \
     if [ -n "${MODEL_PACKAGES}" ]; then reqs="${reqs} ./packages/pixano-inference-torch"; fi; \
     for pkg in ${MODEL_PACKAGES}; do reqs="${reqs} ./packages/${pkg}"; done; \
     case " ${MODEL_PACKAGES} " in \

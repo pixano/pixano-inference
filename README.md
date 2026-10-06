@@ -30,21 +30,22 @@
 
 # Pixano-Inference
 
-A [Ray Serve](https://docs.ray.io/en/latest/serve/index.html) inference server for the
-[Pixano](https://pixano.github.io/pixano/latest/) annotation tool, with a REST API and a Python client.
+An inference server for the [Pixano](https://pixano.github.io/pixano/latest/) annotation tool.
+It runs models on [Ray Serve](https://docs.ray.io/en/latest/serve/index.html) and exposes them
+through a REST API and a Python client.
 
-Models are independent Python packages with their own code, dependencies, and environments.
-The server discovers installed models automatically; the core requires no ML framework.
+Each model lives in its own Python package. Install the ones you need and the server finds them.
 
 ## Quickstart
 
-Requires Python 3.10–3.13. Install Pixano-Inference with the Grounding DINO model:
+This runs SAM2 and segments an object from a single click. You need Python 3.10 to 3.13.
 
 ```bash
-pip install "pixano-inference[sam,clip]"
+pip install "pixano-inference[sam]"
+pip install "sam-2 @ git+https://github.com/facebookresearch/sam2.git"
 ```
 
-Create `models.py`:
+Write the server configuration in `models.py`:
 
 ```python
 from pixano_inference.configs import DeploymentConfig, ModelConfig
@@ -55,76 +56,74 @@ models = [
         name="sam2-image",
         model_class="Sam2ImageModel",
         model_params=Sam2ImageParams(path="facebook/sam2-hiera-base-plus"),
-        deployment=DeploymentConfig(num_gpus=1, num_cpus=2),
+        deployment=DeploymentConfig(num_gpus=1),  # 0 to run on CPU
     ),
 ]
 ```
 
-Start the server. The first run downloads the model weights.
+Start the server. The first start downloads the weights.
 
 ```bash
 pixano-inference --config models.py
 ```
 
-Check [readiness](http://localhost:7463/v1/ready), then save this request as `predict.py`:
+When http://localhost:7463/v1/ready answers `"ready": true`, run this from another terminal:
 
 ```python
-from pixano_inference_client import DetectionRequest, SyncPixanoInferenceClient
+from pixano_inference.client import SyncPixanoInferenceClient
+from pixano_inference.schemas import SegmentationRequest
 
 client = SyncPixanoInferenceClient("http://localhost:7463")
-result = client.detection(
-    DetectionRequest(
-        model="grounding-dino",
-        image="https://raw.githubusercontent.com/pixano/pixano-inference/main/docs/assets/examples/sam2/bedroom/00000.jpg",
-        classes=["bed", "lamp"],
-        box_threshold=0.3,
-        text_threshold=0.25,
+result = client.segmentation(
+    SegmentationRequest(
+        model="sam2-image",
+        image="https://raw.githubusercontent.com/pixano/pixano-inference/main/docs/assets/examples/sam2/truck.jpg",
+        points=[[[500, 375]]],  # one click, in pixels
+        labels=[[1]],  # 1: the click is on the object
     )
 )
-print(result.data.classes, result.data.boxes, result.data.scores)
+
+scores = result.data.scores.to_numpy().ravel()
+best = scores.argmax()
+mask = result.data.masks[0][best].to_mask()
+print(f"score {scores[best]:.2f}, mask of {mask.sum()} pixels")
 ```
 
-Run it in another terminal, using the same Python environment:
+## Models
 
-```bash
-python predict.py
-```
+| Install                                | Models                                     |
+| -------------------------------------- | ------------------------------------------ |
+| `pip install "pixano-inference[sam]"`  | SAM2 image segmentation and video tracking |
+| `pip install "pixano-inference[clip]"` | Image and text embeddings (MobileCLIP2)    |
 
-Applications calling an existing server only need [pixano-inference-client](packages/pixano-inference-client).
-See the [documentation](https://pixano.github.io/pixano-inference/latest/) for the API,
-Docker deployment, and autoscaling.
+Each package has its own README in [`packages/`](packages).
 
-## Model packages
+An application that only sends requests to a server needs `pip install pixano-inference`, which
+installs the client without the server.
 
-Choose a model with an extra, for example `pip install "pixano-inference[sam]"`:
+## Your own model
 
-| Extra              | Package                                                        | Supports                                     |
-| ------------------ | -------------------------------------------------------------- | -------------------------------------------- |
-| `sam`              | [SAM](packages/pixano-inference-sam)                           | SAM2 image segmentation and video tracking   |
-| `clip`             | [CLIP](packages/pixano-inference-clip)                         | Image/text embeddings, including MobileCLIP2 |
-| `grounding-dino`   | [Grounding DINO](packages/pixano-inference-grounding-dino)     | Object detection from text prompts           |
-| `transformers-vlm` | [Transformers VLM](packages/pixano-inference-transformers-vlm) | Hugging Face vision-language models          |
-| `vllm`             | [vLLM](packages/pixano-inference-vllm)                         | Vision-language models on Linux GPUs         |
-
-Each extra installs an independent model package. SAM also needs the upstream `sam-2`
-library; follow its package's installation instructions.
+A model is a small Python package. The [YOLO example](examples/yolo) shows a detector and a tracker,
+and the [numpy detector](examples/numpy_detector) a model with no ML framework at all. The
+[custom models guide](docs/ray_serve/custom_models.md) explains the rest.
 
 ## Development
-
-For source development, clone the repository and use [uv](https://docs.astral.sh/uv/):
 
 ```bash
 git clone https://github.com/pixano/pixano-inference.git
 cd pixano-inference
 uv sync
-uv run pytest -m "not integration" tests/  # Core unit tests
+uv run pytest -m "not integration" tests/
+```
+
+Each package under `packages/` has its own environment and tests, for example:
+
+```bash
 uv run --project packages/pixano-inference-sam pytest packages/pixano-inference-sam/tests
 ```
 
-Develop and test each model in its own package, with its own `pyproject.toml`, `uv.lock`,
-and tests. To build a custom model, start with the [numpy detector](examples/numpy_detector)
-and follow the [guide](docs/ray_serve/custom_models.md) and
-[package specification](docs/ray_serve/custom_model_spec.md).
+The [documentation](https://pixano.github.io/pixano-inference/latest/) covers the API, Docker
+deployment and autoscaling.
 
 ## License
 

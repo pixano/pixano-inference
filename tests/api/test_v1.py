@@ -16,7 +16,7 @@ from pixano_inference.models.detection import DetectionOutput
 from pixano_inference.models.embedding import EmbeddingOutput
 from pixano_inference.models.ner import NEREntity, NEROutput
 from pixano_inference.models.segmentation import SegmentationOutput
-from pixano_inference.models.tracking import TrackingOutput
+from pixano_inference.models.tracking import TrackedFrame, TrackedObject, TrackingOutput
 from pixano_inference.models.vlm import UsageInfo, VLMOutput
 from pixano_inference.ray.app import create_ray_serve_app
 from pixano_inference.ray.config import RayServeConfig
@@ -135,7 +135,7 @@ def test_embedding_requires_exactly_one_modality(client, monkeypatch):
 
 
 def test_tracking_nested_keyframes_map_to_flat_input(client, monkeypatch):
-    result = TrackingOutput(objects_ids=[1], frame_indexes=[1], masks=[])
+    result = TrackingOutput(frames=[])
     handle = FakeHandle(result)
     _install(client, monkeypatch, handle=handle, capability="tracking")
     mask = CompressedRLE.from_mask(np.array([[1, 1], [0, 0]], dtype=np.uint8))
@@ -157,6 +157,60 @@ def test_tracking_nested_keyframes_map_to_flat_input(client, monkeypatch):
     assert sent.keyframes[0].frame_index == 0
     assert sent.keyframes[0].mask is not None
     assert sent.interval.start_frame == 0 and sent.interval.end_frame == 1
+
+
+def test_tracking_by_detection_needs_no_prompt_and_returns_boxes(client, monkeypatch):
+    """A prompt-free request reaches the model, and its tracks come back by frame with boxes."""
+
+    def person(track_id: int, box: list[float], score: float) -> TrackedObject:
+        return TrackedObject(track_id=track_id, box=box, score=score, class_name="person")
+
+    result = TrackingOutput(
+        frames=[
+            TrackedFrame(
+                frame_index=0, objects=[person(1, [12, 30, 80, 190], 0.91), person(2, [200, 41, 260, 180], 0.84)]
+            ),
+            TrackedFrame(frame_index=1, objects=[person(1, [14, 31, 82, 191], 0.9)]),
+        ]
+    )
+    handle = FakeHandle(result)
+    _install(client, monkeypatch, handle=handle, capability="tracking")
+
+    resp = client.post(
+        "/v1/inference/tracking",
+        json={"model": "bytetrack", "video": ["f0.png", "f1.png"], "classes": ["person"], "boxThreshold": 0.4},
+    )
+
+    assert resp.status_code == 200, resp.text
+    sent = handle.predict.last_input
+    assert sent.objects_ids == [] and sent.frame_indexes == [] and sent.keyframes is None
+    assert sent.classes == ["person"] and sent.box_threshold == 0.4
+    frames = resp.json()["data"]["frames"]
+    assert [frame["frameIndex"] for frame in frames] == [0, 1]
+    assert [tracked["trackId"] for tracked in frames[0]["objects"]] == [1, 2]
+    assert frames[0]["objects"][1] == {
+        "trackId": 2,
+        "box": [200.0, 41.0, 260.0, 180.0],
+        "score": 0.84,
+        "class": "person",
+        "mask": None,
+    }
+
+
+def test_tracking_prompts_without_object_ids_are_a_validation_error(client, monkeypatch):
+    _install(client, monkeypatch, handle=FakeHandle(None), capability="tracking")
+
+    resp = client.post(
+        "/v1/inference/tracking",
+        json={
+            "model": "sam2-video",
+            "video": ["f0.png"],
+            "keyframes": [{"frameIndex": 0, "prompts": {"points": [{"x": 1, "y": 1, "label": 1}]}}],
+        },
+    )
+
+    assert resp.status_code == 422, resp.text
+    assert "Prompts require object IDs" in resp.text
 
 
 def test_segmentation_binary_route(client, monkeypatch):
@@ -203,7 +257,7 @@ def test_capability_mismatch_returns_400(client, monkeypatch):
 
 
 def test_tracking_job_submit_status_cancel(client, monkeypatch):
-    result = TrackingOutput(objects_ids=[1], frame_indexes=[0], masks=[])
+    result = TrackingOutput(frames=[])
     handle = FakeHandle(result, pending=True)  # stays running until cancelled
     _install(client, monkeypatch, handle=handle, capability="tracking")
 

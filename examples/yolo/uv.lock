@@ -1057,6 +1057,43 @@ wheels = [
 ]
 
 [[package]]
+name = "lap"
+version = "0.5.13"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
+    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f1/ae/5cc637c2e5158b7dcf1a9744d33b11dfc21d9309931169402f573e4d1ee3/lap-0.5.13.tar.gz", hash = "sha256:9eff7169e3ca452995af0493cc20d35452c4bfd06122c36c06457119ffbd411b", size = 1537351, upload-time = "2026-02-23T12:37:24.789Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/26/d6/91e97e538c9916ac6a3a12b700a13891704be8ea9b7b4e39dff21be9db69/lap-0.5.13-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:2cc08c4ff49626ba6c1b707f0b02e92cf57a44359e65d9e769acdff1b510eebf", size = 1481773, upload-time = "2026-02-23T12:35:58.667Z" },
+    { url = "https://files.pythonhosted.org/packages/37/1b/1911550ed035c26aa54d1fc6bfafdd97f02e3cc2284904d0de410f17a681/lap-0.5.13-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:32cd1d38500da8e1ef51398121f1408ce23890cbc133647a0f665576b127eca7", size = 1478874, upload-time = "2026-02-23T12:36:00.368Z" },
+    { url = "https://files.pythonhosted.org/packages/e8/51/f046eb06c8a18b8c4a1121981b7c513e882216a000d47a5ecb317b247891/lap-0.5.13-cp310-cp310-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:33c53173abbd8da0ba8c4eef0a7f2dc72230c7c9bc0b634fe5c98873b4999ab8", size = 1708529, upload-time = "2026-02-23T12:36:01.624Z" },
+    { url = "https://files.pythonhosted.org/packages/bd/eb/6a6b6c53738e06af8be5fca3dd3839cd65c35cf0cc6640ec7505374e413c/lap-0.5.13-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:10169f0401cf0ecd12f34d701abebbe2233c9fc5b9b5b46794157f5662646cb5", size = 1703789, upload-time = "2026-02-23T12:36:03.103Z" },
+    { url = "https://files.pythonhosted.org/packages/e7/7f/4bf5cc303b42c9a1c4f99b3f7398559167611aa786aee670fec5a6d81939/lap-0.5.13-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:65d88ca30e30805d57a45bee6dfa40893c0f3ee8c32120ddf660c625ad24d52a", size = 1700875, upload-time = "2026-02-23T12:36:04.507Z" },
+    { url = "https://files.pythonhosted.org/packages/36/c0/0de7f82521247242cca8506f7d4d13801d549d74337313545c1499e0d831/lap-0.5.13-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:ba28e9350ec93ddc94c0a44ae55a8802bc5f19bb7d5e6df5df3f9aa7f7a0e3f1", size = 1710973, upload-time = "2026-02-23T12:36:05.901Z" },
+    { url = "https://files.pythonhosted.org/packages/d5/fc/4114078e67010a48bbe0c581f04c46a5e2da158cfc3e080d0232ef99de3f/lap-0.5.13-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:c00af0eb19ba2b4a6ae6886061449318e3b917670b6fd17c99bffbdc88bf9038", size = 1480911, upload-time = "2026-02-23T12:36:10.114Z" },
+    { url = "https://files.pythonhosted.org/packages/4e/9b/21d52da69d084908bf33733cd51170f429987af3f96162deff7f5f60114d/lap-0.5.13-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:9ed754fd43eef62e0e98038506bac04d8dfdc27b5812b93a91fcfcbf21d1a61f", size = 1478251, upload-time = "2026-02-23T12:36:11.524Z" },
+    { url = "https://files.pythonhosted.org/packages/83/7e/d6cfdda3b96559065c2a205debd4104d2064ecd936ed3ac3180e572f6555/lap-0.5.13-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:f67f2bae5c95d2eb252dca6262a4038a41d52f76f4e4407e0f7bac22847c0e76", size = 1717286, upload-time = "2026-02-23T12:36:12.744Z" },
+    { url = "https://files.pythonhosted.org/packages/3d/90/8b5d5b308dc899d54ae8cb4292f035f0ea530d3fddd5d35e8e533de5256b/lap-0.5.13-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:dadc17c83b429c27274de67474edbe407721e467e9c166611743b8871097edeb", size = 1713904, upload-time = "2026-02-23T12:36:14.239Z" },
+    { url = "https://files.pythonhosted.org/packages/02/c6/19d5e6896e496616573cfbd78f87c9508201304904e2cac4c27abca3364d/lap-0.5.13-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:c974c51b2be1c4db696b953fbcf3657bf84c418304fac33064b86ed99194d25c", size = 1710762, upload-time = "2026-02-23T12:36:15.419Z" },
+    { url = "https://files.pythonhosted.org/packages/12/ce/a089226a167b46d9e16b7e300ef9c9a8c2229e19da9e671aa5e3f90265fe/lap-0.5.13-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:2037d9a30b3f9a9fe185af419ca0d53f6ba3941d9677620522b1f1a62c3dd861", size = 1717976, upload-time = "2026-02-23T12:36:17.018Z" },
+    { url = "https://files.pythonhosted.org/packages/e1/95/96bd702a260ddcdeef35a1d99a510b1f0cd51eab40f749daa728a2f66728/lap-0.5.13-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:77bbb235de0a416c77aae07aa2bebed4846ed741002da7721059279bd130ed4d", size = 1480314, upload-time = "2026-02-23T12:36:20.979Z" },
+    { url = "https://files.pythonhosted.org/packages/6c/c8/c16081ffcc8bf9f123940af8b74bfc8a1fac4f36b3cd7e9b440fdecd9fbc/lap-0.5.13-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:8a793935e238f5430f764c38a1757331e86487738e5c7e8b82c374860e5a1074", size = 1478096, upload-time = "2026-02-23T12:36:22.419Z" },
+    { url = "https://files.pythonhosted.org/packages/92/0a/8d8395c8ea22a665ab4150fb2bcb97cc1f987843a1d316aaabc2d71044dd/lap-0.5.13-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:226c24acbc1acd22c76bac54525174577571d7e71e70845d0c43dd664332e867", size = 1732084, upload-time = "2026-02-23T12:36:24.003Z" },
+    { url = "https://files.pythonhosted.org/packages/8e/82/63fd09e866677f4263372785b23908efcce8da39bcc72fcced51e606bbe2/lap-0.5.13-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:355600a369281c830f900a9a215f8a8729c89ce3f2bf75e1943386fe3d8d1c88", size = 1725964, upload-time = "2026-02-23T12:36:25.339Z" },
+    { url = "https://files.pythonhosted.org/packages/4c/d3/82678703ab1b5a8773905e982244624b14ad004d8d3068d466c56bde0a31/lap-0.5.13-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:0a099030000709e5acfc85b1f3a464a2b7a61abc50e51ab0235f3058d9f26abb", size = 1724642, upload-time = "2026-02-23T12:36:26.759Z" },
+    { url = "https://files.pythonhosted.org/packages/89/f9/e1b61bd002ed6d37e71c355e102ca626f5c50218e769d3105215733b6c0d/lap-0.5.13-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:8687037b179a4a5014f69d26ab917fd2129bbe5894b0768e0a18a60e242794da", size = 1735247, upload-time = "2026-02-23T12:36:28.16Z" },
+    { url = "https://files.pythonhosted.org/packages/84/5b/329c1cdb1fd3a7c9d971310351a1bdfb4264110f9101e2ead942c852a7a0/lap-0.5.13-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:d5e4b4d3b5b7530f28181c7e5dde892d808c19a08a8a8406c505095a272b9849", size = 1479642, upload-time = "2026-02-23T12:36:33.248Z" },
+    { url = "https://files.pythonhosted.org/packages/dd/ea/c2b401643c1c0a4e404bc15335302ccd7cddf0f095dbf4b04e911a84ce31/lap-0.5.13-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:1a806e4af277199c4161164a4ea9311f217ed0c084ca5fde010743d2ac8ac9ba", size = 1477371, upload-time = "2026-02-23T12:36:34.527Z" },
+    { url = "https://files.pythonhosted.org/packages/c8/5a/ef374f285dbab0673071503688e869354f6c2374be57880b1b997baba161/lap-0.5.13-cp313-cp313-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:508f6360c7bf2c59d89adff7dba8fd39166573d23f002f54a678c2e026b614cc", size = 1720150, upload-time = "2026-02-23T12:36:35.781Z" },
+    { url = "https://files.pythonhosted.org/packages/fa/16/b9316bee1776229baad3dca301daca5acd0cde0523227a4fb8e223b85bf6/lap-0.5.13-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:bdd55fb97879ba924821f8386a51bbbe8f1088fc4f4d9cd1afa40635c1b17036", size = 1715566, upload-time = "2026-02-23T12:36:37.275Z" },
+    { url = "https://files.pythonhosted.org/packages/6d/c3/341bdec28a1aaf99ed874fc48793d154ea9985bb498c8a4fd459cf9424e8/lap-0.5.13-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:b145a738c55d26556a233d1bc597f96e0e00c0d11a1bfca07cf5907c00969126", size = 1705991, upload-time = "2026-02-23T12:36:39.086Z" },
+    { url = "https://files.pythonhosted.org/packages/d0/cc/c9f3c1e82a070d4f64d13a50e326fcc719714f3fe576792dcf3afce625ab/lap-0.5.13-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:ab5c634733dd0cdb3ef32f607644d238894df8781bbd91cfbf46435872ad4c92", size = 1716593, upload-time = "2026-02-23T12:36:40.291Z" },
+]
+
+[[package]]
 name = "markdown-it-py"
 version = "4.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1909,16 +1946,21 @@ wheels = [
 name = "pixano-inference"
 source = { editable = "../../" }
 dependencies = [
-    { name = "fastapi" },
-    { name = "jinja2" },
+    { name = "httpx" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
     { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "pydantic" },
+    { name = "typing-extensions" },
+]
+
+[package.optional-dependencies]
+server = [
+    { name = "fastapi" },
+    { name = "jinja2" },
     { name = "pillow" },
-    { name = "pixano-inference-client", extra = ["masks"] },
     { name = "prometheus-client" },
     { name = "pycocotools" },
-    { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "python-dotenv" },
     { name = "python-multipart" },
@@ -1931,8 +1973,9 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fastapi", specifier = ">=0.100.0" },
-    { name = "jinja2", specifier = ">=3.1.6" },
+    { name = "fastapi", marker = "extra == 'server'", specifier = ">=0.100.0" },
+    { name = "httpx" },
+    { name = "jinja2", marker = "extra == 'server'", specifier = ">=3.1.6" },
     { name = "mike", marker = "extra == 'docs'", specifier = ">=2.1.0,<3.0.0" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6.0,<2.0.0" },
     { name = "mkdocs-gen-files", marker = "extra == 'docs'", specifier = ">=0.5.0" },
@@ -1941,76 +1984,49 @@ requires-dist = [
     { name = "mkdocs-redirects", marker = "extra == 'docs'", specifier = ">=1.2.1" },
     { name = "mkdocstrings-python", marker = "extra == 'docs'", specifier = ">=1.7.0" },
     { name = "numpy", specifier = ">=1.26.0,<3.0.0" },
-    { name = "pillow", specifier = ">=12.3.0" },
-    { name = "pixano-inference-client", extras = ["masks"], editable = "../../packages/pixano-inference-client" },
+    { name = "pillow", marker = "extra == 'masks'", specifier = ">=9.0.0" },
+    { name = "pillow", marker = "extra == 'server'", specifier = ">=12.3.0" },
     { name = "pixano-inference-clip", marker = "extra == 'clip'", editable = "../../packages/pixano-inference-clip" },
     { name = "pixano-inference-grounding-dino", marker = "extra == 'grounding-dino'", editable = "../../packages/pixano-inference-grounding-dino" },
     { name = "pixano-inference-sam", marker = "extra == 'sam'", editable = "../../packages/pixano-inference-sam" },
     { name = "pixano-inference-torch", marker = "extra == 'torch'", editable = "../../packages/pixano-inference-torch" },
     { name = "pixano-inference-transformers-vlm", marker = "extra == 'transformers-vlm'", editable = "../../packages/pixano-inference-transformers-vlm" },
     { name = "pixano-inference-vllm", marker = "extra == 'vllm'", editable = "../../packages/pixano-inference-vllm" },
-    { name = "prometheus-client", specifier = ">=0.16.0" },
-    { name = "pycocotools" },
+    { name = "prometheus-client", marker = "extra == 'server'", specifier = ">=0.16.0" },
+    { name = "pycocotools", marker = "extra == 'masks'" },
+    { name = "pycocotools", marker = "extra == 'server'" },
     { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
-    { name = "pydantic-settings", specifier = ">=2.14.2" },
+    { name = "pydantic-settings", marker = "extra == 'server'", specifier = ">=2.14.2" },
     { name = "pytest", marker = "extra == 'test'" },
     { name = "pytest-asyncio", marker = "extra == 'test'" },
     { name = "pytest-cov", marker = "extra == 'test'" },
     { name = "pytest-httpx", marker = "extra == 'test'" },
     { name = "pytest-mock", marker = "extra == 'test'" },
-    { name = "python-dotenv", specifier = ">=1.2.2,<2.0.0" },
-    { name = "python-multipart", specifier = ">=0.0.30" },
-    { name = "pyyaml", specifier = ">=6.0.0" },
-    { name = "ray", extras = ["serve"], specifier = ">=2.56.0,<3.0.0" },
-    { name = "requests", specifier = ">=2.33.0" },
+    { name = "python-dotenv", marker = "extra == 'server'", specifier = ">=1.2.2,<2.0.0" },
+    { name = "python-multipart", marker = "extra == 'server'", specifier = ">=0.0.30" },
+    { name = "pyyaml", marker = "extra == 'server'", specifier = ">=6.0.0" },
+    { name = "ray", extras = ["serve"], marker = "extra == 'server'", specifier = ">=2.56.0,<3.0.0" },
+    { name = "requests", marker = "extra == 'server'", specifier = ">=2.33.0" },
     { name = "responses", marker = "extra == 'test'" },
-    { name = "typer", specifier = ">=0.9.0" },
-    { name = "uvicorn", specifier = ">=0.31.0" },
+    { name = "typer", marker = "extra == 'server'", specifier = ">=0.9.0" },
+    { name = "typing-extensions" },
+    { name = "uvicorn", marker = "extra == 'server'", specifier = ">=0.31.0" },
 ]
-provides-extras = ["clip", "docs", "grounding-dino", "sam", "test", "torch", "transformers-vlm", "vllm"]
+provides-extras = ["clip", "docs", "grounding-dino", "masks", "sam", "server", "test", "torch", "transformers-vlm", "vllm"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "pixano-inference", extras = ["test", "docs"] },
+    { name = "pixano-inference", extras = ["server", "test", "docs"] },
     { name = "pixano-numpy-detector", editable = "../numpy_detector" },
 ]
-
-[[package]]
-name = "pixano-inference-client"
-version = "0.1.0"
-source = { editable = "../../packages/pixano-inference-client" }
-dependencies = [
-    { name = "httpx" },
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "pydantic" },
-    { name = "typing-extensions" },
-]
-
-[package.optional-dependencies]
-masks = [
-    { name = "pillow" },
-    { name = "pycocotools" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "httpx" },
-    { name = "numpy", specifier = ">=1.26.0,<3.0.0" },
-    { name = "pillow", marker = "extra == 'masks'", specifier = ">=9.0.0" },
-    { name = "pycocotools", marker = "extra == 'masks'" },
-    { name = "pydantic", specifier = ">=2.0.0,<3.0.0" },
-    { name = "typing-extensions" },
-]
-provides-extras = ["masks"]
 
 [[package]]
 name = "pixano-yolo-detector"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "pixano-inference" },
+    { name = "lap" },
+    { name = "pixano-inference", extra = ["server"] },
     { name = "torch" },
     { name = "ultralytics", version = "8.4.123", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' and sys_platform != 'linux'" },
     { name = "ultralytics", version = "8.4.160", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' or sys_platform == 'linux'" },
@@ -2023,7 +2039,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "pixano-inference", editable = "../../" },
+    { name = "lap", specifier = ">=0.5.12" },
+    { name = "pixano-inference", extras = ["server"], editable = "../../" },
     { name = "torch", specifier = ">=2.3.0,<3.0.0" },
     { name = "ultralytics" },
 ]

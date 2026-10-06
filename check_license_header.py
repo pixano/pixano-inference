@@ -53,6 +53,7 @@ EXCLUDE_FILES: set[str] = {
     "bug_report.md",
     "feature_request.md",
     "CLAUDE.md",  # local, gitignored Claude Code guidance — not shipped source
+    "AGENTS.md",  # repository guidance for coding agents — not shipped source
 }
 
 # Directories to exclude (virtualenvs, build artifacts, caches, generated sites).

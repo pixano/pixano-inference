@@ -21,9 +21,9 @@ from typing import Any
 
 from pixano_inference_torch import resolve_device
 
+from pixano_inference.configs import ModelDeploymentConfig
 from pixano_inference.models.embedding import EmbeddingInput, EmbeddingModel, EmbeddingOutput
 from pixano_inference.models.registry import register_model
-from pixano_inference.ray.config import ModelDeploymentConfig
 from pixano_inference.schemas.nd_array import NDArrayFloat
 
 

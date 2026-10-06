@@ -59,7 +59,7 @@ In the example (`pyproject.toml`):
 [project]
 name = "pixano-numpy-detector"
 requires-python = ">=3.10,<3.14"
-dependencies = ["pixano-inference >= 0.6.0, < 0.7.0", "numpy >= 1.26.0, < 3.0.0", "Pillow >= 9.0.0", "pydantic >= 2.0.0, < 3.0.0"]
+dependencies = ["pixano-inference[server] >= 0.7.0, < 0.8.0", "numpy >= 1.26.0, < 3.0.0", "Pillow >= 9.0.0", "pydantic >= 2.0.0, < 3.0.0"]
 
 [project.entry-points."pixano_inference.models"]
 numpy_detector = "pixano_numpy_detector.model"
@@ -82,12 +82,21 @@ input/output:
 
 A subclass of `InferenceModel` that is not one of these is rejected by `ModelConfig`.
 
+A `TrackingModel` is either prompted or prompt-free. A prompted model (SAM2) receives
+`objects_ids` with one keyframe per object and returns their masks. A prompt-free model
+(tracking by detection, such as ByteTrack) receives only the video, optionally with `classes`
+and `box_threshold`, creates the tracks itself and returns their boxes and scores. Both return
+a `TrackingOutput` with one `TrackedFrame` per frame, each listing the `TrackedObject`s alive in
+that frame: a `track_id` with a `mask`, or a `box` (`[x1, y1, x2, y2]` in pixels of the frame)
+with a `score` and a `class_name`. A model that supports only one of the two request styles
+MUST raise a `ValueError` on the other.
+
 **2.2 Registration.** The class MUST be decorated with `@register_model("Name")`. `Name` is
 what configs put in `model_class`; it MUST be unique across the installed packages (a second
 registration of the same name raises, and that package fails to load).
 
-**2.3 Construction.** The constructor is `__init__(self, config: ModelDeploymentConfig)`. An
-override MUST call `super().__init__(config)` and MUST NOT load weights or import the
+**2.3 Construction.** The constructor is `__init__(self, config: ModelDeploymentConfig)`, with
+`ModelDeploymentConfig` imported from `pixano_inference.configs`. An override MUST call `super().__init__(config)` and MUST NOT load weights or import the
 framework: the replica constructs the model and immediately calls `load_model()` (§2.4), so
 the constructor only initializes attributes.
 
@@ -98,7 +107,9 @@ failure here fails the deployment: at startup with `--config`, or as the error o
 `POST /v1/models`.
 
 **2.5 `predict(input)`.** MUST accept the base class's input type and return its output type,
-synchronously. Calls on one replica are serialized by the server, so the model need not be
+synchronously. Each capability base class is `InferenceModel[Input, Output]` (for example
+`DetectionModel` is `InferenceModel[DetectionInput, DetectionOutput]`), so a type checker
+verifies the signature. Calls on one replica are serialized by the server, so the model need not be
 thread-safe. Anything raised fails that request with a `500` error envelope (the exception is
 logged server-side, its text is not returned); a call that outlives the deployment's
 `timeout_s` fails with `504`.
@@ -206,7 +217,10 @@ from a git URL (`#subdirectory=` for a monorepo), from a local directory, or fro
 of wheels; `uv pip install` also follows the package's `[tool.uv.sources]`.
 
 **5.3 Core version.** The package SHOULD constrain `pixano-inference` to the versions whose
-contract it was written against (`>= 0.6.0, < 0.7.0` today), as the first-party packages do.
+contract it was written against (`>= 0.7.0, < 0.8.0` today), as the first-party packages do.
+It SHOULD depend on the `server` extra (`pixano-inference[server]`), so that installing the
+package yields an environment that can serve it; the base install holds the model API and the
+schemas but no server.
 
 ## 6. Conformance
 

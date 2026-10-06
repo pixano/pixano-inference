@@ -139,19 +139,26 @@ for box in boxes:
 ## Call SAM2 Video with detected boxes
 
 ```python
-from pixano_inference.schemas import TrackingRequest
+from pixano_inference.schemas import TrackingRequestV1
 
 
 async def run_video_segmentation():
     obj_ids = list(range(len(boxes)))
     frame_indexes = [0] * len(boxes)
 
-    request = TrackingRequest(
+    # One keyframe per detected object. A detection box is [x1, y1, x2, y2];
+    # a box prompt is its top-left corner with a width and a height.
+    keyframes = [
+        {"frame_index": 0, "prompts": {"box": {"x": x1, "y": y1, "width": x2 - x1, "height": y2 - y1}}}
+        for x1, y1, x2, y2 in boxes
+    ]
+
+    request = TrackingRequestV1(
         model="sam2-video",
         video=frames,
         frame_indexes=frame_indexes,
         objects_ids=obj_ids,
-        boxes=boxes,
+        keyframes=keyframes,
     )
     response = await client.tracking(request)
     return response
@@ -163,17 +170,15 @@ masks_response = asyncio.run(run_video_segmentation())
 ## Display the result
 
 ```python
+# The result lists, for each frame, the objects tracked in it.
 vis_frame_stride = 4
 plt.close("all")
-for out_frame_idx in range(0, len(frames), vis_frame_stride):
+for frame in masks_response.data.frames:
+    if frame.frame_index % vis_frame_stride != 0:
+        continue
     plt.figure(figsize=(6, 4))
-    plt.title(f"frame {out_frame_idx}")
-    plt.imshow(Image.open(frames[out_frame_idx]))
-    for out_obj_id, out_mask, frame_indx in zip(
-        masks_response.data.objects_ids, masks_response.data.masks, masks_response.data.frame_indexes
-    ):
-        if frame_indx != out_frame_idx:
-            continue
-        out_mask = out_mask.to_mask()
-        show_mask(out_mask, plt.gca(), obj_id=out_obj_id)
+    plt.title(f"frame {frame.frame_index}")
+    plt.imshow(Image.open(frames[frame.frame_index]))
+    for tracked in frame.objects:
+        show_mask(tracked.mask.to_mask(), plt.gca(), obj_id=tracked.track_id)
 ```
