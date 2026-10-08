@@ -94,6 +94,8 @@ def test_deploy_predict_and_undeploy(serve_runtime):
         # The Serve app reached RUNNING.
         assert manager.model_statuses()["stub-det"] == "RUNNING"
         assert manager.readiness()["ready"] is True
+        # The stub does not describe itself: listed without an interface, and the deploy succeeded.
+        assert manager.get_model_interface("stub-det") is None
 
         # Inference dispatches through the Serve handle and returns the model output.
         handle = manager.get_handle("stub-det")
@@ -185,6 +187,11 @@ def test_deploy_installed_plugin_model(serve_runtime):
         buffer = io.BytesIO()
         image.save(buffer, format="PNG")
         data_uri = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode()
+
+        # The interface the plugin declares was fetched from the replica when the app came up.
+        declared = manager.get_model_interface("np-det")
+        assert declared is not None and declared.capability == "detection"
+        assert declared.classes == "closed" and declared.class_names == ["object"]
 
         handle = manager.get_handle("np-det")
         result = handle.predict.remote(DetectionInput(image=data_uri, classes=None)).result(timeout_s=30)
