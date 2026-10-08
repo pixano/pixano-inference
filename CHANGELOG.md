@@ -40,6 +40,14 @@ An additive release: no wire field is removed or renamed, and a model package wr
   declare it as their response model, so `docs/openapi.json` now describes them. The wire shape is
   unchanged.
 
+### Fixed
+
+- A successful response whose body did not match its schema escaped the client as a raw
+  `pydantic.ValidationError`, unlike every other failure. Both clients now raise
+  `PixanoInferenceError` with the code `invalid_response` (the status code, the request id and a
+  summary of the fields that do not match), for the inference, job and admin calls alike, so a
+  caller handles one exception type.
+
 ## [0.7.0] - 2026-10-06
 
 The wire contract moves back into the core, and the server becomes an extra: one distribution owns
