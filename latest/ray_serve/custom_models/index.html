@@ -845,6 +845,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#describing-the-model-to-clients" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Describing the model to clients
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#notes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2525,6 +2536,8 @@
       
         
       
+        
+      
     
     
     
@@ -2667,6 +2680,34 @@
     
   
     inference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api_reference/schemas/interface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    interface
   
 
     
@@ -3402,6 +3443,14 @@ already registered it:</p>
 </tr>
 </tbody>
 </table>
+<h2 id="describing-the-model-to-clients">Describing the model to clients</h2>
+<p>A model may tell clients how to call it: override <code>interface</code> with the descriptor of its
+capability (<code>DetectionInterface</code>, <code>TrackingInterface</code>, ... from <code>pixano_inference.models</code>), and
+<code>GET /v1/models</code> publishes it next to the model's status. A closed-vocabulary detector lists its
+<code>class_names</code>, a tracker says whether it takes prompts or runs prompt-free, a VLM which prompt
+forms it accepts. The server reads it after <code>load_model()</code>, so values can come from the loaded
+weights. See §2.11 of the <a href="../custom_model_spec/">specification</a>; a model that does not override
+it is listed with <code>interface: null</code>.</p>
 <h2 id="notes">Notes</h2>
 <ul>
 <li><strong>Package, don't ship directories.</strong> Defining a model in <code>__main__</code> or a loose script and

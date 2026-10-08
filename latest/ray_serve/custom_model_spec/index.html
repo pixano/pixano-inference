@@ -2508,6 +2508,8 @@
       
         
       
+        
+      
     
     
     
@@ -2650,6 +2652,34 @@
     
   
     inference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api_reference/schemas/interface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    interface
   
 
     
@@ -3245,7 +3275,7 @@ installed package, so nothing else is needed for a model to be found by name.</p
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[project]</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"pixano-numpy-detector"</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">requires-python</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"&gt;=3.10,&lt;3.14"</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">dependencies</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"pixano-inference[server] &gt;= 0.7.0, &lt; 0.8.0"</span><span class="p">,</span><span class="w"> </span><span class="s2">"numpy &gt;= 1.26.0, &lt; 3.0.0"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Pillow &gt;= 9.0.0"</span><span class="p">,</span><span class="w"> </span><span class="s2">"pydantic &gt;= 2.0.0, &lt; 3.0.0"</span><span class="p">]</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">dependencies</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"pixano-inference[server] &gt;= 0.7.1, &lt; 0.8.0"</span><span class="p">,</span><span class="w"> </span><span class="s2">"numpy &gt;= 1.26.0, &lt; 3.0.0"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Pillow &gt;= 9.0.0"</span><span class="p">,</span><span class="w"> </span><span class="s2">"pydantic &gt;= 2.0.0, &lt; 3.0.0"</span><span class="p">]</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="k">[project.entry-points.</span><span class="s2">"pixano_inference.models"</span><span class="k">]</span>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">numpy_detector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"pixano_numpy_detector.model"</span>
@@ -3349,20 +3379,79 @@ addresses are refused for URLs, local paths are allowed only under
 <p><strong>2.10 Device.</strong> <code>self.config.resources.num_gpus &gt; 0</code> means the deployment was given a GPU;
 the model chooses the device from it. <code>pixano_inference_torch.resolve_device(self.config)</code>
 does this for PyTorch (CUDA, then Apple MPS, else CPU).</p>
-<p>In the example (<code>model.py</code>), 2.1 to 2.5 and 2.9; no framework, so 2.8 and 2.10 are moot:</p>
+<p><strong>2.11 <code>interface</code>.</strong> A model MAY declare how it is called by overriding the <code>interface</code>
+property with the descriptor of its capability, from <code>pixano_inference.schemas</code> (also exported
+by <code>pixano_inference.models</code>). A capability's input is the union of what every model of that
+capability might accept; the descriptor says what <em>this</em> model reads and returns, so a client
+can decide how to call it and what to show for it: a prompted tracker and a tracker by detection
+are both <code>TrackingModel</code>s, but a client prompts the first and only picks classes for the second.
+The server calls the property once per deployment, after <code>load_model()</code> (so a value that depends
+on the loaded weights, such as a class set, MAY be read from the model), and publishes it as
+<code>interface</code> on <code>GET /v1/models</code> and in the response of <code>POST /v1/models</code>. A model that does not
+override it is listed with <code>interface: null</code>; declaring one requires <code>pixano-inference &gt;= 0.7.1</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Descriptor</th>
+<th>Fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tracking</code></td>
+<td><code>TrackingInterface</code></td>
+<td><code>prompts</code>: what a keyframe may carry (<code>points</code>, <code>box</code>, <code>mask</code>, <code>text</code>; <code>[]</code> for none); <code>prompt_free</code>: accepts a request naming no object; <code>classes</code>: <code>none</code>, <code>open</code> or <code>closed</code>; <code>class_names</code>: the closed set; <code>thresholds</code> (<code>box</code>, <code>text</code>); <code>interval</code>: honours the propagation interval; <code>outputs</code>: what a tracked object carries (<code>mask</code>, <code>box</code>, <code>score</code>, <code>class</code>)</td>
+</tr>
+<tr>
+<td><code>detection</code></td>
+<td><code>DetectionInterface</code></td>
+<td><code>classes</code>: <code>open</code> (detects the names the request gives) or <code>closed</code> (its own set); <code>class_names</code>; <code>thresholds</code> (<code>box</code>, <code>text</code>); <code>outputs</code> (<code>box</code>, <code>score</code>, <code>class</code>, <code>mask</code>)</td>
+</tr>
+<tr>
+<td><code>segmentation</code></td>
+<td><code>SegmentationInterface</code></td>
+<td><code>prompts</code>; <code>multimask</code>: several candidate masks per prompt; <code>embeddings</code>: returns and accepts the image embedding; <code>outputs</code> (<code>mask</code>, <code>score</code>, <code>logits</code>)</td>
+</tr>
+<tr>
+<td><code>vlm</code></td>
+<td><code>VLMInterface</code></td>
+<td><code>prompt</code>: accepted forms (<code>text</code>, <code>messages</code>); <code>images</code>: <code>{min, max}</code> images per request (<code>max: null</code> for no limit)</td>
+</tr>
+<tr>
+<td><code>embedding</code></td>
+<td><code>EmbeddingInterface</code></td>
+<td><code>modalities</code> (<code>image</code>, <code>text</code>); <code>dim</code>: vector size, <code>null</code> when unknown</td>
+</tr>
+<tr>
+<td><code>ner</code></td>
+<td><code>NERInterface</code></td>
+<td><code>entity_types</code>: the labels it returns, <code>null</code> when unknown</td>
+</tr>
+</tbody>
+</table>
+<p>Fields are camelCase on the wire (<code>promptFree</code>, <code>classNames</code>), and every descriptor carries its
+<code>capability</code>, which is how a client tells them apart.</p>
+<p>In the example (<code>model.py</code>), 2.1 to 2.5, 2.9 and 2.11; no framework, so 2.8 and 2.10 are moot:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nd">@register_model</span><span class="p">(</span><span class="s2">"NumpyDetector"</span><span class="p">)</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">NumpyDetector</span><span class="p">(</span><span class="n">DetectionModel</span><span class="p">):</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">load_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">model_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"threshold"</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="n">DetectionInput</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DetectionOutput</span><span class="p">:</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">convert_string_to_image</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">image</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        <span class="o">...</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>        <span class="k">return</span> <span class="n">DetectionOutput</span><span class="p">(</span><span class="n">boxes</span><span class="o">=</span><span class="p">[</span><span class="n">box</span><span class="p">],</span> <span class="n">scores</span><span class="o">=</span><span class="p">[</span><span class="n">score</span><span class="p">],</span> <span class="n">classes</span><span class="o">=</span><span class="p">[</span><span class="s2">"object"</span><span class="p">],</span> <span class="n">masks</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="nd">@property</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">interface</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DetectionInterface</span><span class="p">:</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        <span class="k">return</span> <span class="n">DetectionInterface</span><span class="p">(</span><span class="n">classes</span><span class="o">=</span><span class="s2">"closed"</span><span class="p">,</span> <span class="n">class_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"object"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"box"</span><span class="p">,</span> <span class="s2">"score"</span><span class="p">,</span> <span class="s2">"class"</span><span class="p">])</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="n">DetectionInput</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DetectionOutput</span><span class="p">:</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>        <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">convert_string_to_image</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">image</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>        <span class="o">...</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>        <span class="k">return</span> <span class="n">DetectionOutput</span><span class="p">(</span><span class="n">boxes</span><span class="o">=</span><span class="p">[</span><span class="n">box</span><span class="p">],</span> <span class="n">scores</span><span class="o">=</span><span class="p">[</span><span class="n">score</span><span class="p">],</span> <span class="n">classes</span><span class="o">=</span><span class="p">[</span><span class="s2">"object"</span><span class="p">],</span> <span class="n">masks</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </span></code></pre></div>
 <p>In the yolo example, 2.8 and 2.10: <code>from ultralytics import YOLO</code> sits inside <code>load_model()</code>,
 which picks <code>"cuda"</code> only when <code>num_gpus &gt; 0</code> and CUDA is available, and <code>unload()</code> frees the
-model and the CUDA cache.</p>
+model and the CUDA cache. Its 2.11 reads <code>class_names</code> from the loaded weights (<code>model.names</code>),
+and <code>YOLOByteTrackModel</code> declares <code>prompt_free=True</code> with no <code>prompts</code>, which is how a client
+tells it apart from a prompted tracker such as SAM2.</p>
 <h2 id="3-parameters">3. Parameters</h2>
 <p><strong>3.1 Typed params.</strong> A model SHOULD define a params class: a subclass of
 <code>pixano_inference.configs.BaseModelParams</code>, registered with
@@ -3429,7 +3518,8 @@ are not an integration mechanism.</p>
 from a git URL (<code>#subdirectory=</code> for a monorepo), from a local directory, or from a directory
 of wheels; <code>uv pip install</code> also follows the package's <code>[tool.uv.sources]</code>.</p>
 <p><strong>5.3 Core version.</strong> The package SHOULD constrain <code>pixano-inference</code> to the versions whose
-contract it was written against (<code>&gt;= 0.7.0, &lt; 0.8.0</code> today), as the first-party packages do.
+contract it was written against (<code>&gt;= 0.7.1, &lt; 0.8.0</code> for one that declares its <code>interface</code>, <code>&gt;= 0.7.0</code>
+otherwise), as the first-party packages do.
 It SHOULD depend on the <code>server</code> extra (<code>pixano-inference[server]</code>), so that installing the
 package yields an environment that can serve it; the base install holds the model API and the
 schemas but no server.</p>
