@@ -22,7 +22,13 @@ import numpy as np
 from pydantic import Field
 
 from pixano_inference.configs import BaseModelParams, register_model_params
-from pixano_inference.models import DetectionInput, DetectionModel, DetectionOutput, register_model
+from pixano_inference.models import (
+    DetectionInput,
+    DetectionInterface,
+    DetectionModel,
+    DetectionOutput,
+    register_model,
+)
 from pixano_inference.utils.media import convert_string_to_image
 
 
@@ -46,6 +52,11 @@ class NumpyDetector(DetectionModel):
     def load_model(self) -> None:
         """Read the (optional) difference threshold from the deployment params."""
         self._threshold = int(self.config.model_params.get("threshold", 20))
+
+    @property
+    def interface(self) -> DetectionInterface:
+        """Tell clients what to expect: one fixed class, no request threshold, a box and a score."""
+        return DetectionInterface(classes="closed", class_names=["object"], outputs=["box", "score", "class"])
 
     def predict(self, input: DetectionInput) -> DetectionOutput:
         """Return one box around pixels that differ from the top-left background colour."""

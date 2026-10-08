@@ -1649,7 +1649,7 @@ dev = [
 
 [[package]]
 name = "pixano-inference-grounding-dino"
-version = "0.2.0"
+version = "0.2.1"
 source = { editable = "." }
 dependencies = [
     { name = "accelerate" },

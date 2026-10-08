@@ -15,7 +15,7 @@ from typing import Any
 from pixano_inference_torch import resolve_device, should_compile
 
 from pixano_inference.configs import ModelDeploymentConfig
-from pixano_inference.models.detection import DetectionInput, DetectionModel, DetectionOutput
+from pixano_inference.models.detection import DetectionInput, DetectionInterface, DetectionModel, DetectionOutput
 from pixano_inference.models.registry import register_model
 
 
@@ -72,6 +72,11 @@ class GroundingDINOModel(DetectionModel):
         params = self._config.model_params
         base["path"] = params.get("path")
         return base
+
+    @property
+    def interface(self) -> DetectionInterface:
+        """Open vocabulary: the request names the classes, and sets the box and text thresholds."""
+        return DetectionInterface(classes="open", thresholds=["box", "text"], outputs=["box", "score", "class"])
 
     def predict(self, input: DetectionInput) -> DetectionOutput:
         """Run zero-shot detection.

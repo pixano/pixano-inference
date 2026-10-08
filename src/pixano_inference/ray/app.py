@@ -15,12 +15,13 @@ import time
 from collections.abc import Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import ray
 from anyio import move_on_after, to_thread
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from pydantic import TypeAdapter
 from ray import serve
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -32,6 +33,7 @@ from pixano_inference.jobs import JobManager, JobRecord
 from pixano_inference.models.capabilities import find_capability
 from pixano_inference.models.registry import ModelClassRegistry
 from pixano_inference.schemas import ModelInfo
+from pixano_inference.schemas.interface import ModelInterface
 from pixano_inference.security import make_api_key_dependency, warn_if_auth_disabled
 from pixano_inference.server_settings import ServerSettings
 
@@ -49,6 +51,11 @@ _CLEANUP_TIMEOUT_S = 30.0
 _ABORT_DRAIN_TIMEOUT_S = 5.0
 # Timeout for a capability that has no entry in the capability table.
 _FALLBACK_TIMEOUT_S = 120.0
+# Budget for asking a freshly deployed replica how its model is called. The replica is RUNNING, so
+# the call is immediate, except for a scale-to-zero deployment that has to start a replica first.
+_INTERFACE_TIMEOUT_S = 60.0
+
+_INTERFACE_ADAPTER: TypeAdapter[Optional[ModelInterface]] = TypeAdapter(Optional[ModelInterface])
 
 
 class StartupAborted(RuntimeError):
@@ -241,6 +248,7 @@ class DeploymentManager:
         self._handles: dict[str, Any] = {}  # model_name -> Serve DeploymentHandle (cache)
         self._configs: dict[str, ModelDeploymentConfig] = {}  # model_name -> config
         self._metadata_cache: dict[str, dict[str, Any]] = {}  # model_name -> metadata
+        self._interface_cache: dict[str, ModelInterface | None] = {}  # model_name -> declared interface
         self.jobs = JobManager()
 
     @property
@@ -281,6 +289,7 @@ class DeploymentManager:
 
         self._configs[config.name] = config
         self._handles.pop(config.name, None)
+        self._interface_cache[config.name] = self._fetch_interface(config.name)
         logger.info(
             "Deployed model '%s' (class=%s, capability=%s)", config.name, config.model_class, config.capability
         )
@@ -302,6 +311,7 @@ class DeploymentManager:
         self._configs.pop(name, None)
         self._handles.pop(name, None)
         self._metadata_cache.pop(name, None)
+        self._interface_cache.pop(name, None)
         self.jobs.cancel_for_model(name)
         logger.info("Undeployed model '%s'", name)
 
@@ -370,6 +380,28 @@ class DeploymentManager:
                 f"(last status: {self._app_status(name)})."
             ) from exc
 
+    def _fetch_interface(self, name: str) -> ModelInterface | None:
+        """Ask the replica of a model that just reached RUNNING how the model is called.
+
+        Called once per deployment; ``GET /v1/models`` reads the cached answer and never calls a
+        replica. The wait is bounded and a failure is never fatal: a model that does not describe
+        itself, or a replica that cannot answer in time, is listed with ``interface: null`` and a
+        warning. Only a shutdown request (Ctrl-C during startup) propagates.
+        """
+        try:
+            declared = _run_with_node_watchdog(
+                lambda: serve.get_app_handle(name).get_interface.remote().result(timeout_s=_INTERFACE_TIMEOUT_S),
+                timeout_s=_INTERFACE_TIMEOUT_S + _WATCHDOG_POLL_S,
+                what=f"Fetching the interface of '{name}'",
+                should_abort=self._should_abort,
+            )
+            return _INTERFACE_ADAPTER.validate_python(declared)
+        except StartupAborted:
+            raise
+        except Exception as exc:
+            logger.warning("Could not fetch the interface of '%s'; it is listed without one: %s", name, exc)
+            return None
+
     def _app_status(self, name: str) -> str:
         """Return the Serve application status string for *name* (or NOT_STARTED)."""
         try:
@@ -407,6 +439,10 @@ class DeploymentManager:
         }
         self._metadata_cache[name] = metadata
         return metadata
+
+    def get_model_interface(self, name: str) -> ModelInterface | None:
+        """How a deployed model is called, as fetched when it was deployed (``None`` if unknown)."""
+        return self._interface_cache.get(name)
 
     def list_models(self) -> list[ModelInfo]:
         """List all deployed models."""

@@ -22,7 +22,7 @@ from typing import Any
 from pixano_inference_torch import resolve_device
 
 from pixano_inference.configs import ModelDeploymentConfig
-from pixano_inference.models.embedding import EmbeddingInput, EmbeddingModel, EmbeddingOutput
+from pixano_inference.models.embedding import EmbeddingInput, EmbeddingInterface, EmbeddingModel, EmbeddingOutput
 from pixano_inference.models.registry import register_model
 from pixano_inference.schemas.nd_array import NDArrayFloat
 
@@ -54,6 +54,7 @@ class OpenClipEmbeddingModel(EmbeddingModel):
         self._preprocess: Any = None
         self._tokenizer: Any = None
         self._device: Any = None
+        self._dim: int | None = None
 
     def load_model(self) -> None:
         """Load the open_clip model, preprocessing transform, and tokenizer."""
@@ -73,13 +74,27 @@ class OpenClipEmbeddingModel(EmbeddingModel):
 
         model, _, preprocess = open_clip.create_model_and_transforms(spec, pretrained=pretrained, device=self._device)
         model = model.eval()
+        tokenizer = open_clip.get_tokenizer(spec)
+        # The vector size is a property of the weights: read it now, before compilation, so the
+        # model listing can show it before the first request.
+        self._dim = self._probe_dim(model, tokenizer, self._device)
         if compile_model:
             model = torch.compile(model)
 
         self._model = model
         self._preprocess = preprocess
-        self._tokenizer = open_clip.get_tokenizer(spec)
-        logger.info("OpenClipEmbeddingModel '%s' loaded (%s) on %s", self.model_name, spec, self._device)
+        self._tokenizer = tokenizer
+        logger.info(
+            "OpenClipEmbeddingModel '%s' loaded (%s, dim=%d) on %s", self.model_name, spec, self._dim, self._device
+        )
+
+    @staticmethod
+    def _probe_dim(model: Any, tokenizer: Any, device: Any) -> int:
+        """Size of the vectors the model produces, read from one encoded token sequence."""
+        import torch
+
+        with torch.inference_mode():
+            return int(model.encode_text(tokenizer(["probe"]).to(device)).shape[-1])
 
     @property
     def metadata(self) -> dict[str, Any]:
@@ -89,6 +104,11 @@ class OpenClipEmbeddingModel(EmbeddingModel):
         if self._device is not None:
             base["device"] = str(self._device)
         return base
+
+    @property
+    def interface(self) -> EmbeddingInterface:
+        """Images and texts share one space; the vector size is known once the weights are loaded."""
+        return EmbeddingInterface(modalities=["image", "text"], dim=self._dim)
 
     def predict(self, input: EmbeddingInput) -> EmbeddingOutput:
         """Embed the input image(s) or text(s) into the shared CLIP space.

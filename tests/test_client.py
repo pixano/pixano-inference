@@ -11,6 +11,7 @@ import json
 
 import numpy as np
 import pytest
+from pydantic import ValidationError
 from pytest_httpx import HTTPXMock
 
 from pixano_inference.client import (
@@ -18,7 +19,14 @@ from pixano_inference.client import (
     PixanoInferenceError,
     SyncPixanoInferenceClient,
 )
-from pixano_inference.schemas import DetectionRequest, EmbeddingRequest, SegmentationRequest
+from pixano_inference.schemas import (
+    DetectionRequest,
+    EmbeddingRequest,
+    SegmentationRequest,
+    TrackedFrame,
+    TrackingInterface,
+    TrackingOutput,
+)
 from pixano_inference.schemas.nd_array import NDArrayFloat
 from pixano_inference.schemas.v1 import TrackingRequestV1
 
@@ -130,6 +138,45 @@ async def test_error_envelope_becomes_exception(httpx_mock: HTTPXMock, simple_pi
     assert exc.value.request_id == "req-9"
 
 
+async def test_a_response_that_does_not_match_its_schema_is_a_client_error(
+    httpx_mock: HTTPXMock, simple_pixano_inference_client
+):
+    """A 2xx body the client cannot parse raises the same exception type as every other failure."""
+    httpx_mock.add_response(json={"id": "seg-1", "data": {"masks": []}}, headers={"X-Request-ID": "req-7"})
+
+    with pytest.raises(PixanoInferenceError) as exc:
+        await simple_pixano_inference_client.segmentation(
+            SegmentationRequest(model="sam2", image="https://example.com/x.jpg")
+        )
+
+    assert exc.value.status_code == 200
+    assert exc.value.code == "invalid_response"
+    assert exc.value.request_id == "req-7"
+    assert "does not match SegmentationResponse" in exc.value.message
+    assert "status: Field required" in exc.value.message and "data.scores: Field required" in exc.value.message
+    assert isinstance(exc.value.__cause__, ValidationError)
+
+
+async def test_a_body_that_is_not_json_is_a_client_error(httpx_mock: HTTPXMock, simple_pixano_inference_client):
+    httpx_mock.add_response(url=f"{URL}/v1/jobs/j1", content=b"<html>gateway</html>")
+
+    with pytest.raises(PixanoInferenceError) as exc:
+        await simple_pixano_inference_client.get_job("j1")
+
+    assert exc.value.code == "invalid_response" and "not JSON" in exc.value.message
+
+
+async def test_a_job_payload_that_is_not_a_tracking_output_is_a_client_error(
+    httpx_mock: HTTPXMock, simple_pixano_inference_client
+):
+    httpx_mock.add_response(
+        url=f"{URL}/v1/jobs/j1", json={"jobId": "j1", "status": "completed", "data": {"masks": []}}
+    )
+
+    with pytest.raises(PixanoInferenceError, match=r"invalid_response.*does not match JobStatus.*data\.frames"):
+        await simple_pixano_inference_client.get_job("j1")
+
+
 async def test_retries_then_succeeds_on_503(httpx_mock: HTTPXMock):
     httpx_mock.add_response(status_code=503, json={"error": {"code": "unavailable", "message": "starting"}})
     httpx_mock.add_response(json=_segmentation_response("after-retry"))
@@ -179,11 +226,18 @@ async def test_job_lifecycle(httpx_mock: HTTPXMock, simple_pixano_inference_clie
 
     httpx_mock.add_response(
         url=f"{URL}/v1/jobs/j1",
-        json={"jobId": "j1", "status": "completed", "data": {"frames": [{"frameIndex": 0, "objects": []}]}},
+        json={
+            "jobId": "j1",
+            "status": "completed",
+            "data": {"frames": [{"frameIndex": 0, "objects": []}]},
+            "timestamp": "2026-10-08T09:00:00Z",
+        },
     )
     done = await simple_pixano_inference_client.wait_for_job("j1", poll_interval=0.0)
     assert done.status == "completed"
-    assert done.data == {"frames": [{"frameIndex": 0, "objects": []}]}
+    # The payload is typed: the TrackingOutput the sync route returns, not a dict to re-validate.
+    assert done.data == TrackingOutput(frames=[TrackedFrame(frame_index=0, objects=[])])
+    assert done.timestamp is not None and done.timestamp.year == 2026
 
 
 # --- Admin / service ----------------------------------------------------------------
@@ -197,6 +251,49 @@ async def test_list_models(httpx_mock: HTTPXMock, simple_pixano_inference_client
     models = await simple_pixano_inference_client.list_models()
     assert models[0].name == "sam2"
     assert models[0].status == "RUNNING"
+    assert models[0].interface is None  # a 0.7.0 server, or a model that declares none
+
+
+async def test_list_models_parses_the_interface(httpx_mock: HTTPXMock, simple_pixano_inference_client):
+    httpx_mock.add_response(
+        url=f"{URL}/v1/models",
+        json=[
+            {
+                "name": "sam2-video",
+                "capability": "tracking",
+                "status": "RUNNING",
+                "interface": {"capability": "tracking", "prompts": ["points", "box", "mask"], "outputs": ["mask"]},
+            },
+            {
+                "name": "bytetrack",
+                "capability": "tracking",
+                "status": "RUNNING",
+                "interface": {
+                    "capability": "tracking",
+                    "promptFree": True,
+                    "classes": "closed",
+                    "classNames": ["person"],
+                    "outputs": ["box", "score", "class"],
+                },
+            },
+        ],
+    )
+
+    prompted, prompt_free = await simple_pixano_inference_client.list_models()
+
+    assert prompted.interface == TrackingInterface(prompts=["points", "box", "mask"], outputs=["mask"])
+    assert isinstance(prompt_free.interface, TrackingInterface)
+    assert prompt_free.interface.prompt_free is True and prompt_free.interface.class_names == ["person"]
+
+
+async def test_a_model_listing_that_does_not_match_its_schema_is_a_client_error(
+    httpx_mock: HTTPXMock, simple_pixano_inference_client
+):
+    httpx_mock.add_response(url=f"{URL}/v1/models", json=[{"name": "sam2", "interface": {"capability": "ocr"}}])
+
+    with pytest.raises(PixanoInferenceError, match="invalid_response") as exc:
+        await simple_pixano_inference_client.list_models()
+    assert "0.capability: Field required" in exc.value.message
 
 
 async def test_ready_does_not_raise_on_503(httpx_mock: HTTPXMock, simple_pixano_inference_client):
@@ -215,3 +312,13 @@ def test_sync_client_segmentation(httpx_mock: HTTPXMock, sync_pixano_inference_c
     )
     assert result.id == "sync-1"
     assert httpx_mock.get_request().url.path == "/v1/inference/segmentation"
+
+
+def test_sync_client_raises_on_a_response_that_does_not_match_its_schema(
+    httpx_mock: HTTPXMock, sync_pixano_inference_client: SyncPixanoInferenceClient
+):
+    httpx_mock.add_response(url=f"{URL}/v1/jobs/j1", json={"jobId": "j1"})
+
+    with pytest.raises(PixanoInferenceError, match="invalid_response") as exc:
+        sync_pixano_inference_client.get_job("j1")
+    assert exc.value.status_code == 200 and "status: Field required" in exc.value.message

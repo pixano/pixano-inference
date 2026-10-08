@@ -16,6 +16,7 @@ from __future__ import annotations
 from typing import ClassVar
 
 from pixano_inference.schemas.detection import DetectionInput, DetectionOutput  # noqa: F401
+from pixano_inference.schemas.interface import DetectionInterface  # noqa: F401
 
 from .base import InferenceModel
 
@@ -25,7 +26,9 @@ class DetectionModel(InferenceModel[DetectionInput, DetectionOutput]):
 
     Subclasses implement ``predict`` which receives a :class:`DetectionInput`
     and returns a :class:`DetectionOutput`.  The same pair of types covers
-    both pure detection (no masks) and instance segmentation (with masks).
+    both pure detection (no masks) and instance segmentation (with masks). The ``interface``
+    property, when overridden, returns a :class:`DetectionInterface`: whether the model detects the
+    classes the request names or has its own class set, and what each detection carries.
 
     Example:
         ```python

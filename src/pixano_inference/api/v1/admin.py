@@ -34,6 +34,7 @@ def build_admin_router(deployment_manager: DeploymentManager) -> APIRouter:
                 model_class=m.model_class,
                 model_path=m.model_path,
                 status=statuses.get(m.name, "NOT_STARTED"),
+                interface=deployment_manager.get_model_interface(m.name),
             )
             for m in deployment_manager.list_models()
         ]
@@ -71,6 +72,7 @@ def build_admin_router(deployment_manager: DeploymentManager) -> APIRouter:
             if isinstance(model_config.model_params.get("path"), str)
             else None,
             status=statuses.get(model_config.name, "NOT_STARTED"),
+            interface=deployment_manager.get_model_interface(model_config.name),
         )
 
     @router.delete("/{name}")

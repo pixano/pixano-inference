@@ -25,6 +25,7 @@ from ray.serve.config import AutoscalingConfig as ServeAutoscalingConfig
 
 from pixano_inference.configs.deployment import ModelDeploymentConfig
 from pixano_inference.models.base import InferenceModel
+from pixano_inference.schemas.interface import ModelInterface
 
 
 logger = logging.getLogger(__name__)
@@ -87,6 +88,10 @@ class ModelReplica:
     async def get_metadata(self) -> dict[str, Any]:
         """Return model metadata."""
         return self._model.metadata
+
+    async def get_interface(self) -> ModelInterface | None:
+        """Return how the model is called, or ``None`` when it does not describe itself."""
+        return self._model.interface
 
     async def get_stats(self) -> dict[str, Any]:
         """Return request/timing statistics for this replica."""

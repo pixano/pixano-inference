@@ -9,7 +9,9 @@
 Two clients share one contract: :class:`PixanoInferenceClient` (async) and
 :class:`SyncPixanoInferenceClient` (sync). Both hold a pooled httpx transport, send the
 optional API key, retry transient failures with backoff, and raise
-:class:`PixanoInferenceError` carrying the server's ``{code, message, requestId}`` envelope.
+:class:`PixanoInferenceError` for every failure: the server's ``{code, message, requestId}``
+envelope on an error status, ``connection_error`` when the server cannot be reached, and
+``invalid_response`` when a successful response does not match its schema.
 Requests serialize as camelCase JSON (``by_alias=True``); media is passed by value as a URL,
 base64 data-URI, or media-root path (the server also exposes ``/binary`` multipart routes for
 callers that prefer raw uploads).
@@ -22,6 +24,7 @@ import time
 from typing import Any
 
 import httpx
+from pydantic import TypeAdapter, ValidationError
 
 from .schemas.base import BaseResponse
 from .schemas.inference import (
@@ -46,10 +49,23 @@ TRACKING_TIMEOUT = 600.0
 DEPLOY_TIMEOUT = 600.0
 _RETRY_STATUS = frozenset({502, 503, 504})
 _TERMINAL_JOB_STATES = frozenset({"completed", "failed", "canceled"})
+# Set by the server on every response (echoed from the request or generated). The client only
+# reads it; the name is repeated here rather than imported from the server stack.
+_REQUEST_ID_HEADER = "X-Request-ID"
+_VALIDATION_ERRORS_SHOWN = 5
 
 
 class PixanoInferenceError(Exception):
-    """Error raised by the client, carrying the server error envelope."""
+    """Error raised by the client, carrying the server error envelope.
+
+    Attributes:
+        status_code: HTTP status of the response, ``0`` when there was none.
+        code: The server's error code, or one of the client's own: ``connection_error``,
+            ``timeout``, ``invalid_response`` (a successful response that does not match its
+            schema, so the server and the client disagree on the contract).
+        message: What went wrong.
+        request_id: The server's request id, when a response carried one.
+    """
 
     def __init__(self, status_code: int, code: str, message: Any, request_id: str | None = None) -> None:
         """Store the status code, error code, message, and optional request id."""
@@ -125,6 +141,39 @@ class _ClientBase:
                 message = body.get("detail") or body.get("message") or message
         raise PixanoInferenceError(response.status_code, code, message, request_id)
 
+    @staticmethod
+    def _parse(response: httpx.Response, response_type: Any) -> Any:
+        """Validate the body of a successful response against its schema.
+
+        Raises:
+            PixanoInferenceError: With code ``invalid_response`` when the body is not JSON or does
+                not match ``response_type``, so a caller handles one exception type whatever fails.
+        """
+        request_id = response.headers.get(_REQUEST_ID_HEADER)
+        try:
+            body = response.json()
+        except ValueError as exc:
+            message = f"The response body is not JSON: {exc}"
+            raise PixanoInferenceError(response.status_code, "invalid_response", message, request_id) from exc
+        try:
+            return TypeAdapter(response_type).validate_python(body)
+        except ValidationError as exc:
+            message = _describe_validation_error(exc, response_type)
+            raise PixanoInferenceError(response.status_code, "invalid_response", message, request_id) from exc
+
+
+def _describe_validation_error(exc: ValidationError, response_type: Any) -> str:
+    """One line naming the expected schema and the first fields that do not match it."""
+    errors = exc.errors()
+    shown = "; ".join(
+        f"{'.'.join(str(part) for part in error['loc']) or '<body>'}: {error['msg']}"
+        for error in errors[:_VALIDATION_ERRORS_SHOWN]
+    )
+    hidden = len(errors) - _VALIDATION_ERRORS_SHOWN
+    more = f" (+{hidden} more)" if hidden > 0 else ""
+    name = getattr(response_type, "__name__", str(response_type))
+    return f"The response does not match {name}: {shown}{more}"
+
 
 class PixanoInferenceClient(_ClientBase):
     """Asynchronous client for the Pixano Inference /v1 API."""
@@ -190,7 +239,7 @@ class PixanoInferenceClient(_ClientBase):
 
     async def _infer(self, path: str, request: Any, response_type: type[BaseResponse], timeout: float | None) -> Any:
         response = await self._request("POST", path, json=self._json_body(request), timeout=timeout)
-        return response_type.model_validate(response.json())
+        return self._parse(response, response_type)
 
     # --- Inference ------------------------------------------------------------------
 
@@ -229,17 +278,17 @@ class PixanoInferenceClient(_ClientBase):
         response = await self._request(
             "POST", "/v1/inference/tracking/jobs", json=self._json_body(request), timeout=timeout
         )
-        return JobStatus.model_validate(response.json())
+        return self._parse(response, JobStatus)
 
     async def get_job(self, job_id: str) -> JobStatus:
         """Poll the status of a job."""
         response = await self._request("GET", f"/v1/jobs/{job_id}")
-        return JobStatus.model_validate(response.json())
+        return self._parse(response, JobStatus)
 
     async def cancel_job(self, job_id: str) -> JobStatus:
         """Cancel a job."""
         response = await self._request("DELETE", f"/v1/jobs/{job_id}")
-        return JobStatus.model_validate(response.json())
+        return self._parse(response, JobStatus)
 
     async def wait_for_job(
         self, job_id: str, *, poll_interval: float = 1.0, timeout: float | None = None
@@ -259,14 +308,14 @@ class PixanoInferenceClient(_ClientBase):
     async def list_models(self) -> list[ModelStatusInfo]:
         """List deployed models with their live status."""
         response = await self._request("GET", "/v1/models")
-        return [ModelStatusInfo.model_validate(model) for model in response.json()]
+        return self._parse(response, list[ModelStatusInfo])
 
     async def deploy_model(self, request: DeployModelRequest, *, timeout: float | None = None) -> ModelStatusInfo:
         """Deploy a model at runtime."""
         response = await self._request(
             "POST", "/v1/models", json=self._json_body(request), timeout=timeout or DEPLOY_TIMEOUT
         )
-        return ModelStatusInfo.model_validate(response.json())
+        return self._parse(response, ModelStatusInfo)
 
     async def undeploy_model(self, name: str) -> dict[str, Any]:
         """Undeploy a model."""
@@ -345,7 +394,7 @@ class SyncPixanoInferenceClient(_ClientBase):
 
     def _infer(self, path: str, request: Any, response_type: type[BaseResponse], timeout: float | None) -> Any:
         response = self._request("POST", path, json=self._json_body(request), timeout=timeout)
-        return response_type.model_validate(response.json())
+        return self._parse(response, response_type)
 
     def segmentation(self, request: SegmentationRequest, *, timeout: float | None = None) -> SegmentationResponse:
         """Run image segmentation."""
@@ -374,15 +423,15 @@ class SyncPixanoInferenceClient(_ClientBase):
     def submit_tracking_job(self, request: TrackingRequestV1, *, timeout: float | None = None) -> JobStatus:
         """Submit a tracking request as an asynchronous job."""
         response = self._request("POST", "/v1/inference/tracking/jobs", json=self._json_body(request), timeout=timeout)
-        return JobStatus.model_validate(response.json())
+        return self._parse(response, JobStatus)
 
     def get_job(self, job_id: str) -> JobStatus:
         """Poll the status of a job."""
-        return JobStatus.model_validate(self._request("GET", f"/v1/jobs/{job_id}").json())
+        return self._parse(self._request("GET", f"/v1/jobs/{job_id}"), JobStatus)
 
     def cancel_job(self, job_id: str) -> JobStatus:
         """Cancel a job."""
-        return JobStatus.model_validate(self._request("DELETE", f"/v1/jobs/{job_id}").json())
+        return self._parse(self._request("DELETE", f"/v1/jobs/{job_id}"), JobStatus)
 
     def wait_for_job(self, job_id: str, *, poll_interval: float = 1.0, timeout: float | None = None) -> JobStatus:
         """Poll a job until it reaches a terminal state."""
@@ -398,14 +447,14 @@ class SyncPixanoInferenceClient(_ClientBase):
     def list_models(self) -> list[ModelStatusInfo]:
         """List deployed models with their live status."""
         response = self._request("GET", "/v1/models")
-        return [ModelStatusInfo.model_validate(model) for model in response.json()]
+        return self._parse(response, list[ModelStatusInfo])
 
     def deploy_model(self, request: DeployModelRequest, *, timeout: float | None = None) -> ModelStatusInfo:
         """Deploy a model at runtime."""
         response = self._request(
             "POST", "/v1/models", json=self._json_body(request), timeout=timeout or DEPLOY_TIMEOUT
         )
-        return ModelStatusInfo.model_validate(response.json())
+        return self._parse(response, ModelStatusInfo)
 
     def undeploy_model(self, name: str) -> dict[str, Any]:
         """Undeploy a model."""

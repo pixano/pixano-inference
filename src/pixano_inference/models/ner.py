@@ -12,6 +12,7 @@ The I/O types live in :mod:`pixano_inference.schemas.ner` and are re-exported he
 
 from typing import ClassVar
 
+from pixano_inference.schemas.interface import NERInterface  # noqa: F401
 from pixano_inference.schemas.ner import NEREntity, NERInput, NEROutput  # noqa: F401
 
 from .base import InferenceModel
@@ -21,7 +22,8 @@ class NERModel(InferenceModel[NERInput, NEROutput]):
     """Base class for named entity recognition models.
 
     ``predict`` receives a :class:`NERInput` (the text to analyse) and returns a :class:`NEROutput`
-    (the recognised entities).
+    (the recognised entities). The ``interface`` property, when overridden, returns a
+    :class:`NERInterface`: the entity types the model can return.
 
     Example:
         ```python

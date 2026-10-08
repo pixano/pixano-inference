@@ -14,7 +14,7 @@ from typing import Any
 
 from pixano_inference.configs import ModelDeploymentConfig
 from pixano_inference.models.registry import register_model
-from pixano_inference.models.vlm import UsageInfo, VLMInput, VLMModel, VLMOutput
+from pixano_inference.models.vlm import UsageInfo, VLMInput, VLMInterface, VLMModel, VLMOutput
 
 
 logger = logging.getLogger(__name__)
@@ -60,6 +60,11 @@ class VLLMVLMModel(VLMModel):
         params = self._config.model_params
         base["path"] = params.get("path")
         return base
+
+    @property
+    def interface(self) -> VLMInterface:
+        """Chat messages only, with the images embedded in them; any number of images."""
+        return VLMInterface(prompt=["messages"])
 
     def predict(self, input: VLMInput) -> VLMOutput:
         """Run VLM generation via vLLM.

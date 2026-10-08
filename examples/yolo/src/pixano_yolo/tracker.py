@@ -34,9 +34,12 @@ from pixano_inference.models.tracking import (
     TrackedFrame,
     TrackedObject,
     TrackingInput,
+    TrackingInterface,
     TrackingModel,
     TrackingOutput,
 )
+
+from .model import class_names_of
 
 
 logger = logging.getLogger(__name__)
@@ -99,6 +102,18 @@ class YOLOByteTrackModel(TrackingModel):
         base["path"] = self._config.model_params.get("path")
         base["tracker"] = self._tracker
         return base
+
+    @property
+    def interface(self) -> TrackingInterface:
+        """Tracking by detection: no prompt, the detector's own classes, a box per track and frame."""
+        return TrackingInterface(
+            prompts=[],
+            prompt_free=True,
+            classes="closed",
+            class_names=class_names_of(self._model),
+            thresholds=["box"],
+            outputs=["box", "score", "class"],
+        )
 
     def predict(self, input: TrackingInput) -> TrackingOutput:
         """Detect the objects of each frame and link them into tracks.

@@ -14,18 +14,21 @@ admin/job envelopes. It imports no web framework, so the client depends on it di
 
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
 
 from pydantic import model_validator
 
 from .base import BaseRequest, _BaseModel
+from .interface import ModelInterface
 from .rle import CompressedRLE
 from .tracking import (
     TrackingBoxPrompt,
     TrackingInput,
     TrackingInterval,
     TrackingKeyframe,
+    TrackingOutput,
     TrackingPointPrompt,
 )
 
@@ -109,21 +112,45 @@ class DeployModelRequest(_BaseModel):
 
 
 class ModelStatusInfo(_BaseModel):
-    """Model listing entry with its live Serve status."""
+    """Model listing entry with its live Serve status.
+
+    Attributes:
+        name: Deployment name, the ``model`` a request names.
+        capability: Capability of the model, which fixes its route.
+        model_class: Registered class name of the model.
+        model_path: Checkpoint id or location, when the model has one.
+        status: Live Ray Serve status of the deployment.
+        interface: How the model is called, as the model declares it (see
+            :mod:`pixano_inference.schemas.interface`). ``None`` when the model declares none or
+            the server could not fetch it.
+    """
 
     name: str
     capability: str
     model_class: str | None = None
     model_path: str | None = None
     status: str
+    interface: ModelInterface | None = None
 
 
 class JobStatus(_BaseModel):
-    """Status envelope for an asynchronous job."""
+    """Status envelope for an asynchronous job.
+
+    Attributes:
+        job_id: Identifier of the job, from the submit response.
+        status: ``running`` until the job reaches a terminal state.
+        detail: Why the job failed or was canceled, when it did.
+        data: The result of a completed job, ``None`` otherwise. Jobs run tracking requests, so it
+            is the :class:`TrackingOutput` the synchronous route would have returned.
+        metadata: Metadata of the model that ran the job.
+        timestamp: When the job was submitted or, once terminal, when it ended.
+        processing_time: Seconds from submission to the terminal state, ``0`` while running.
+    """
 
     job_id: str
     status: Literal["running", "completed", "failed", "canceled"]
     detail: str | None = None
-    data: dict[str, Any] | None = None
+    data: TrackingOutput | None = None
     metadata: dict[str, Any] = {}
+    timestamp: datetime | None = None
     processing_time: float = 0.0

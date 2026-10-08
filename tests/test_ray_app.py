@@ -15,11 +15,12 @@ import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
+from pixano_inference.models import DetectionInterface, DetectionModel, DetectionOutput, register_model
 from pixano_inference.models.tracking import TrackedFrame, TrackedObject, TrackingOutput
 from pixano_inference.ray import app as ray_app_module
 from pixano_inference.ray.app import DeploymentManager, create_ray_serve_app
 from pixano_inference.ray.config import ModelDeploymentConfig, RayServeConfig
-from pixano_inference.schemas import ModelInfo
+from pixano_inference.schemas import ModelInfo, TrackingInterface
 from pixano_inference.schemas.rle import CompressedRLE
 from tests.fakes import FakeHandle
 
@@ -33,6 +34,113 @@ def ray_app_client():
 
 def _make_tracking_config(name: str = "sam2-video"):
     return ModelDeploymentConfig(name=name, capability="tracking", model_class="Sam2VideoModel")
+
+
+@register_model("DescribedStubDetector")
+class DescribedStubDetector(DetectionModel):
+    """A stub that describes itself; the manager must publish what the replica returns."""
+
+    def load_model(self) -> None:
+        pass
+
+    def predict(self, input):  # noqa: ANN001
+        return DetectionOutput(boxes=[], scores=[], classes=[])
+
+    @property
+    def interface(self) -> DetectionInterface:
+        return DetectionInterface(classes="closed", class_names=["thing"], outputs=["box", "score", "class"])
+
+
+class _FakeInterfaceMethod:
+    """``handle.get_interface.remote().result(timeout_s=...)`` as the manager calls it."""
+
+    def __init__(self, value=None, *, error: Exception | None = None, delay_s: float = 0.0) -> None:
+        self._value = value
+        self._error = error
+        self._delay_s = delay_s
+        self.timeouts: list[float] = []
+
+    def remote(self):
+        return self
+
+    def result(self, timeout_s: float):
+        self.timeouts.append(timeout_s)
+        time.sleep(self._delay_s)
+        if self._error is not None:
+            raise self._error
+        return self._value
+
+
+class TestModelInterface:
+    """The interface is fetched once per deployment, cached, and never fails a deploy."""
+
+    @staticmethod
+    def _deploying_manager(monkeypatch: pytest.MonkeyPatch, get_interface: _FakeInterfaceMethod) -> DeploymentManager:
+        manager = DeploymentManager(RayServeConfig(num_gpus=0))
+        monkeypatch.setattr(manager, "_preflight_resource_check", lambda config: None)
+        monkeypatch.setattr(manager, "_run_serve_app", lambda app, name, timeout_s: None)
+        monkeypatch.setattr(manager, "_best_effort_delete", lambda name: None)
+        monkeypatch.setattr(ray_app_module, "_has_live_ray_node", lambda: True)
+        monkeypatch.setattr(
+            ray_app_module.serve, "get_app_handle", lambda name: SimpleNamespace(get_interface=get_interface)
+        )
+        return manager
+
+    @staticmethod
+    def _config(name: str = "described") -> ModelDeploymentConfig:
+        return ModelDeploymentConfig(name=name, capability="detection", model_class="DescribedStubDetector")
+
+    def test_deploy_fetches_the_interface_once_and_undeploy_forgets_it(self, monkeypatch: pytest.MonkeyPatch):
+        declared = DescribedStubDetector(self._config()).interface
+        get_interface = _FakeInterfaceMethod(declared)
+        manager = self._deploying_manager(monkeypatch, get_interface)
+
+        manager.deploy_model(self._config())
+
+        assert manager.get_model_interface("described") == declared
+        assert manager.get_model_interface("described") == declared  # served from the cache
+        assert get_interface.timeouts == [ray_app_module._INTERFACE_TIMEOUT_S]  # one bounded call
+
+        manager.undeploy_model("described")
+        assert manager.get_model_interface("described") is None
+
+    def test_a_model_without_interface_lists_with_none(self, monkeypatch: pytest.MonkeyPatch):
+        manager = self._deploying_manager(monkeypatch, _FakeInterfaceMethod(None))
+
+        manager.deploy_model(self._config())
+
+        assert manager.get_model_interface("described") is None
+        assert "described" in manager._configs
+
+    def test_a_fetch_failure_warns_and_never_fails_the_deploy(self, monkeypatch: pytest.MonkeyPatch, caplog):
+        manager = self._deploying_manager(monkeypatch, _FakeInterfaceMethod(error=TimeoutError("replica busy")))
+
+        with caplog.at_level("WARNING", logger=ray_app_module.__name__):
+            manager.deploy_model(self._config())
+
+        assert "described" in manager._configs
+        assert manager.get_model_interface("described") is None
+        assert "Could not fetch the interface of 'described'" in caplog.text
+
+    def test_a_malformed_interface_is_dropped_not_served(self, monkeypatch: pytest.MonkeyPatch, caplog):
+        manager = self._deploying_manager(monkeypatch, _FakeInterfaceMethod({"capability": "detection"}))
+
+        with caplog.at_level("WARNING", logger=ray_app_module.__name__):
+            manager.deploy_model(self._config())
+
+        assert manager.get_model_interface("described") is None
+        assert "Could not fetch the interface" in caplog.text
+
+    def test_shutdown_during_the_fetch_still_aborts_startup(self, monkeypatch: pytest.MonkeyPatch):
+        """Ctrl-C while the replica is slow to answer must not be swallowed as a fetch failure."""
+        manager = self._deploying_manager(monkeypatch, _FakeInterfaceMethod(None, delay_s=2.0))
+        manager._should_abort = lambda: True
+
+        with pytest.raises(ray_app_module.StartupAborted):
+            manager.deploy_model(self._config())
+
+    def test_unknown_model_has_no_interface(self):
+        assert DeploymentManager(RayServeConfig(num_gpus=0)).get_model_interface("nope") is None
 
 
 class TestJobManager:
@@ -121,6 +229,61 @@ class TestServiceRoutes:
         body = response.json()
         assert body[0]["capability"] == "segmentation"
         assert body[0]["status"] == "RUNNING"
+        assert body[0]["interface"] is None  # nothing declared (or a model package predating 0.7.1)
+
+    def test_list_models_publishes_the_declared_interface(
+        self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ):
+        manager = ray_app_client.app.state.deployment_manager
+        declared = {
+            "sam2-video": TrackingInterface(prompts=["points", "box", "mask"], interval=True, outputs=["mask"]),
+            "bytetrack": None,
+        }
+        monkeypatch.setattr(
+            manager,
+            "list_models",
+            lambda: [ModelInfo(name=name, capability="tracking", model_class="X") for name in declared],
+        )
+        monkeypatch.setattr(manager, "model_statuses", lambda: {name: "RUNNING" for name in declared})
+        monkeypatch.setattr(manager, "get_model_interface", declared.get)
+
+        body = ray_app_client.get("/v1/models").json()
+
+        assert body[0]["interface"] == {
+            "capability": "tracking",
+            "prompts": ["points", "box", "mask"],
+            "promptFree": False,
+            "classes": "none",
+            "classNames": None,
+            "thresholds": [],
+            "interval": True,
+            "outputs": ["mask"],
+        }
+        assert body[1]["interface"] is None
+
+    def test_deploy_route_returns_the_interface(self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch):
+        manager = ray_app_client.app.state.deployment_manager
+        declared = DescribedStubDetector(
+            ModelDeploymentConfig(name="described", capability="detection", model_class="DescribedStubDetector")
+        ).interface
+
+        def _deploy(config):
+            manager._configs[config.name] = config
+            manager._interface_cache[config.name] = declared
+
+        monkeypatch.setattr(manager, "deploy_model", _deploy)
+        monkeypatch.setattr(manager, "model_statuses", lambda: {"described": "RUNNING"})
+
+        response = ray_app_client.post("/v1/models", json={"name": "described", "modelClass": "DescribedStubDetector"})
+
+        assert response.status_code == 201, response.text
+        assert response.json()["interface"] == {
+            "capability": "detection",
+            "classes": "closed",
+            "classNames": ["thing"],
+            "thresholds": [],
+            "outputs": ["box", "score", "class"],
+        }
 
     def test_info(self, ray_app_client: TestClient, monkeypatch: pytest.MonkeyPatch):
         fake_ray = SimpleNamespace(

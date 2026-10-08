@@ -12,6 +12,49 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+An additive release: no wire field is removed or renamed, and a model package written against
+0.7.0 keeps working unchanged.
+
+### Added
+
+- **A model describes how it is called.** `GET /v1/models` (and the response of `POST /v1/models`)
+  carries an `interface` per model: a typed, per-capability descriptor the model declares through
+  the new `InferenceModel.interface` property (`TrackingInterface`, `DetectionInterface`,
+  `SegmentationInterface`, `VLMInterface`, `EmbeddingInterface`, `NERInterface` in
+  `pixano_inference.schemas`, told apart by their `capability`). A tracker says which prompts a
+  keyframe may carry and whether it accepts a prompt-free request; a detector says whether it
+  detects the classes the request names or has its own class set, and which; and so on, so a
+  client knows how to call a given model and what to show for it, where the capability alone
+  said neither. The server fetches it once per deployment, after `load_model()`, with a bounded
+  wait that never fails a deploy; a model that declares none, or a model package that predates
+  the field, is listed with `interface: null`. See §2.11 of the custom model specification.
+- **The first-party models declare theirs.** `Sam2VideoModel` takes `points`, `box` or `mask`
+  keyframes and honours the interval; `YOLOByteTrackModel` is `promptFree` with the detector's
+  `classNames`; `Sam2ImageModel` returns candidate masks and reusable embeddings;
+  `GroundingDINOModel` is open-vocabulary with box and text thresholds; `OpenClipEmbeddingModel`
+  embeds images and text and reports its `dim`; the Transformers and vLLM VLMs say which prompt
+  forms they accept; the YOLO and numpy example detectors publish their class set. The model
+  packages are `0.2.1` and require `pixano-inference >= 0.7.1`.
+
+### Changed
+
+- **The job payload is typed.** `JobStatus.data` is a `TrackingOutput | None` (jobs run tracking
+  requests, and the server already sent exactly that output), so a client reads
+  `job.data.frames` as it does `response.data` from the synchronous route instead of re-validating
+  a `dict`. `JobStatus` also carries the `timestamp` the server always sent, and the job routes
+  declare it as their response model, so `docs/openapi.json` now describes them. The wire shape is
+  unchanged.
+
+### Fixed
+
+- A successful response whose body did not match its schema escaped the client as a raw
+  `pydantic.ValidationError`, unlike every other failure. Both clients now raise
+  `PixanoInferenceError` with the code `invalid_response` (the status code, the request id and a
+  summary of the fields that do not match), for the inference, job and admin calls alike, so a
+  caller handles one exception type.
+
 ## [0.7.0] - 2026-10-06
 
 The wire contract moves back into the core, and the server becomes an extra: one distribution owns

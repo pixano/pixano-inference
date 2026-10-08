@@ -24,6 +24,7 @@ from pixano_inference.models.tracking import (
     TrackedFrame,
     TrackedObject,
     TrackingInput,
+    TrackingInterface,
     TrackingKeyframe,
     TrackingModel,
     TrackingOutput,
@@ -106,6 +107,17 @@ class Sam2VideoModel(TrackingModel):
         if self._predictor is not None:
             base["device"] = str(self._predictor.device)
         return base
+
+    @property
+    def interface(self) -> TrackingInterface:
+        """Prompted tracking: every object is named by a keyframe, and comes back as a mask per frame."""
+        return TrackingInterface(
+            prompts=["points", "box", "mask"],
+            prompt_free=False,
+            classes="none",
+            interval=True,
+            outputs=["mask"],
+        )
 
     def predict(self, input: TrackingInput) -> TrackingOutput:
         """Run SAM2 video mask generation.

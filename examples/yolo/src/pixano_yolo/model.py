@@ -23,11 +23,19 @@ import logging
 from typing import Any
 
 from pixano_inference.configs import ModelDeploymentConfig
-from pixano_inference.models.detection import DetectionInput, DetectionModel, DetectionOutput
+from pixano_inference.models.detection import DetectionInput, DetectionInterface, DetectionModel, DetectionOutput
 from pixano_inference.models.registry import register_model
 
 
 logger = logging.getLogger(__name__)
+
+
+def class_names_of(model: Any) -> list[str] | None:
+    """The class set of a loaded ultralytics model, in class-index order (``None`` before loading)."""
+    if model is None:
+        return None
+    names = model.names
+    return [names[index] for index in sorted(names)]
 
 
 @register_model("YOLOModel")
@@ -74,6 +82,16 @@ class YOLOModel(DetectionModel):
         base = super().metadata
         base["path"] = self._config.model_params.get("path")
         return base
+
+    @property
+    def interface(self) -> DetectionInterface:
+        """A closed-vocabulary detector: its class set comes from the weights, once loaded."""
+        return DetectionInterface(
+            classes="closed",
+            class_names=class_names_of(self._model),
+            thresholds=["box"],
+            outputs=["box", "score", "class"],
+        )
 
     def predict(self, input: DetectionInput) -> DetectionOutput:
         """Run detection / instance segmentation.

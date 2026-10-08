@@ -12,6 +12,7 @@ The I/O types live in :mod:`pixano_inference.schemas.vlm` and are re-exported he
 
 from typing import ClassVar
 
+from pixano_inference.schemas.interface import ImageRange, VLMInterface  # noqa: F401
 from pixano_inference.schemas.vlm import UsageInfo, VLMInput, VLMOutput  # noqa: F401
 
 from .base import InferenceModel
@@ -21,7 +22,9 @@ class VLMModel(InferenceModel[VLMInput, VLMOutput]):
     """Base class for vision-language models.
 
     ``predict`` receives a :class:`VLMInput` (prompt, images and generation parameters) and returns
-    a :class:`VLMOutput` (generated text, usage and generation config).
+    a :class:`VLMOutput` (generated text, usage and generation config). The ``interface`` property,
+    when overridden, returns a :class:`VLMInterface`: the prompt forms the model accepts and how
+    many images a request may carry.
 
     Example:
         ```python
