@@ -290,7 +290,7 @@ every module listed in the `pixano_inference.models` group, which runs the decor
 
 ```toml
 [project]
-dependencies = ["pixano-inference[server] >= 0.7.0, < 0.8.0", "torch >= 2.3.0, < 3.0.0", "ultralytics", "lap >= 0.5.12"]
+dependencies = ["pixano-inference[server] >= 0.7.1, < 0.8.0", "torch >= 2.3.0, < 3.0.0", "ultralytics", "lap >= 0.5.12"]
 
 [project.entry-points."pixano_inference.models"]
 yolo_detector = "pixano_yolo.model"
