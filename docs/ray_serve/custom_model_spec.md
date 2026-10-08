@@ -59,7 +59,7 @@ In the example (`pyproject.toml`):
 [project]
 name = "pixano-numpy-detector"
 requires-python = ">=3.10,<3.14"
-dependencies = ["pixano-inference[server] >= 0.7.0, < 0.8.0", "numpy >= 1.26.0, < 3.0.0", "Pillow >= 9.0.0", "pydantic >= 2.0.0, < 3.0.0"]
+dependencies = ["pixano-inference[server] >= 0.7.1, < 0.8.0", "numpy >= 1.26.0, < 3.0.0", "Pillow >= 9.0.0", "pydantic >= 2.0.0, < 3.0.0"]
 
 [project.entry-points."pixano_inference.models"]
 numpy_detector = "pixano_numpy_detector.model"
@@ -161,13 +161,17 @@ override it is listed with `interface: null`; declaring one requires `pixano-inf
 Fields are camelCase on the wire (`promptFree`, `classNames`), and every descriptor carries its
 `capability`, which is how a client tells them apart.
 
-In the example (`model.py`), 2.1 to 2.5 and 2.9; no framework, so 2.8 and 2.10 are moot:
+In the example (`model.py`), 2.1 to 2.5, 2.9 and 2.11; no framework, so 2.8 and 2.10 are moot:
 
 ```python
 @register_model("NumpyDetector")
 class NumpyDetector(DetectionModel):
     def load_model(self) -> None:
         self._threshold = int(self.config.model_params.get("threshold", 20))
+
+    @property
+    def interface(self) -> DetectionInterface:
+        return DetectionInterface(classes="closed", class_names=["object"], outputs=["box", "score", "class"])
 
     def predict(self, input: DetectionInput) -> DetectionOutput:
         image = np.asarray(convert_string_to_image(input.image), dtype=np.int16)
@@ -177,7 +181,9 @@ class NumpyDetector(DetectionModel):
 
 In the yolo example, 2.8 and 2.10: `from ultralytics import YOLO` sits inside `load_model()`,
 which picks `"cuda"` only when `num_gpus > 0` and CUDA is available, and `unload()` frees the
-model and the CUDA cache.
+model and the CUDA cache. Its 2.11 reads `class_names` from the loaded weights (`model.names`),
+and `YOLOByteTrackModel` declares `prompt_free=True` with no `prompts`, which is how a client
+tells it apart from a prompted tracker such as SAM2.
 
 ## 3. Parameters
 
@@ -240,7 +246,8 @@ from a git URL (`#subdirectory=` for a monorepo), from a local directory, or fro
 of wheels; `uv pip install` also follows the package's `[tool.uv.sources]`.
 
 **5.3 Core version.** The package SHOULD constrain `pixano-inference` to the versions whose
-contract it was written against (`>= 0.7.0, < 0.8.0` today), as the first-party packages do.
+contract it was written against (`>= 0.7.1, < 0.8.0` for one that declares its `interface`, `>= 0.7.0`
+otherwise), as the first-party packages do.
 It SHOULD depend on the `server` extra (`pixano-inference[server]`), so that installing the
 package yields an environment that can serve it; the base install holds the model API and the
 schemas but no server.

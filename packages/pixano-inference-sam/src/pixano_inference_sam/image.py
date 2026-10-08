@@ -18,7 +18,12 @@ from pixano_inference_torch import resolve_device, resolve_torch_dtype
 
 from pixano_inference.configs import ModelDeploymentConfig
 from pixano_inference.models.registry import register_model
-from pixano_inference.models.segmentation import SegmentationInput, SegmentationModel, SegmentationOutput
+from pixano_inference.models.segmentation import (
+    SegmentationInput,
+    SegmentationInterface,
+    SegmentationModel,
+    SegmentationOutput,
+)
 
 from ._deps import assert_sam2_installed
 from ._prompts import pad_points_and_labels, validate_prompts
@@ -87,6 +92,16 @@ class Sam2ImageModel(SegmentationModel):
         if self._predictor is not None:
             base["device"] = str(self._predictor.device)
         return base
+
+    @property
+    def interface(self) -> SegmentationInterface:
+        """Prompted segmentation: points, a box or a previous mask; candidate masks; reusable embeddings."""
+        return SegmentationInterface(
+            prompts=["points", "box", "mask"],
+            multimask=True,
+            embeddings=True,
+            outputs=["mask", "score", "logits"],
+        )
 
     def predict(self, input: SegmentationInput) -> SegmentationOutput:
         """Run SAM2 image mask generation.

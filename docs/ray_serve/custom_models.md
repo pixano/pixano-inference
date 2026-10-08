@@ -161,6 +161,16 @@ Or deploy it at runtime through the admin API (`POST /v1/models`).
 | `max_batch_size`        | >1 enables batching (implement `predict_batch` to exploit it). |
 | `timeout_s`             | Per-request inference timeout (else a per-capability default). |
 
+## Describing the model to clients
+
+A model may tell clients how to call it: override `interface` with the descriptor of its
+capability (`DetectionInterface`, `TrackingInterface`, ... from `pixano_inference.models`), and
+`GET /v1/models` publishes it next to the model's status. A closed-vocabulary detector lists its
+`class_names`, a tracker says whether it takes prompts or runs prompt-free, a VLM which prompt
+forms it accepts. The server reads it after `load_model()`, so values can come from the loaded
+weights. See §2.11 of the [specification](custom_model_spec.md); a model that does not override
+it is listed with `interface: null`.
+
 ## Notes
 
 - **Package, don't ship directories.** Defining a model in `__main__` or a loose script and

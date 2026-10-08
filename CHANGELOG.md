@@ -30,6 +30,13 @@ An additive release: no wire field is removed or renamed, and a model package wr
   said neither. The server fetches it once per deployment, after `load_model()`, with a bounded
   wait that never fails a deploy; a model that declares none, or a model package that predates
   the field, is listed with `interface: null`. See §2.11 of the custom model specification.
+- **The first-party models declare theirs.** `Sam2VideoModel` takes `points`, `box` or `mask`
+  keyframes and honours the interval; `YOLOByteTrackModel` is `promptFree` with the detector's
+  `classNames`; `Sam2ImageModel` returns candidate masks and reusable embeddings;
+  `GroundingDINOModel` is open-vocabulary with box and text thresholds; `OpenClipEmbeddingModel`
+  embeds images and text and reports its `dim`; the Transformers and vLLM VLMs say which prompt
+  forms they accept; the YOLO and numpy example detectors publish their class set. The model
+  packages are `0.2.1` and require `pixano-inference >= 0.7.1`.
 
 ### Changed
 

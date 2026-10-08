@@ -15,7 +15,7 @@ from pixano_numpy_detector import NumpyDetector, NumpyDetectorParams
 from pydantic import ValidationError
 
 from pixano_inference.configs import ModelConfig
-from pixano_inference.models import DetectionInput
+from pixano_inference.models import DetectionInput, DetectionInterface
 from pixano_inference.plugins import load_plugin_models
 
 
@@ -44,3 +44,12 @@ def test_detects_the_foreground_box():
     out = model.predict(DetectionInput(image=_image_with_square()))
     assert out.boxes == [[10, 20, 29, 39]]
     assert out.classes == ["object"]
+
+
+def test_describes_itself_as_a_closed_vocabulary_detector():
+    model = NumpyDetector(ModelConfig(name="np", model_class="NumpyDetector").to_deployment_config())
+
+    assert model.interface == DetectionInterface(
+        classes="closed", class_names=["object"], outputs=["box", "score", "class"]
+    )
+    assert model.interface.model_dump(by_alias=True)["classNames"] == ["object"]
