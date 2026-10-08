@@ -53,3 +53,7 @@ class TestInferenceModel:
     def test_predict(self, model: MockModel):
         result = model.predict(MockInput())
         assert result == MockOutput(result="ok")
+
+    def test_interface_is_unknown_unless_declared(self, model: MockModel):
+        """A model that does not describe itself (every 0.7.0 model) lists with no interface."""
+        assert model.interface is None

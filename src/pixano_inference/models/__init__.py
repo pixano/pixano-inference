@@ -6,7 +6,8 @@
 
 """Public API for inference models.
 
-This module re-exports all base classes, I/O types, and the model registry.
+This module re-exports all base classes, I/O types, the ``interface`` descriptors, and the model
+registry.
 ML engineers should import from here when creating custom models.
 """
 
@@ -23,10 +24,17 @@ from .capabilities import (
     get_capability,
     infer_http_capability,
 )
-from .detection import DetectionInput, DetectionModel, DetectionOutput
-from .embedding import EmbeddingInput, EmbeddingModel, EmbeddingOutput
-from .ner import NEREntity, NERInput, NERModel, NEROutput
+from .detection import DetectionInput, DetectionInterface, DetectionModel, DetectionOutput
+from .embedding import EmbeddingInput, EmbeddingInterface, EmbeddingModel, EmbeddingOutput
+from .ner import NEREntity, NERInput, NERInterface, NERModel, NEROutput
 from .registry import ModelClassRegistry, register_model
-from .segmentation import SegmentationInput, SegmentationModel, SegmentationOutput
-from .tracking import TrackedFrame, TrackedObject, TrackingInput, TrackingModel, TrackingOutput
-from .vlm import UsageInfo, VLMInput, VLMModel, VLMOutput
+from .segmentation import SegmentationInput, SegmentationInterface, SegmentationModel, SegmentationOutput
+from .tracking import (
+    TrackedFrame,
+    TrackedObject,
+    TrackingInput,
+    TrackingInterface,
+    TrackingModel,
+    TrackingOutput,
+)
+from .vlm import ImageRange, UsageInfo, VLMInput, VLMInterface, VLMModel, VLMOutput

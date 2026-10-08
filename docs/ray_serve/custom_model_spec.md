@@ -138,6 +138,29 @@ addresses are refused for URLs, local paths are allowed only under
 the model chooses the device from it. `pixano_inference_torch.resolve_device(self.config)`
 does this for PyTorch (CUDA, then Apple MPS, else CPU).
 
+**2.11 `interface`.** A model MAY declare how it is called by overriding the `interface`
+property with the descriptor of its capability, from `pixano_inference.schemas` (also exported
+by `pixano_inference.models`). A capability's input is the union of what every model of that
+capability might accept; the descriptor says what _this_ model reads and returns, so a client
+can decide how to call it and what to show for it: a prompted tracker and a tracker by detection
+are both `TrackingModel`s, but a client prompts the first and only picks classes for the second.
+The server calls the property once per deployment, after `load_model()` (so a value that depends
+on the loaded weights, such as a class set, MAY be read from the model), and publishes it as
+`interface` on `GET /v1/models` and in the response of `POST /v1/models`. A model that does not
+override it is listed with `interface: null`; declaring one requires `pixano-inference >= 0.7.1`.
+
+| Capability     | Descriptor              | Fields                                                                                                                                                                                                                                                                                                                                                                 |
+| -------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tracking`     | `TrackingInterface`     | `prompts`: what a keyframe may carry (`points`, `box`, `mask`, `text`; `[]` for none); `prompt_free`: accepts a request naming no object; `classes`: `none`, `open` or `closed`; `class_names`: the closed set; `thresholds` (`box`, `text`); `interval`: honours the propagation interval; `outputs`: what a tracked object carries (`mask`, `box`, `score`, `class`) |
+| `detection`    | `DetectionInterface`    | `classes`: `open` (detects the names the request gives) or `closed` (its own set); `class_names`; `thresholds` (`box`, `text`); `outputs` (`box`, `score`, `class`, `mask`)                                                                                                                                                                                            |
+| `segmentation` | `SegmentationInterface` | `prompts`; `multimask`: several candidate masks per prompt; `embeddings`: returns and accepts the image embedding; `outputs` (`mask`, `score`, `logits`)                                                                                                                                                                                                               |
+| `vlm`          | `VLMInterface`          | `prompt`: accepted forms (`text`, `messages`); `images`: `{min, max}` images per request (`max: null` for no limit)                                                                                                                                                                                                                                                    |
+| `embedding`    | `EmbeddingInterface`    | `modalities` (`image`, `text`); `dim`: vector size, `null` when unknown                                                                                                                                                                                                                                                                                                |
+| `ner`          | `NERInterface`          | `entity_types`: the labels it returns, `null` when unknown                                                                                                                                                                                                                                                                                                             |
+
+Fields are camelCase on the wire (`promptFree`, `classNames`), and every descriptor carries its
+`capability`, which is how a client tells them apart.
+
 In the example (`model.py`), 2.1 to 2.5 and 2.9; no framework, so 2.8 and 2.10 are moot:
 
 ```python

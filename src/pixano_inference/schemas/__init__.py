@@ -8,7 +8,8 @@
 
 Everything a server, a model implementation and a client exchange is defined here: the wire value
 types (``NDArray``, ``CompressedRLE``), the capability ``Input``/``Output`` types that a model's
-``predict`` consumes and returns, the HTTP request/response envelopes, and the admin and job types.
+``predict`` consumes and returns, the HTTP request/response envelopes, the admin and job types, and
+the per-capability ``interface`` descriptor a model may publish.
 
 This package depends on pydantic and numpy only, and imports nothing else from
 ``pixano_inference``: the model API, the client and the server all build on it.
@@ -32,6 +33,16 @@ from .inference import (
     TrackingResponse,
     VLMRequest,
     VLMResponse,
+)
+from .interface import (
+    DetectionInterface,
+    EmbeddingInterface,
+    ImageRange,
+    ModelInterface,
+    NERInterface,
+    SegmentationInterface,
+    TrackingInterface,
+    VLMInterface,
 )
 from .models import ModelInfo
 from .nd_array import NDArray, NDArrayFloat

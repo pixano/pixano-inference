@@ -12,6 +12,25 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+An additive release: no wire field is removed or renamed, and a model package written against
+0.7.0 keeps working unchanged.
+
+### Added
+
+- **A model describes how it is called.** `GET /v1/models` (and the response of `POST /v1/models`)
+  carries an `interface` per model: a typed, per-capability descriptor the model declares through
+  the new `InferenceModel.interface` property (`TrackingInterface`, `DetectionInterface`,
+  `SegmentationInterface`, `VLMInterface`, `EmbeddingInterface`, `NERInterface` in
+  `pixano_inference.schemas`, told apart by their `capability`). A tracker says which prompts a
+  keyframe may carry and whether it accepts a prompt-free request; a detector says whether it
+  detects the classes the request names or has its own class set, and which; and so on, so a
+  client knows how to call a given model and what to show for it, where the capability alone
+  said neither. The server fetches it once per deployment, after `load_model()`, with a bounded
+  wait that never fails a deploy; a model that declares none, or a model package that predates
+  the field, is listed with `interface: null`. See §2.11 of the custom model specification.
+
 ## [0.7.0] - 2026-10-06
 
 The wire contract moves back into the core, and the server becomes an extra: one distribution owns

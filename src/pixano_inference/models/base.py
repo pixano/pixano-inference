@@ -14,6 +14,8 @@ from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar
 
 from pydantic import BaseModel
 
+from pixano_inference.schemas.interface import ModelInterface
+
 
 if TYPE_CHECKING:
     from pixano_inference.configs.deployment import ModelDeploymentConfig
@@ -79,6 +81,21 @@ class InferenceModel(ABC, Generic[InputT, OutputT]):
             "capability": self.capability,
             "model_class": self._config.model_class,
         }
+
+    @property
+    def interface(self) -> ModelInterface | None:
+        """How the model is called, for clients: the descriptor of its capability.
+
+        A capability's ``Input`` is the union of what every model of that capability might accept;
+        the descriptor says what *this* model reads and returns (its prompts, its class set, its
+        outputs...), so a client knows how to call it and what to show for it. The server fetches it
+        once per deployment, after :meth:`load_model`, and publishes it on ``GET /v1/models``; values
+        that depend on the loaded weights (a class set, an embedding size) can therefore be read from
+        the model. Each capability base class names the descriptor type it expects.
+
+        The default, ``None``, means the model does not describe itself.
+        """
+        return None
 
     @abstractmethod
     def load_model(self) -> None:

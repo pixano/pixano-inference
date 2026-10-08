@@ -103,6 +103,70 @@
         "title": "DeployModelRequest",
         "type": "object"
       },
+      "DetectionInterface": {
+        "description": "How a detection model is called.\n\nAttributes:\n    capability: Always ``\"detection\"``; tells the descriptors apart on the wire.\n    classes: ``\"open\"`` when the model detects the class names the request gives (and requires\n        them), ``\"closed\"`` when it has its own class set.\n    class_names: The class set of a closed-vocabulary model, ``None`` otherwise.\n    thresholds: The confidence thresholds the model reads from the request.\n    outputs: What each detection carries.",
+        "properties": {
+          "capability": {
+            "const": "detection",
+            "default": "detection",
+            "title": "Capability",
+            "type": "string"
+          },
+          "classNames": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classnames"
+          },
+          "classes": {
+            "enum": [
+              "open",
+              "closed"
+            ],
+            "title": "Classes",
+            "type": "string"
+          },
+          "outputs": {
+            "items": {
+              "enum": [
+                "box",
+                "score",
+                "class",
+                "mask"
+              ],
+              "type": "string"
+            },
+            "title": "Outputs",
+            "type": "array"
+          },
+          "thresholds": {
+            "default": [],
+            "items": {
+              "enum": [
+                "box",
+                "text"
+              ],
+              "type": "string"
+            },
+            "title": "Thresholds",
+            "type": "array"
+          }
+        },
+        "required": [
+          "classes",
+          "outputs"
+        ],
+        "title": "DetectionInterface",
+        "type": "object"
+      },
       "DetectionOutput": {
         "description": "Output for detection.\n\n``masks`` is populated when the model performs instance segmentation\n(boxes + masks).  For detection-only models it is ``None``.\n\nAttributes:\n    boxes: List of detected boxes.\n    scores: List of confidence scores.\n    classes: List of class names associated with each box.\n    masks: Optional instance masks in compressed-RLE format.",
         "properties": {
@@ -251,6 +315,45 @@
         "title": "DetectionResponse",
         "type": "object"
       },
+      "EmbeddingInterface": {
+        "description": "How an embedding model is called.\n\nAttributes:\n    capability: Always ``\"embedding\"``; tells the descriptors apart on the wire.\n    modalities: What the model embeds. A model listing both maps them into one shared space.\n    dim: Dimensionality of the vectors, ``None`` when it is not known before a call.",
+        "properties": {
+          "capability": {
+            "const": "embedding",
+            "default": "embedding",
+            "title": "Capability",
+            "type": "string"
+          },
+          "dim": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dim"
+          },
+          "modalities": {
+            "items": {
+              "enum": [
+                "image",
+                "text"
+              ],
+              "type": "string"
+            },
+            "title": "Modalities",
+            "type": "array"
+          }
+        },
+        "required": [
+          "modalities"
+        ],
+        "title": "EmbeddingInterface",
+        "type": "object"
+      },
       "EmbeddingOutput": {
         "description": "Output for embedding computation.\n\nAttributes:\n    embeddings: Embedding vectors as a ``[num_inputs, dim]`` array.\n    dim: Dimensionality of each embedding vector.",
         "properties": {
@@ -395,12 +498,78 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "ImageRange": {
+        "description": "How many images a request may carry.\n\nAttributes:\n    min: The fewest images a request must carry.\n    max: The most images a request may carry; ``None`` when there is no limit.",
+        "properties": {
+          "max": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "min": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Min",
+            "type": "integer"
+          }
+        },
+        "title": "ImageRange",
+        "type": "object"
+      },
       "ModelStatusInfo": {
-        "description": "Model listing entry with its live Serve status.",
+        "description": "Model listing entry with its live Serve status.\n\nAttributes:\n    name: Deployment name, the ``model`` a request names.\n    capability: Capability of the model, which fixes its route.\n    model_class: Registered class name of the model.\n    model_path: Checkpoint id or location, when the model has one.\n    status: Live Ray Serve status of the deployment.\n    interface: How the model is called, as the model declares it (see\n        :mod:`pixano_inference.schemas.interface`). ``None`` when the model declares none or\n        the server could not fetch it.",
         "properties": {
           "capability": {
             "title": "Capability",
             "type": "string"
+          },
+          "interface": {
+            "anyOf": [
+              {
+                "discriminator": {
+                  "mapping": {
+                    "detection": "#/components/schemas/DetectionInterface",
+                    "embedding": "#/components/schemas/EmbeddingInterface",
+                    "ner": "#/components/schemas/NERInterface",
+                    "segmentation": "#/components/schemas/SegmentationInterface",
+                    "tracking": "#/components/schemas/TrackingInterface",
+                    "vlm": "#/components/schemas/VLMInterface"
+                  },
+                  "propertyName": "capability"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/TrackingInterface"
+                  },
+                  {
+                    "$ref": "#/components/schemas/DetectionInterface"
+                  },
+                  {
+                    "$ref": "#/components/schemas/SegmentationInterface"
+                  },
+                  {
+                    "$ref": "#/components/schemas/VLMInterface"
+                  },
+                  {
+                    "$ref": "#/components/schemas/EmbeddingInterface"
+                  },
+                  {
+                    "$ref": "#/components/schemas/NERInterface"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interface"
           },
           "modelClass": {
             "anyOf": [
@@ -502,6 +671,33 @@
         "title": "NEREntity",
         "type": "object"
       },
+      "NERInterface": {
+        "description": "How a named entity recognition model is called.\n\nAttributes:\n    capability: Always ``\"ner\"``; tells the descriptors apart on the wire.\n    entity_types: The labels the model can return, ``None`` when they are not known.",
+        "properties": {
+          "capability": {
+            "const": "ner",
+            "default": "ner",
+            "title": "Capability",
+            "type": "string"
+          },
+          "entityTypes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entitytypes"
+          }
+        },
+        "title": "NERInterface",
+        "type": "object"
+      },
       "NEROutput": {
         "description": "Output for named entity recognition.\n\nAttributes:\n    entities: List of recognised entities.",
         "properties": {
@@ -576,6 +772,58 @@
           "data"
         ],
         "title": "NERResponse",
+        "type": "object"
+      },
+      "SegmentationInterface": {
+        "description": "How an image segmentation model is called.\n\nAttributes:\n    capability: Always ``\"segmentation\"``; tells the descriptors apart on the wire.\n    prompts: What a request may carry to name what to segment. Empty for a model that segments\n        without a prompt.\n    multimask: Whether the model can return several candidate masks per prompt.\n    embeddings: Whether the model returns the image embedding on request and accepts it back,\n        so a client can re-prompt the same image without re-encoding it.\n    outputs: What a prediction carries.",
+        "properties": {
+          "capability": {
+            "const": "segmentation",
+            "default": "segmentation",
+            "title": "Capability",
+            "type": "string"
+          },
+          "embeddings": {
+            "default": false,
+            "title": "Embeddings",
+            "type": "boolean"
+          },
+          "multimask": {
+            "default": false,
+            "title": "Multimask",
+            "type": "boolean"
+          },
+          "outputs": {
+            "items": {
+              "enum": [
+                "mask",
+                "score",
+                "logits"
+              ],
+              "type": "string"
+            },
+            "title": "Outputs",
+            "type": "array"
+          },
+          "prompts": {
+            "default": [],
+            "items": {
+              "enum": [
+                "points",
+                "box",
+                "mask",
+                "text"
+              ],
+              "type": "string"
+            },
+            "title": "Prompts",
+            "type": "array"
+          }
+        },
+        "required": [
+          "outputs"
+        ],
+        "title": "SegmentationInterface",
         "type": "object"
       },
       "SegmentationOutput": {
@@ -933,6 +1181,95 @@
         "title": "TrackingBoxPrompt",
         "type": "object"
       },
+      "TrackingInterface": {
+        "description": "How a tracking model is called.\n\nAttributes:\n    capability: Always ``\"tracking\"``; tells the descriptors apart on the wire.\n    prompts: What a keyframe may carry to name an object. Empty for a model that takes no prompt.\n    prompt_free: Whether the model accepts a request that names no object (tracking by\n        detection: the model detects the objects and creates the tracks itself).\n    classes: ``\"none\"`` when the model has no notion of class, ``\"open\"`` when it detects the\n        class names the request gives, ``\"closed\"`` when it has its own class set.\n    class_names: The class set of a closed-vocabulary model, ``None`` otherwise.\n    thresholds: The confidence thresholds the model reads from the request.\n    interval: Whether the model honours the propagation ``interval`` of the request.\n    outputs: What each tracked object carries.",
+        "properties": {
+          "capability": {
+            "const": "tracking",
+            "default": "tracking",
+            "title": "Capability",
+            "type": "string"
+          },
+          "classNames": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classnames"
+          },
+          "classes": {
+            "default": "none",
+            "enum": [
+              "none",
+              "open",
+              "closed"
+            ],
+            "title": "Classes",
+            "type": "string"
+          },
+          "interval": {
+            "default": false,
+            "title": "Interval",
+            "type": "boolean"
+          },
+          "outputs": {
+            "items": {
+              "enum": [
+                "mask",
+                "box",
+                "score",
+                "class"
+              ],
+              "type": "string"
+            },
+            "title": "Outputs",
+            "type": "array"
+          },
+          "promptFree": {
+            "default": false,
+            "title": "Promptfree",
+            "type": "boolean"
+          },
+          "prompts": {
+            "default": [],
+            "items": {
+              "enum": [
+                "points",
+                "box",
+                "mask",
+                "text"
+              ],
+              "type": "string"
+            },
+            "title": "Prompts",
+            "type": "array"
+          },
+          "thresholds": {
+            "default": [],
+            "items": {
+              "enum": [
+                "box",
+                "text"
+              ],
+              "type": "string"
+            },
+            "title": "Thresholds",
+            "type": "array"
+          }
+        },
+        "required": [
+          "outputs"
+        ],
+        "title": "TrackingInterface",
+        "type": "object"
+      },
       "TrackingInterval": {
         "description": "Optional propagation window relative to the provided video frames.",
         "properties": {
@@ -1255,6 +1592,39 @@
           "totalTokens"
         ],
         "title": "UsageInfo",
+        "type": "object"
+      },
+      "VLMInterface": {
+        "description": "How a vision-language model is called.\n\nAttributes:\n    capability: Always ``\"vlm\"``; tells the descriptors apart on the wire.\n    prompt: The prompt forms the model accepts: a ``text`` string, or chat ``messages``.\n    images: How many images a request may carry, in ``images`` or embedded in the messages.",
+        "properties": {
+          "capability": {
+            "const": "vlm",
+            "default": "vlm",
+            "title": "Capability",
+            "type": "string"
+          },
+          "images": {
+            "$ref": "#/components/schemas/ImageRange",
+            "default": {
+              "min": 0
+            }
+          },
+          "prompt": {
+            "items": {
+              "enum": [
+                "text",
+                "messages"
+              ],
+              "type": "string"
+            },
+            "title": "Prompt",
+            "type": "array"
+          }
+        },
+        "required": [
+          "prompt"
+        ],
+        "title": "VLMInterface",
         "type": "object"
       },
       "VLMOutput": {

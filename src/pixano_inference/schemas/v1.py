@@ -20,6 +20,7 @@ from typing import Any, Literal
 from pydantic import model_validator
 
 from .base import BaseRequest, _BaseModel
+from .interface import ModelInterface
 from .rle import CompressedRLE
 from .tracking import (
     TrackingBoxPrompt,
@@ -109,13 +110,25 @@ class DeployModelRequest(_BaseModel):
 
 
 class ModelStatusInfo(_BaseModel):
-    """Model listing entry with its live Serve status."""
+    """Model listing entry with its live Serve status.
+
+    Attributes:
+        name: Deployment name, the ``model`` a request names.
+        capability: Capability of the model, which fixes its route.
+        model_class: Registered class name of the model.
+        model_path: Checkpoint id or location, when the model has one.
+        status: Live Ray Serve status of the deployment.
+        interface: How the model is called, as the model declares it (see
+            :mod:`pixano_inference.schemas.interface`). ``None`` when the model declares none or
+            the server could not fetch it.
+    """
 
     name: str
     capability: str
     model_class: str | None = None
     model_path: str | None = None
     status: str
+    interface: ModelInterface | None = None
 
 
 class JobStatus(_BaseModel):

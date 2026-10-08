@@ -15,6 +15,7 @@ I/O types live in :mod:`pixano_inference.schemas.embedding` and are re-exported 
 from typing import ClassVar
 
 from pixano_inference.schemas.embedding import EmbeddingInput, EmbeddingOutput  # noqa: F401
+from pixano_inference.schemas.interface import EmbeddingInterface  # noqa: F401
 
 from .base import InferenceModel
 
@@ -23,7 +24,9 @@ class EmbeddingModel(InferenceModel[EmbeddingInput, EmbeddingOutput]):
     """Base class for image/text embedding models (CLIP-style shared space).
 
     ``predict`` receives an :class:`EmbeddingInput` (exactly one of image or text) and returns an
-    :class:`EmbeddingOutput` (a ``[num_inputs, dim]`` vector array).
+    :class:`EmbeddingOutput` (a ``[num_inputs, dim]`` vector array). The ``interface`` property, when
+    overridden, returns an :class:`EmbeddingInterface`: the modalities the model embeds and the
+    size of its vectors.
 
     Example:
         ```python

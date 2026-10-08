@@ -13,6 +13,7 @@ live in :mod:`pixano_inference.schemas.segmentation`; they are re-exported here 
 
 from typing import ClassVar
 
+from pixano_inference.schemas.interface import SegmentationInterface  # noqa: F401
 from pixano_inference.schemas.segmentation import SegmentationInput, SegmentationOutput  # noqa: F401
 
 from .base import InferenceModel
@@ -22,7 +23,9 @@ class SegmentationModel(InferenceModel[SegmentationInput, SegmentationOutput]):
     """Base class for image segmentation models.
 
     ``predict`` receives a :class:`SegmentationInput` (image, prompts and options) and returns a
-    :class:`SegmentationOutput` (masks, scores and, optionally, embeddings).
+    :class:`SegmentationOutput` (masks, scores and, optionally, embeddings). The ``interface``
+    property, when overridden, returns a :class:`SegmentationInterface`: the prompts the model takes
+    and what a prediction carries.
 
     Example:
         ```python

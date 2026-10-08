@@ -13,6 +13,7 @@ The I/O and prompt types are the wire contract and live in
 
 from typing import ClassVar
 
+from pixano_inference.schemas.interface import TrackingInterface  # noqa: F401
 from pixano_inference.schemas.tracking import (  # noqa: F401
     TrackedFrame,
     TrackedObject,
@@ -34,7 +35,9 @@ class TrackingModel(InferenceModel[TrackingInput, TrackingOutput]):
     frame, the objects tracked in it. A model is either prompted (the request names the objects with
     points, boxes or masks, and the model returns their masks, as SAM2 does) or prompt-free
     (tracking by detection: the request has no object, and the model creates the tracks and returns
-    their boxes and scores, as ByteTrack does).
+    their boxes and scores, as ByteTrack does). The ``interface`` property, when overridden, returns
+    a :class:`TrackingInterface`: which prompts the model takes, whether it accepts a prompt-free
+    request, its class set and what each tracked object carries.
 
     Example:
         ```python
