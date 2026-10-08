@@ -12,7 +12,7 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.7.1] - 2026-10-08
 
 An additive release: no wire field is removed or renamed, and a model package written against
 0.7.0 keeps working unchanged.
@@ -277,5 +277,6 @@ with its own `pyproject.toml`, `uv.lock` and tests, plugged in at runtime.
   publishes all nine distributions and refuses a tag that does not match `__version__`
   (see `RELEASING.md`).
 
+[0.7.1]: https://github.com/pixano/pixano-inference/releases/tag/v0.7.1
 [0.7.0]: https://github.com/pixano/pixano-inference/releases/tag/v0.7.0
 [0.6.0]: https://github.com/pixano/pixano-inference/releases/tag/v0.6.0
