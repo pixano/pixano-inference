@@ -31,6 +31,15 @@ An additive release: no wire field is removed or renamed, and a model package wr
   wait that never fails a deploy; a model that declares none, or a model package that predates
   the field, is listed with `interface: null`. See §2.11 of the custom model specification.
 
+### Changed
+
+- **The job payload is typed.** `JobStatus.data` is a `TrackingOutput | None` (jobs run tracking
+  requests, and the server already sent exactly that output), so a client reads
+  `job.data.frames` as it does `response.data` from the synchronous route instead of re-validating
+  a `dict`. `JobStatus` also carries the `timestamp` the server always sent, and the job routes
+  declare it as their response model, so `docs/openapi.json` now describes them. The wire shape is
+  unchanged.
+
 ## [0.7.0] - 2026-10-06
 
 The wire contract moves back into the core, and the server becomes an extra: one distribution owns

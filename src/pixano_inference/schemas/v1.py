@@ -14,6 +14,7 @@ admin/job envelopes. It imports no web framework, so the client depends on it di
 
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
 
@@ -27,6 +28,7 @@ from .tracking import (
     TrackingInput,
     TrackingInterval,
     TrackingKeyframe,
+    TrackingOutput,
     TrackingPointPrompt,
 )
 
@@ -132,11 +134,23 @@ class ModelStatusInfo(_BaseModel):
 
 
 class JobStatus(_BaseModel):
-    """Status envelope for an asynchronous job."""
+    """Status envelope for an asynchronous job.
+
+    Attributes:
+        job_id: Identifier of the job, from the submit response.
+        status: ``running`` until the job reaches a terminal state.
+        detail: Why the job failed or was canceled, when it did.
+        data: The result of a completed job, ``None`` otherwise. Jobs run tracking requests, so it
+            is the :class:`TrackingOutput` the synchronous route would have returned.
+        metadata: Metadata of the model that ran the job.
+        timestamp: When the job was submitted or, once terminal, when it ended.
+        processing_time: Seconds from submission to the terminal state, ``0`` while running.
+    """
 
     job_id: str
     status: Literal["running", "completed", "failed", "canceled"]
     detail: str | None = None
-    data: dict[str, Any] | None = None
+    data: TrackingOutput | None = None
     metadata: dict[str, Any] = {}
+    timestamp: datetime | None = None
     processing_time: float = 0.0

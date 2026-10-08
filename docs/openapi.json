@@ -523,6 +523,75 @@
         "title": "ImageRange",
         "type": "object"
       },
+      "JobStatus": {
+        "description": "Status envelope for an asynchronous job.\n\nAttributes:\n    job_id: Identifier of the job, from the submit response.\n    status: ``running`` until the job reaches a terminal state.\n    detail: Why the job failed or was canceled, when it did.\n    data: The result of a completed job, ``None`` otherwise. Jobs run tracking requests, so it\n        is the :class:`TrackingOutput` the synchronous route would have returned.\n    metadata: Metadata of the model that ran the job.\n    timestamp: When the job was submitted or, once terminal, when it ended.\n    processing_time: Seconds from submission to the terminal state, ``0`` while running.",
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrackingOutput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "jobId": {
+            "title": "Jobid",
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Metadata",
+            "type": "object"
+          },
+          "processingTime": {
+            "default": 0.0,
+            "title": "Processingtime",
+            "type": "number"
+          },
+          "status": {
+            "enum": [
+              "running",
+              "completed",
+              "failed",
+              "canceled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timestamp"
+          }
+        },
+        "required": [
+          "jobId",
+          "status"
+        ],
+        "title": "JobStatus",
+        "type": "object"
+      },
       "ModelStatusInfo": {
         "description": "Model listing entry with its live Serve status.\n\nAttributes:\n    name: Deployment name, the ``model`` a request names.\n    capability: Capability of the model, which fixes its route.\n    model_class: Registered class name of the model.\n    model_path: Checkpoint id or location, when the model has one.\n    status: Live Ray Serve status of the deployment.\n    interface: How the model is called, as the model declares it (see\n        :mod:`pixano_inference.schemas.interface`). ``None`` when the model declares none or\n        the server could not fetch it.",
         "properties": {
@@ -2591,9 +2660,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Submit Tracking Job V1 Inference Tracking Jobs Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/JobStatus"
                 }
               }
             },
@@ -2658,9 +2725,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Submit Tracking Job Binary V1 Inference Tracking Jobs Binary Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/JobStatus"
                 }
               }
             },
@@ -2898,9 +2963,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Cancel Job V1 Jobs  Job Id  Delete",
-                  "type": "object"
+                  "$ref": "#/components/schemas/JobStatus"
                 }
               }
             },
@@ -2972,9 +3035,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Job V1 Jobs  Job Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/JobStatus"
                 }
               }
             },

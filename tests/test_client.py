@@ -18,7 +18,13 @@ from pixano_inference.client import (
     PixanoInferenceError,
     SyncPixanoInferenceClient,
 )
-from pixano_inference.schemas import DetectionRequest, EmbeddingRequest, SegmentationRequest
+from pixano_inference.schemas import (
+    DetectionRequest,
+    EmbeddingRequest,
+    SegmentationRequest,
+    TrackedFrame,
+    TrackingOutput,
+)
 from pixano_inference.schemas.nd_array import NDArrayFloat
 from pixano_inference.schemas.v1 import TrackingRequestV1
 
@@ -179,11 +185,18 @@ async def test_job_lifecycle(httpx_mock: HTTPXMock, simple_pixano_inference_clie
 
     httpx_mock.add_response(
         url=f"{URL}/v1/jobs/j1",
-        json={"jobId": "j1", "status": "completed", "data": {"frames": [{"frameIndex": 0, "objects": []}]}},
+        json={
+            "jobId": "j1",
+            "status": "completed",
+            "data": {"frames": [{"frameIndex": 0, "objects": []}]},
+            "timestamp": "2026-10-08T09:00:00Z",
+        },
     )
     done = await simple_pixano_inference_client.wait_for_job("j1", poll_interval=0.0)
     assert done.status == "completed"
-    assert done.data == {"frames": [{"frameIndex": 0, "objects": []}]}
+    # The payload is typed: the TrackingOutput the sync route returns, not a dict to re-validate.
+    assert done.data == TrackingOutput(frames=[TrackedFrame(frame_index=0, objects=[])])
+    assert done.timestamp is not None and done.timestamp.year == 2026
 
 
 # --- Admin / service ----------------------------------------------------------------

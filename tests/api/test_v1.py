@@ -276,3 +276,39 @@ def test_tracking_job_submit_status_cancel(client, monkeypatch):
     cancel = client.delete(f"/v1/jobs/{job_id}")
     assert cancel.status_code == 200
     assert cancel.json()["status"] == "canceled"
+
+
+def test_completed_tracking_job_returns_the_typed_payload(client, monkeypatch):
+    """The job payload is the tracking output of the sync route, timestamped, as the client types it."""
+    from pixano_inference.schemas import JobStatus
+
+    mask = CompressedRLE.from_mask(np.array([[1, 1], [0, 0]], dtype=np.uint8))
+    result = TrackingOutput(frames=[TrackedFrame(frame_index=0, objects=[TrackedObject(track_id=1, mask=mask)])])
+    _install(client, monkeypatch, handle=FakeHandle(result), capability="tracking")
+
+    submit = client.post(
+        "/v1/inference/tracking/jobs",
+        json={"model": "sam2-video", "video": ["f0.png"], "objectsIds": [1], "frameIndexes": [0]},
+    )
+    assert submit.status_code == 202, submit.text
+    assert submit.json()["data"] is None and submit.json()["timestamp"] is not None
+
+    body = None
+    for _ in range(50):  # the job task completes on the app's event loop between requests
+        body = client.get(f"/v1/jobs/{submit.json()['jobId']}").json()
+        if body["status"] != "running":
+            break
+    assert body is not None and body["status"] == "completed", body
+
+    assert body["data"] == {
+        "frames": [
+            {
+                "frameIndex": 0,
+                "objects": [
+                    {"trackId": 1, "box": None, "score": None, "class": None, "mask": mask.model_dump(mode="json")}
+                ],
+            }
+        ]
+    }
+    assert body["processingTime"] >= 0.0
+    assert JobStatus.model_validate(body).data == result
