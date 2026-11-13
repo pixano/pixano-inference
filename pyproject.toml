@@ -77,6 +77,7 @@ server = [
 ]
 # One extra per model package: a separate distribution that brings its own framework.
 sam = ["pixano-inference-sam"]
+sam3 = ["pixano-inference-sam3"]
 clip = ["pixano-inference-clip"]
 grounding-dino = ["pixano-inference-grounding-dino"]
 transformers-vlm = ["pixano-inference-transformers-vlm"]
@@ -176,6 +177,7 @@ dev = [
 [tool.uv.sources]
 pixano-inference-torch = { path = "packages/pixano-inference-torch", editable = true }
 pixano-inference-sam = { path = "packages/pixano-inference-sam", editable = true }
+pixano-inference-sam3 = { path = "packages/pixano-inference-sam3", editable = true }
 pixano-inference-clip = { path = "packages/pixano-inference-clip", editable = true }
 pixano-inference-grounding-dino = { path = "packages/pixano-inference-grounding-dino", editable = true }
 pixano-inference-transformers-vlm = { path = "packages/pixano-inference-transformers-vlm", editable = true }

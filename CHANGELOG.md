@@ -27,6 +27,9 @@ An additive change: no wire field is removed or renamed, and a model package wri
   model sets when it reads them: a model that does not ignores the fields, so a client offers
   exemplars only where the interface says so. Malformed boxes, negatives without exemplars and
   exemplars with several classes are refused with `422`.
+- **`pixano-inference-sam3`**, a SAM 3 detection package (`sam3` extra): text prompts, exemplars
+  and negative exemplars, with boxes, scores, classes and masks. SAM 3 is under Meta's SAM
+  License, not Apache, and its `facebook/sam3` weights are gated: see the package's README.
 
 ## [0.7.1] - 2026-10-08
 
