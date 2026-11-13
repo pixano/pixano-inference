@@ -58,6 +58,7 @@ jobs:
         package:
           - pixano-inference-torch
           - pixano-inference-sam
+          - pixano-inference-sam3
           - pixano-inference-clip
           - pixano-inference-grounding-dino
           - pixano-inference-transformers-vlm

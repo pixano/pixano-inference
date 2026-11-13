@@ -8,7 +8,7 @@
 
 # Releasing
 
-A release publishes nine distributions to PyPI and the versioned documentation, all from the
+A release publishes ten distributions to PyPI and the versioned documentation, all from the
 `Publish` workflow, which runs when a GitHub release is published.
 
 1. Set the core version in `src/pixano_inference/__version__.py`, and bump the version of any
@@ -50,5 +50,5 @@ them all at once with an account-scoped API token: either a one-off manual uploa
 (`uv publish dist/*`), or the token stored as the repository secret `PYPI_API_TOKEN`, which the
 workflow uses instead of trusted publishing for as long as it exists (delete it afterwards, and
 add regular publishers to the created projects). The projects: `pixano-inference`, `pixano-inference-client`, `pixano-inference-torch`,
-`pixano-inference-sam`, `pixano-inference-clip`, `pixano-inference-grounding-dino`,
+`pixano-inference-sam`, `pixano-inference-sam3`, `pixano-inference-clip`, `pixano-inference-grounding-dino`,
 `pixano-inference-transformers-vlm`, `pixano-inference-vllm`.

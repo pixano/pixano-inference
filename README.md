@@ -94,6 +94,7 @@ print(f"score {scores[best]:.2f}, mask of {mask.sum()} pixels")
 | Install                                | Models                                     |
 | -------------------------------------- | ------------------------------------------ |
 | `pip install "pixano-inference[sam]"`  | SAM2 image segmentation and video tracking |
+| `pip install "pixano-inference[sam3]"` | SAM 3 detection, by text or by exemplars   |
 | `pip install "pixano-inference[clip]"` | Image and text embeddings (MobileCLIP2)    |
 
 Each package has its own README in [`packages/`](packages).

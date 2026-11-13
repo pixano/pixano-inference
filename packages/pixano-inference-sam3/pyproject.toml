@@ -1,0 +1,48 @@
+[project]
+name = "pixano-inference-sam3"
+version = "0.1.0"
+description = "SAM 3 open-vocabulary detection, by text and by exemplar boxes, packaged as a Pixano Inference plugin."
+requires-python = ">=3.10,<3.14"
+license = { file = "LICENSE" }
+readme = "README.md"
+dependencies = [
+  "pixano-inference[server] >= 0.7.1, < 0.8.0",
+  "pixano-inference-torch >= 0.2.0",
+  # Meta's package, on PyPI. 0.1.4 is the release this plugin was verified with; its weights
+  # (facebook/sam3) are gated, and it is distributed under the SAM License (see README).
+  "sam3 == 0.1.4",
+  # sam3 imports these at runtime without declaring them.
+  "psutil",
+  "huggingface_hub",
+  "numpy >= 1.26.0, < 3.0.0",
+  "torch >= 2.5.0, < 3.0.0",
+]
+
+# Discovery: Pixano Inference loads this entry point at startup, registering Sam3DetectionModel.
+[project.entry-points."pixano_inference.models"]
+sam3 = "pixano_inference_sam3"
+
+[dependency-groups]
+dev = [
+  "pytest",
+]
+
+[tool.uv]
+environments = [
+  "sys_platform == 'linux'",
+  "sys_platform == 'darwin'",
+]
+
+[tool.uv.sources]
+pixano-inference = { path = "../..", editable = true }
+pixano-inference-torch = { path = "../pixano-inference-torch", editable = true }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pixano_inference_sam3"]

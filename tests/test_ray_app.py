@@ -282,6 +282,8 @@ class TestServiceRoutes:
             "classes": "closed",
             "classNames": ["thing"],
             "thresholds": [],
+            "exemplars": False,
+            "negativeExemplars": False,
             "outputs": ["box", "score", "class"],
         }
 

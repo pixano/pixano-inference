@@ -12,6 +12,25 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+An additive change: no wire field is removed or renamed, and a model package written against
+0.7.1 keeps working unchanged.
+
+### Added
+
+- **Detection by exemplars ("more like these").** `DetectionInput` (and so the body of
+  `POST /v1/inference/detection`) takes `exemplar_boxes`, boxes in pixels of the image around
+  instances of what to find, and `negative_exemplar_boxes`, around look-alikes not to find. With
+  exemplars, `classes` names at most one class, the class of the exemplars; without one the
+  prompt is visual only. `DetectionInterface` gains `exemplars` and `negative_exemplars`, which a
+  model sets when it reads them: a model that does not ignores the fields, so a client offers
+  exemplars only where the interface says so. Malformed boxes, negatives without exemplars and
+  exemplars with several classes are refused with `422`.
+- **`pixano-inference-sam3`**, a SAM 3 detection package (`sam3` extra): text prompts, exemplars
+  and negative exemplars, with boxes, scores, classes and masks. SAM 3 is under Meta's SAM
+  License, not Apache, and its `facebook/sam3` weights are gated: see the package's README.
+
 ## [0.7.1] - 2026-10-08
 
 An additive release: no wire field is removed or renamed, and a model package written against

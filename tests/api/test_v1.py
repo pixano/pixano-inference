@@ -79,6 +79,40 @@ def test_detection_route(client, monkeypatch):
     assert resp.json()["data"]["classes"] == ["truck"]
 
 
+def test_detection_route_passes_exemplars_to_the_model(client, monkeypatch):
+    result = DetectionOutput(boxes=[[1, 2, 3, 4]], scores=[0.9], classes=["screw"], masks=None)
+    handle = FakeHandle(result)
+    _install(client, monkeypatch, handle=handle, capability="detection")
+    resp = client.post(
+        "/v1/inference/detection",
+        json={
+            "model": "sam3",
+            "image": "https://example.com/x.jpg",
+            "classes": ["screw"],
+            "exemplarBoxes": [[10, 20, 30, 40]],
+            "negativeExemplarBoxes": [[50, 60, 70, 80]],
+        },
+    )
+    assert resp.status_code == 200
+    assert handle.predict.last_input.exemplar_boxes == [[10, 20, 30, 40]]
+    assert handle.predict.last_input.negative_exemplar_boxes == [[50, 60, 70, 80]]
+
+
+def test_detection_route_refuses_exemplars_with_several_classes(client, monkeypatch):
+    result = DetectionOutput(boxes=[], scores=[], classes=[], masks=None)
+    _install(client, monkeypatch, handle=FakeHandle(result), capability="detection")
+    resp = client.post(
+        "/v1/inference/detection",
+        json={
+            "model": "sam3",
+            "image": "https://example.com/x.jpg",
+            "classes": ["screw", "nut"],
+            "exemplarBoxes": [[10, 20, 30, 40]],
+        },
+    )
+    assert resp.status_code == 422
+
+
 def test_vlm_route(client, monkeypatch):
     result = VLMOutput(
         generated_text="hello",
