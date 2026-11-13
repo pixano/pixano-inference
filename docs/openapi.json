@@ -104,7 +104,7 @@
         "type": "object"
       },
       "DetectionInterface": {
-        "description": "How a detection model is called.\n\nAttributes:\n    capability: Always ``\"detection\"``; tells the descriptors apart on the wire.\n    classes: ``\"open\"`` when the model detects the class names the request gives (and requires\n        them), ``\"closed\"`` when it has its own class set.\n    class_names: The class set of a closed-vocabulary model, ``None`` otherwise.\n    thresholds: The confidence thresholds the model reads from the request.\n    outputs: What each detection carries.",
+        "description": "How a detection model is called.\n\nAttributes:\n    capability: Always ``\"detection\"``; tells the descriptors apart on the wire.\n    classes: ``\"open\"`` when the model detects the class names the request gives (and requires\n        them), ``\"closed\"`` when it has its own class set.\n    class_names: The class set of a closed-vocabulary model, ``None`` otherwise.\n    thresholds: The confidence thresholds the model reads from the request.\n    exemplars: Whether the model reads ``exemplar_boxes``: finds more objects like the ones boxed\n        in the image. A request may then name no class (a visual prompt only).\n    negative_exemplars: Whether the model also reads ``negative_exemplar_boxes``.\n    outputs: What each detection carries.",
         "properties": {
           "capability": {
             "const": "detection",
@@ -133,6 +133,16 @@
             ],
             "title": "Classes",
             "type": "string"
+          },
+          "exemplars": {
+            "default": false,
+            "title": "Exemplars",
+            "type": "boolean"
+          },
+          "negativeExemplars": {
+            "default": false,
+            "title": "Negativeexemplars",
+            "type": "boolean"
           },
           "outputs": {
             "items": {
@@ -242,6 +252,23 @@
             ],
             "title": "Classes"
           },
+          "exemplarBoxes": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exemplarboxes"
+          },
           "image": {
             "anyOf": [
               {
@@ -261,6 +288,23 @@
           "model": {
             "title": "Model",
             "type": "string"
+          },
+          "negativeExemplarBoxes": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Negativeexemplarboxes"
           },
           "textThreshold": {
             "default": 0.5,
