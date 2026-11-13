@@ -91,6 +91,15 @@ that frame: a `track_id` with a `mask`, or a `box` (`[x1, y1, x2, y2]` in pixels
 with a `score` and a `class_name`. A model that supports only one of the two request styles
 MUST raise a `ValueError` on the other.
 
+A `DetectionModel` MAY also find "more like these": a request may carry `exemplar_boxes`, boxes
+(`[x1, y1, x2, y2]` in pixels of the image) around instances of what to find, and
+`negative_exemplar_boxes` around look-alikes not to find. `classes` then names at most one class:
+the class of the exemplars, given to every detection and used as a text prompt alongside them;
+without one the prompt is visual only and detections carry the class `""`. A model that reads
+them MUST say so in its `interface` (`exemplars`, `negative_exemplars`, §2.11): the request
+schema does not refuse unknown fields, so a model that does not read exemplars silently ignores
+them, and a client offers them only to a model that declares it.
+
 **2.2 Registration.** The class MUST be decorated with `@register_model("Name")`. `Name` is
 what configs put in `model_class`; it MUST be unique across the installed packages (a second
 registration of the same name raises, and that package fails to load).
@@ -152,7 +161,7 @@ override it is listed with `interface: null`; declaring one requires `pixano-inf
 | Capability     | Descriptor              | Fields                                                                                                                                                                                                                                                                                                                                                                 |
 | -------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `tracking`     | `TrackingInterface`     | `prompts`: what a keyframe may carry (`points`, `box`, `mask`, `text`; `[]` for none); `prompt_free`: accepts a request naming no object; `classes`: `none`, `open` or `closed`; `class_names`: the closed set; `thresholds` (`box`, `text`); `interval`: honours the propagation interval; `outputs`: what a tracked object carries (`mask`, `box`, `score`, `class`) |
-| `detection`    | `DetectionInterface`    | `classes`: `open` (detects the names the request gives) or `closed` (its own set); `class_names`; `thresholds` (`box`, `text`); `outputs` (`box`, `score`, `class`, `mask`)                                                                                                                                                                                            |
+| `detection`    | `DetectionInterface`    | `classes`: `open` (detects the names the request gives) or `closed` (its own set); `class_names`; `thresholds` (`box`, `text`); `exemplars`: reads `exemplar_boxes`; `negative_exemplars`: also reads `negative_exemplar_boxes`; `outputs` (`box`, `score`, `class`, `mask`)                                                                                            |
 | `segmentation` | `SegmentationInterface` | `prompts`; `multimask`: several candidate masks per prompt; `embeddings`: returns and accepts the image embedding; `outputs` (`mask`, `score`, `logits`)                                                                                                                                                                                                               |
 | `vlm`          | `VLMInterface`          | `prompt`: accepted forms (`text`, `messages`); `images`: `{min, max}` images per request (`max: null` for no limit)                                                                                                                                                                                                                                                    |
 | `embedding`    | `EmbeddingInterface`    | `modalities` (`image`, `text`); `dim`: vector size, `null` when unknown                                                                                                                                                                                                                                                                                                |

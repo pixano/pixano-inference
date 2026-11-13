@@ -78,6 +78,9 @@ class DetectionInterface(_BaseModel):
             them), ``"closed"`` when it has its own class set.
         class_names: The class set of a closed-vocabulary model, ``None`` otherwise.
         thresholds: The confidence thresholds the model reads from the request.
+        exemplars: Whether the model reads ``exemplar_boxes``: finds more objects like the ones boxed
+            in the image. A request may then name no class (a visual prompt only).
+        negative_exemplars: Whether the model also reads ``negative_exemplar_boxes``.
         outputs: What each detection carries.
     """
 
@@ -85,11 +88,15 @@ class DetectionInterface(_BaseModel):
     classes: Literal["open", "closed"]
     class_names: list[str] | None = None
     thresholds: list[Threshold] = []
+    exemplars: bool = False
+    negative_exemplars: bool = False
     outputs: list[Literal["box", "score", "class", "mask"]]
 
     @model_validator(mode="after")
     def _check(self) -> DetectionInterface:
         _check_class_names(self.classes, self.class_names)
+        if self.negative_exemplars and not self.exemplars:
+            raise ValueError("'negative_exemplars' requires 'exemplars'.")
         return self
 
 
